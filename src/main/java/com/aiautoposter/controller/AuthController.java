@@ -64,14 +64,24 @@ public class AuthController {
         }
     }
     
-    @PostMapping("/validate")
-    public ResponseEntity<?> validateToken(@RequestParam String token) {
+    @GetMapping("/validate")
+    public ResponseEntity<?> validateToken(@RequestHeader("Authorization") String authHeader) {
         try {
+            String token = authHeader.replace("Bearer ", "");
             String username = jwtTokenUtil.getUsernameFromToken(token);
             UserDetails userDetails = userService.loadUserByUsername(username);
             
             if (jwtTokenUtil.validateToken(token, userDetails)) {
-                return ResponseEntity.ok("Token is valid");
+                // Return user data along with validation
+                User user = userService.findByEmail(username).orElse(null);
+                if (user != null) {
+                    Map<String, Object> response = new HashMap<>();
+                    response.put("valid", true);
+                    response.put("user", user);
+                    return ResponseEntity.ok(response);
+                } else {
+                    return ResponseEntity.badRequest().body("User not found");
+                }
             } else {
                 return ResponseEntity.badRequest().body("Token is invalid");
             }

@@ -54,6 +54,10 @@ public class ScheduleService {
         return scheduleRepository.findByScheduledForBetween(startTime, endTime);
     }
     
+    public List<Schedule> findAll() {
+        return scheduleRepository.findAll();
+    }
+    
     public List<Schedule> getPendingSchedules() {
         return scheduleRepository.findByStatus(Schedule.ScheduleStatus.PENDING);
     }

@@ -44,7 +44,7 @@ public class ScheduleController {
     
     @GetMapping
     public ResponseEntity<List<Schedule>> getAllSchedules() {
-        List<Schedule> schedules = scheduleService.getPendingSchedules();
+        List<Schedule> schedules = scheduleService.findAll();
         return new ResponseEntity<>(schedules, HttpStatus.OK);
     }
     

@@ -120,6 +120,6 @@ public class Schedule {
     }
     
     public enum ScheduleStatus {
-        PENDING, PUBLISHED, FAILED, CANCELLED
+        PENDING, PUBLISHED, FAILED, CANCELLED, SCHEDULED
     }
 }

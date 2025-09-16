@@ -1,6 +1,7 @@
 package com.aiautoposter.service;
 
 import com.aiautoposter.entity.Notification;
+import com.aiautoposter.entity.User;
 import com.aiautoposter.repository.NotificationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
@@ -21,6 +22,9 @@ public class NotificationService {
     
     @Autowired
     private JavaMailSender mailSender;
+    
+    @Autowired
+    private UserService userService;
     
     public Notification createNotification(Long postId, Long userId, Notification.NotificationType type, String message) {
         Notification notification = new Notification(postId, userId, type, message);
@@ -103,9 +107,14 @@ public class NotificationService {
     
     private void sendEmailNotification(Long userId, Notification.NotificationType type, String message) {
         try {
-            // In a real implementation, you would fetch the user's email
-            // For now, we'll use a placeholder
-            String userEmail = "user@example.com";
+            // Fetch the user's actual email from database
+            User user = userService.findById(userId).orElse(null);
+            if (user == null || user.getEmail() == null) {
+                System.err.println("Cannot send email notification: User not found or email is null for userId: " + userId);
+                return;
+            }
+            
+            String userEmail = user.getEmail();
             
             SimpleMailMessage mailMessage = new SimpleMailMessage();
             mailMessage.setTo(userEmail);

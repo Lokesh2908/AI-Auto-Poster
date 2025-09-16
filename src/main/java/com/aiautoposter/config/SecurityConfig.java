@@ -2,6 +2,7 @@ package com.aiautoposter.config;
 
 import com.aiautoposter.security.JwtAuthenticationEntryPoint;
 import com.aiautoposter.security.JwtRequestFilter;
+import com.aiautoposter.service.UserDetailsServiceImpl;
 import com.aiautoposter.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -26,7 +27,7 @@ import java.util.Arrays;
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
     
     @Autowired
-    private UserService userService;
+    private UserDetailsServiceImpl userDetailsService;
     
     @Autowired
     private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
@@ -36,7 +37,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth.userDetailsService((org.springframework.security.core.userdetails.UserDetailsService) userService).passwordEncoder(passwordEncoder());
+        auth.userDetailsService(userDetailsService).passwordEncoder(passwordEncoder());
     }
     
     @Bean
@@ -56,8 +57,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             .authorizeRequests()
                 .antMatchers("/", "/index", "/dashboard").permitAll()
                 .antMatchers("/api/auth/**").permitAll()
-                .antMatchers("/api/users/register").permitAll()
-                .antMatchers("/api/users/login").permitAll()
+                // Auth endpoints are under /api/auth/**
                 .antMatchers("/h2-console/**").permitAll()
                 .antMatchers("/actuator/**").permitAll()
                 .antMatchers("/css/**", "/js/**", "/images/**").permitAll()
@@ -76,7 +76,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         configuration.setAllowedOrigins(Arrays.asList("*"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
-        configuration.setAllowCredentials(true);
+        configuration.setAllowCredentials(false);
         
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

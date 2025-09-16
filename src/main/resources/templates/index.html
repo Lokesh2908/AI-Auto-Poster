@@ -3,54 +3,386 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Auto Poster</title>
+    <title>AI Auto Poster - Revolutionary Content Management</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.2/lib/anime.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'inter': ['Inter', 'sans-serif'],
+                    },
+                    animation: {
+                        'gradient-x': 'gradient-x 15s ease infinite',
+                        'gradient-y': 'gradient-y 15s ease infinite',
+                        'gradient-xy': 'gradient-xy 15s ease infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'bounce-slow': 'bounce 3s infinite',
+                        'wiggle': 'wiggle 1s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        'gradient-y': {
+                            '0%, 100%': {
+                                'background-size': '400% 400%',
+                                'background-position': 'center top'
+                            },
+                            '50%': {
+                                'background-size': '200% 200%',
+                                'background-position': 'center center'
+                            }
+                        },
+                        'gradient-x': {
+                            '0%, 100%': {
+                                'background-size': '200% 200%',
+                                'background-position': 'left center'
+                            },
+                            '50%': {
+                                'background-size': '200% 200%',
+                                'background-position': 'right center'
+                            }
+                        },
+                        'gradient-xy': {
+                            '0%, 100%': {
+                                'background-size': '400% 400%',
+                                'background-position': 'left center'
+                            },
+                            '50%': {
+                                'background-size': '200% 200%',
+                                'background-position': 'right center'
+                            }
+                        },
+                        'float': {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-20px)' }
+                        },
+                        'wiggle': {
+                            '0%, 100%': { transform: 'rotate(-3deg)' },
+                            '50%': { transform: 'rotate(3deg)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .bg-gradient-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .bg-gradient-secondary {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        .bg-gradient-success {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        
+        .bg-gradient-warning {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+        
+        .bg-gradient-danger {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+        
+        .bg-gradient-dark {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+        }
+        
+        .bg-gradient-rainbow {
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #ffeaa7, #dda0dd, #98d8c8);
+            background-size: 400% 400%;
+            animation: gradient-xy 15s ease infinite;
+        }
+        
+        .text-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            background-size: 200% 200%;
+            animation: gradient-x 3s ease infinite;
+        }
+        
+        .text-gradient-rainbow {
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #ffeaa7);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            background-size: 400% 400%;
+            animation: gradient-x 5s ease infinite;
+        }
+        
+        .glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .glass-dark {
+            background: rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-style: preserve-3d;
+        }
+        
+        .card:hover {
+            transform: translateY(-8px) rotateX(5deg);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+        
+        .card-glow {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .card-glow::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .card-glow:hover::before {
+            left: 100%;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .btn-primary:hover::before {
+            left: 100%;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+        
+        .floating-shapes {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        .shape {
+            position: absolute;
+            opacity: 0.1;
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        .shape:nth-child(1) { top: 20%; left: 10%; animation-delay: 0s; }
+        .shape:nth-child(2) { top: 60%; left: 80%; animation-delay: 2s; }
+        .shape:nth-child(3) { top: 80%; left: 20%; animation-delay: 4s; }
+        .shape:nth-child(4) { top: 40%; left: 60%; animation-delay: 1s; }
+        .shape:nth-child(5) { top: 10%; left: 70%; animation-delay: 3s; }
+        
+        .tab-indicator {
+            position: absolute;
+            bottom: 0;
+            height: 3px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 2px 2px 0 0;
+        }
+        
+        .notification-badge {
+            animation: pulse 2s infinite;
+        }
+        
+        .status-badge {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .status-badge::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.8s;
+        }
+        
+        .status-badge:hover::before {
+            left: 100%;
+        }
+        
+        .modal-backdrop {
+            backdrop-filter: blur(10px);
+            background: rgba(0, 0, 0, 0.5);
+        }
+        
+        .modal-content {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .input-glow:focus {
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1), 0 0 20px rgba(102, 126, 234, 0.2);
+            border-color: #667eea;
+        }
+        
+        .chart-container {
+            position: relative;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .card:hover {
+                transform: translateY(-4px);
+            }
+        }
+        
+        .loading-spinner {
+            border: 3px solid rgba(102, 126, 234, 0.1);
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .hero-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            background-size: 400% 400%;
+            animation: gradient-xy 15s ease infinite;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .feature-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .feature-card:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-5px);
+        }
+    </style>
 </head>
-<body class="bg-gray-100 min-h-screen">
+<body class="bg-gray-100 min-h-screen transition-colors duration-300">
     <div id="app" x-data="appData()">
         <!-- Navigation -->
-        <nav class="bg-white shadow-lg">
-            <div class="max-w-7xl mx-auto px-4">
-                <div class="flex justify-between h-16">
-                    <div class="flex items-center">
-                        <h1 class="text-xl font-bold text-gray-800">AI Auto Poster</h1>
-                    </div>
-                    <div class="flex items-center space-x-4">
-                        <template x-if="!isAuthenticated">
-                            <div class="flex space-x-2">
-                                <button @click="showLogin = true" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-                                    Login
-                                </button>
-                                <button @click="showRegister = true" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
-                                    Register
-                                </button>
-                            </div>
-                        </template>
-                        <template x-if="isAuthenticated">
-                            <div class="flex items-center space-x-4">
-                                <span class="text-gray-700" x-text="user.email"></span>
-                                <button @click="logout()" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
-                                    Logout
-                                </button>
-                            </div>
-                        </template>
-                    </div>
-                </div>
-            </div>
-        </nav>
+        <div th:replace="fragments/header :: header"></div>
+
+        <!-- Floating Background Shapes -->
+        <div class="floating-shapes">
+            <div class="shape w-64 h-64 bg-gradient-primary rounded-full"></div>
+            <div class="shape w-48 h-48 bg-gradient-secondary rounded-full"></div>
+            <div class="shape w-32 h-32 bg-gradient-success rounded-full"></div>
+            <div class="shape w-56 h-56 bg-gradient-warning rounded-full"></div>
+            <div class="shape w-40 h-40 bg-gradient-danger rounded-full"></div>
+        </div>
 
         <!-- Main Content -->
-        <div class="max-w-7xl mx-auto py-6 px-4">
+        <div class="max-w-7xl mx-auto py-6 px-4 relative z-10">
             <template x-if="!isAuthenticated">
-                <div class="text-center py-12">
-                    <h2 class="text-3xl font-bold text-gray-900 mb-4">Welcome to AI Auto Poster</h2>
-                    <p class="text-lg text-gray-600 mb-8">Generate and schedule AI-powered LinkedIn posts with approval workflows</p>
-                    <div class="space-x-4">
-                        <button @click="showLogin = true" class="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600">
-                            Get Started
-                        </button>
+                <!-- Hero Section -->
+                <div id="hero" class="hero-bg text-center py-20 px-8 rounded-3xl mb-12 relative overflow-hidden">
+                    <div class="relative z-10">
+                        <div class="animate-float">
+                            <i class="fas fa-robot text-6xl text-white mb-8 animate-bounce-slow"></i>
+                        </div>
+                        <h1 class="hero-title text-5xl md:text-7xl font-black text-white mb-6 leading-tight">
+                            AI <span class="text-gradient-rainbow">Auto Poster</span>
+                        </h1>
+                        <p class="hero-subtitle text-xl md:text-2xl text-white/90 mb-8 max-w-3xl mx-auto leading-relaxed">
+                            🚀 Revolutionary AI-powered content generation and LinkedIn posting with intelligent approval workflows
+                        </p>
+                        <div class="space-x-4 mb-12">
+                            <button @click="showLogin = true" class="hero-cta btn-primary text-white px-8 py-4 rounded-2xl text-lg font-semibold shadow-2xl">
+                                <i class="fas fa-rocket mr-2"></i>
+                                Get Started
+                            </button>
+                            <button @click="showRegister = true" class="glass text-white px-8 py-4 rounded-2xl text-lg font-semibold border-2 border-white/30 hover:bg-white/20">
+                                <i class="fas fa-user-plus mr-2"></i>
+                                Join Now
+                            </button>
+                        </div>
+                        
+                        <!-- Feature Cards -->
+                        <div class="grid md:grid-cols-3 gap-6 mt-16">
+                            <div class="feature-card rounded-2xl p-6 text-left">
+                                <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mb-4">
+                                    <i class="fas fa-brain text-white text-xl"></i>
+                                </div>
+                                <h3 class="text-xl font-bold text-white mb-2">AI Content Generation</h3>
+                                <p class="text-white/80">Advanced AI creates engaging LinkedIn posts from your discussions</p>
+                            </div>
+                            <div class="feature-card rounded-2xl p-6 text-left">
+                                <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mb-4">
+                                    <i class="fas fa-users text-white text-xl"></i>
+                                </div>
+                                <h3 class="text-xl font-bold text-white mb-2">Smart Approval Workflow</h3>
+                                <p class="text-white/80">Streamlined manager approval system with real-time notifications</p>
+                            </div>
+                            <div class="feature-card rounded-2xl p-6 text-left">
+                                <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mb-4">
+                                    <i class="fas fa-calendar-alt text-white text-xl"></i>
+                                </div>
+                                <h3 class="text-xl font-bold text-white mb-2">Intelligent Scheduling</h3>
+                                <p class="text-white/80">Schedule posts for optimal engagement times automatically</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </template>
@@ -58,71 +390,171 @@
             <template x-if="isAuthenticated">
                 <div>
                     <!-- Dashboard Tabs -->
-                    <div class="mb-6">
-                        <nav class="flex space-x-8">
+                    <div class="mb-8 glass rounded-2xl p-2 backdrop-blur-xl">
+                        <nav class="flex space-x-2 relative">
                             <button @click="activeTab = 'dashboard'" 
-                                    :class="activeTab === 'dashboard' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500'"
-                                    class="py-2 px-1 border-b-2 font-medium text-sm">
-                                Dashboard
+                                    :class="activeTab === 'dashboard' ? 'bg-gradient-primary text-white shadow-lg' : 'text-gray-600 hover:text-gray-800'"
+                                    class="relative px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-300 flex items-center space-x-2">
+                                <i class="fas fa-chart-pie"></i>
+                                <span>Dashboard</span>
+                                <span x-show="activeTab === 'dashboard'" class="absolute -top-1 -right-1 w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></span>
                             </button>
                             <button @click="activeTab = 'posts'" 
-                                    :class="activeTab === 'posts' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500'"
-                                    class="py-2 px-1 border-b-2 font-medium text-sm">
-                                Posts
+                                    :class="activeTab === 'posts' ? 'bg-gradient-primary text-white shadow-lg' : 'text-gray-600 hover:text-gray-800'"
+                                    class="relative px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-300 flex items-center space-x-2">
+                                <i class="fas fa-file-alt"></i>
+                                <span>Posts</span>
+                                <span x-show="posts.length > 0" class="ml-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-full" x-text="posts.length"></span>
                             </button>
                             <button @click="activeTab = 'approvals'" 
-                                    :class="activeTab === 'approvals' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500'"
-                                    class="py-2 px-1 border-b-2 font-medium text-sm">
-                                Approvals
+                                    :class="activeTab === 'approvals' ? 'bg-gradient-primary text-white shadow-lg' : 'text-gray-600 hover:text-gray-800'"
+                                    class="relative px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-300 flex items-center space-x-2">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Approvals</span>
+                                <span x-show="pendingApprovals.length > 0" class="ml-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full notification-badge" x-text="pendingApprovals.length"></span>
                             </button>
                             <button @click="activeTab = 'schedule'" 
-                                    :class="activeTab === 'schedule' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500'"
-                                    class="py-2 px-1 border-b-2 font-medium text-sm">
-                                Schedule
+                                    :class="activeTab === 'schedule' ? 'bg-gradient-primary text-white shadow-lg' : 'text-gray-600 hover:text-gray-800'"
+                                    class="relative px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-300 flex items-center space-x-2">
+                                <i class="fas fa-calendar-alt"></i>
+                                <span>Schedule</span>
                             </button>
                             <button @click="activeTab = 'notifications'" 
-                                    :class="activeTab === 'notifications' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500'"
-                                    class="py-2 px-1 border-b-2 font-medium text-sm">
-                                Notifications
+                                    :class="activeTab === 'notifications' ? 'bg-gradient-primary text-white shadow-lg' : 'text-gray-600 hover:text-gray-800'"
+                                    class="relative px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-300 flex items-center space-x-2">
+                                <i class="fas fa-bell"></i>
+                                <span>Notifications</span>
+                                <span x-show="notifications.filter(n => !n.readStatus).length > 0" class="ml-2 bg-orange-500 text-white text-xs px-2 py-1 rounded-full notification-badge" x-text="notifications.filter(n => !n.readStatus).length"></span>
                             </button>
                         </nav>
                     </div>
 
                     <!-- Dashboard Content -->
-                    <div x-show="activeTab === 'dashboard'">
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                            <div class="bg-white p-6 rounded-lg shadow">
-                                <div class="flex items-center">
-                                    <div class="p-2 bg-blue-100 rounded-lg">
-                                        <i class="fas fa-file-alt text-blue-600"></i>
-                                    </div>
-                                    <div class="ml-4">
-                                        <p class="text-sm font-medium text-gray-500">Total Posts</p>
-                                        <p class="text-2xl font-semibold text-gray-900" x-text="stats.totalPosts || 0"></p>
-                                    </div>
-                                </div>
+                    <div x-show="activeTab === 'dashboard'" data-tab="dashboard">
+                        <!-- Welcome Banner -->
+                        <div class="bg-gradient-primary rounded-3xl p-8 mb-8 text-white relative overflow-hidden">
+                            <div class="relative z-10">
+                                <h2 class="text-3xl font-bold mb-2">Welcome back! 👋</h2>
+                                <p class="text-white/90 text-lg">Ready to create amazing content today?</p>
                             </div>
-                            <div class="bg-white p-6 rounded-lg shadow">
-                                <div class="flex items-center">
-                                    <div class="p-2 bg-yellow-100 rounded-lg">
-                                        <i class="fas fa-clock text-yellow-600"></i>
+                            <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+                            <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12"></div>
+                        </div>
+
+                        <!-- Stats Cards -->
+                        <div class="stats-grid mb-8">
+                            <div class="card card-glow bg-gradient-to-br from-blue-500 to-blue-600 p-8 rounded-3xl text-white relative overflow-hidden">
+                                <div class="relative z-10">
+                                    <div class="flex items-center justify-between mb-4">
+                                        <div class="p-3 bg-white/20 rounded-2xl">
+                                            <i class="fas fa-file-alt text-2xl"></i>
+                                        </div>
+                                        <div class="text-right">
+                                            <p class="text-blue-100 text-sm font-medium">Total Posts</p>
+                                            <p class="stat-count text-4xl font-black" x-text="stats.totalPosts || 0"></p>
+                                        </div>
                                     </div>
-                                    <div class="ml-4">
-                                        <p class="text-sm font-medium text-gray-500">Pending Approvals</p>
-                                        <p class="text-2xl font-semibold text-gray-900" x-text="stats.pendingApprovals || 0"></p>
+                                    <div class="flex items-center text-blue-100">
+                                        <i class="fas fa-arrow-up text-green-300 mr-1"></i>
+                                        <span class="text-sm">+12% from last month</span>
                                     </div>
                                 </div>
+                                <div class="absolute -top-4 -right-4 w-24 h-24 bg-white/10 rounded-full"></div>
                             </div>
-                            <div class="bg-white p-6 rounded-lg shadow">
-                                <div class="flex items-center">
-                                    <div class="p-2 bg-green-100 rounded-lg">
-                                        <i class="fas fa-check-circle text-green-600"></i>
+
+                            <div class="card card-glow bg-gradient-to-br from-orange-500 to-red-500 p-8 rounded-3xl text-white relative overflow-hidden">
+                                <div class="relative z-10">
+                                    <div class="flex items-center justify-between mb-4">
+                                        <div class="p-3 bg-white/20 rounded-2xl">
+                                            <i class="fas fa-clock text-2xl"></i>
+                                        </div>
+                                        <div class="text-right">
+                                            <p class="text-orange-100 text-sm font-medium">Pending Approvals</p>
+                                            <p class="stat-count text-4xl font-black" x-text="stats.pendingApprovals || 0"></p>
+                                        </div>
                                     </div>
-                                    <div class="ml-4">
-                                        <p class="text-sm font-medium text-gray-500">Published</p>
-                                        <p class="text-2xl font-semibold text-gray-900" x-text="stats.publishedPosts || 0"></p>
+                                    <div class="flex items-center text-orange-100">
+                                        <i class="fas fa-exclamation-triangle text-yellow-300 mr-1"></i>
+                                        <span class="text-sm">Needs attention</span>
                                     </div>
                                 </div>
+                                <div class="absolute -top-4 -right-4 w-24 h-24 bg-white/10 rounded-full"></div>
+                            </div>
+
+                            <div class="card card-glow bg-gradient-to-br from-green-500 to-emerald-600 p-8 rounded-3xl text-white relative overflow-hidden">
+                                <div class="relative z-10">
+                                    <div class="flex items-center justify-between mb-4">
+                                        <div class="p-3 bg-white/20 rounded-2xl">
+                                            <i class="fas fa-check-circle text-2xl"></i>
+                                        </div>
+                                        <div class="text-right">
+                                            <p class="text-green-100 text-sm font-medium">Published</p>
+                                            <p class="stat-count text-4xl font-black" x-text="stats.publishedPosts || 0"></p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center text-green-100">
+                                        <i class="fas fa-rocket text-yellow-300 mr-1"></i>
+                                        <span class="text-sm">Great job!</span>
+                                    </div>
+                                </div>
+                                <div class="absolute -top-4 -right-4 w-24 h-24 bg-white/10 rounded-full"></div>
+                            </div>
+
+                            <div class="card card-glow bg-gradient-to-br from-purple-500 to-pink-500 p-8 rounded-3xl text-white relative overflow-hidden">
+                                <div class="relative z-10">
+                                    <div class="flex items-center justify-between mb-4">
+                                        <div class="p-3 bg-white/20 rounded-2xl">
+                                            <i class="fas fa-eye text-2xl"></i>
+                                        </div>
+                                        <div class="text-right">
+                                            <p class="text-purple-100 text-sm font-medium">Total Views</p>
+                                            <p class="stat-count text-4xl font-black">2.4K</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center text-purple-100">
+                                        <i class="fas fa-arrow-up text-green-300 mr-1"></i>
+                                        <span class="text-sm">+24% engagement</span>
+                                    </div>
+                                </div>
+                                <div class="absolute -top-4 -right-4 w-24 h-24 bg-white/10 rounded-full"></div>
+                            </div>
+
+                            <div class="card card-glow bg-gradient-to-br from-indigo-500 to-blue-600 p-8 rounded-3xl text-white relative overflow-hidden">
+                                <div class="relative z-10">
+                                    <div class="flex items-center justify-between mb-4">
+                                        <div class="p-3 bg-white/20 rounded-2xl">
+                                            <i class="fas fa-calendar-check text-2xl"></i>
+                                        </div>
+                                        <div class="text-right">
+                                            <p class="text-indigo-100 text-sm font-medium">Scheduled</p>
+                                            <p class="stat-count text-4xl font-black" x-text="scheduledPosts.length || 0"></p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center text-indigo-100">
+                                        <i class="fas fa-clock text-yellow-300 mr-1"></i>
+                                        <span class="text-sm">Ready to go</span>
+                                    </div>
+                                </div>
+                                <div class="absolute -top-4 -right-4 w-24 h-24 bg-white/10 rounded-full"></div>
+                            </div>
+
+                            <div class="card card-glow bg-gradient-to-br from-teal-500 to-cyan-600 p-8 rounded-3xl text-white relative overflow-hidden">
+                                <div class="relative z-10">
+                                    <div class="flex items-center justify-between mb-4">
+                                        <div class="p-3 bg-white/20 rounded-2xl">
+                                            <i class="fas fa-thumbs-up text-2xl"></i>
+                                        </div>
+                                        <div class="text-right">
+                                            <p class="text-teal-100 text-sm font-medium">Engagement Rate</p>
+                                            <p class="stat-count text-4xl font-black">8.2%</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center text-teal-100">
+                                        <i class="fas fa-arrow-up text-green-300 mr-1"></i>
+                                        <span class="text-sm">Above average</span>
+                                    </div>
+                                </div>
+                                <div class="absolute -top-4 -right-4 w-24 h-24 bg-white/10 rounded-full"></div>
                             </div>
                         </div>
 
@@ -134,7 +566,7 @@
                             <div class="p-6">
                                 <div class="space-y-4">
                                     <template x-for="post in recentPosts" :key="post.id">
-                                        <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                                        <div class="card flex items-center justify-between p-4 border border-gray-200 rounded-lg">
                                             <div>
                                                 <h4 class="font-medium text-gray-900" x-text="post.title"></h4>
                                                 <p class="text-sm text-gray-500" x-text="post.currentStatus"></p>
@@ -148,7 +580,7 @@
                     </div>
 
                     <!-- Posts Tab -->
-                    <div x-show="activeTab === 'posts'">
+                    <div x-show="activeTab === 'posts'" data-tab="posts">
                         <div class="flex justify-between items-center mb-6">
                             <h2 class="text-2xl font-bold text-gray-900">Posts</h2>
                             <button @click="showCreatePost = true" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
@@ -184,7 +616,7 @@
                             <div class="p-6">
                                 <div class="space-y-4">
                                     <template x-for="post in filteredPosts" :key="post.id">
-                                        <div class="border border-gray-200 rounded-lg p-4">
+                                        <div class="card border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                                             <div class="flex justify-between items-start">
                                                 <div class="flex-1">
                                                     <h3 class="text-lg font-medium text-gray-900" x-text="post.title"></h3>
@@ -197,14 +629,14 @@
                                                     </div>
                                                 </div>
                                                 <div class="flex space-x-2">
-                                                    <button @click="viewPost(post)" class="text-blue-600 hover:text-blue-800">
+                                                    <button @click="viewPost(post)" class="text-blue-600 hover:text-blue-800 dark:text-blue-400">
                                                         <i class="fas fa-eye"></i>
                                                     </button>
-                                                    <button @click="editPost(post)" class="text-green-600 hover:text-green-800">
+                                                    <button @click="editPost(post)" class="text-green-600 hover:text-green-800 dark:text-green-400">
                                                         <i class="fas fa-edit"></i>
                                                     </button>
                                                     <template x-if="post.currentStatus === 'DRAFT'">
-                                                        <button @click="submitForApproval(post.id)" class="text-yellow-600 hover:text-yellow-800">
+                                                        <button @click="submitForApproval(post.id)" class="text-yellow-600 hover:text-yellow-800 dark:text-yellow-400">
                                                             <i class="fas fa-paper-plane"></i>
                                                         </button>
                                                     </template>
@@ -218,7 +650,7 @@
                     </div>
 
                     <!-- Approvals Tab -->
-                    <div x-show="activeTab === 'approvals'">
+                    <div x-show="activeTab === 'approvals'" data-tab="approvals">
                         <div class="mb-6">
                             <h2 class="text-2xl font-bold text-gray-900">Approval Requests</h2>
                         </div>
@@ -253,7 +685,7 @@
                     </div>
 
                     <!-- Schedule Tab -->
-                    <div x-show="activeTab === 'schedule'">
+                    <div x-show="activeTab === 'schedule'" data-tab="schedule">
                         <div class="flex justify-between items-center mb-6">
                             <h2 class="text-2xl font-bold text-gray-900">Scheduled Posts</h2>
                             <button @click="showScheduleModal = true" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
@@ -290,7 +722,7 @@
                     </div>
 
                     <!-- Notifications Tab -->
-                    <div x-show="activeTab === 'notifications'">
+                    <div x-show="activeTab === 'notifications'" data-tab="notifications">
                         <div class="flex justify-between items-center mb-6">
                             <h2 class="text-2xl font-bold text-gray-900">Notifications</h2>
                             <button @click="markAllAsRead()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
@@ -331,24 +763,27 @@
             </template>
         </div>
 
+        <!-- Footer -->
+        <div th:replace="fragments/footer :: footer"></div>
+
         <!-- Login Modal -->
-        <div x-show="showLogin" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" style="display: none;">
-            <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div x-show="showLogin" class="fixed inset-0 bg-gray-900/60 overflow-y-auto h-full w-full z-50" style="display: none;">
+            <div class="relative top-20 mx-auto p-5 border border-gray-200 dark:border-gray-700 w-96 shadow-xl rounded-xl bg-white dark:bg-gray-800">
                 <div class="mt-3">
-                    <h3 class="text-lg font-medium text-gray-900 mb-4">Login</h3>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Login</h3>
                     <form @submit.prevent="login()">
                         <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700">Email</label>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
                             <input type="email" x-model="loginForm.email" required
-                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
                         </div>
                         <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700">Password</label>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
                             <input type="password" x-model="loginForm.password" required
-                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
                         </div>
                         <div class="flex justify-end space-x-2">
-                            <button type="button" @click="showLogin = false" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
+                            <button type="button" @click="showLogin = false" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600">
                                 Cancel
                             </button>
                             <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">
@@ -361,37 +796,37 @@
         </div>
 
         <!-- Register Modal -->
-        <div x-show="showRegister" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" style="display: none;">
-            <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div x-show="showRegister" class="fixed inset-0 bg-gray-900/60 overflow-y-auto h-full w-full z-50" style="display: none;">
+            <div class="relative top-20 mx-auto p-5 border border-gray-200 dark:border-gray-700 w-96 shadow-xl rounded-xl bg-white dark:bg-gray-800">
                 <div class="mt-3">
-                    <h3 class="text-lg font-medium text-gray-900 mb-4">Register</h3>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Register</h3>
                     <form @submit.prevent="register()">
                         <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700">Email</label>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
                             <input type="email" x-model="registerForm.email" required
-                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
                         </div>
                         <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700">Password</label>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
                             <input type="password" x-model="registerForm.password" required
-                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
                         </div>
                         <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700">Department</label>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Department</label>
                             <input type="text" x-model="registerForm.department" required
-                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
                         </div>
                         <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700">Role</label>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Role</label>
                             <select x-model="registerForm.role" required
-                                    class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                    class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
                                 <option value="USER">User</option>
                                 <option value="MANAGER">Manager</option>
                                 <option value="ADMIN">Admin</option>
                             </select>
                         </div>
                         <div class="flex justify-end space-x-2">
-                            <button type="button" @click="showRegister = false" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
+                            <button type="button" @click="showRegister = false" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600">
                                 Cancel
                             </button>
                             <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700">
@@ -404,28 +839,28 @@
         </div>
 
         <!-- Create Post Modal -->
-        <div x-show="showCreatePost" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" style="display: none;">
-            <div class="relative top-20 mx-auto p-5 border w-2xl shadow-lg rounded-md bg-white">
+        <div x-show="showCreatePost" class="fixed inset-0 bg-gray-900/60 overflow-y-auto h-full w-full z-50" style="display: none;">
+            <div class="relative top-20 mx-auto p-5 border border-gray-200 dark:border-gray-700 w-2xl shadow-xl rounded-xl bg-white dark:bg-gray-800">
                 <div class="mt-3">
-                    <h3 class="text-lg font-medium text-gray-900 mb-4">Create New Post</h3>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Create New Post</h3>
                     <form @submit.prevent="createPost()">
                         <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700">Title</label>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Title</label>
                             <input type="text" x-model="postForm.title" required
-                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
                         </div>
                         <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700">Source Discussion</label>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Source Discussion</label>
                             <textarea x-model="postForm.sourceDiscussion" rows="4" required
-                                      class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"></textarea>
+                                      class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"></textarea>
                         </div>
                         <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700">Target Platforms</label>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Target Platforms</label>
                             <input type="text" x-model="postForm.targetPlatforms" value="linkedin"
-                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
                         </div>
                         <div class="flex justify-end space-x-2">
-                            <button type="button" @click="showCreatePost = false" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
+                            <button type="button" @click="showCreatePost = false" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600">
                                 Cancel
                             </button>
                             <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">
@@ -441,6 +876,7 @@
     <script>
         function appData() {
             return {
+                isDark: false,
                 isAuthenticated: false,
                 user: null,
                 token: localStorage.getItem('token'),
@@ -481,18 +917,76 @@
                 rejectFeedback: '',
 
                 init() {
+                    document.documentElement.classList.remove('dark');
                     if (this.token) {
                         this.validateToken();
+                    } else {
+                        // Show login modal if no token
+                        this.showLogin = true;
                     }
-                    this.loadData();
+                    this.animateIn();
+                },
+
+                toggleDarkMode() {},
+
+                animateIn() {
+                    try {
+                        if (window.anime) {
+                            // Cards entrance
+                            anime({
+                                targets: '.card',
+                                translateY: [16, 0],
+                                opacity: [0, 1],
+                                easing: 'spring(1, 80, 10, 0)',
+                                delay: anime.stagger(60)
+                            });
+                            // Hero timeline
+                            anime.timeline({ easing: 'easeOutExpo' })
+                                .add({ targets: '.hero-title', translateY: [20, 0], opacity: [0, 1], duration: 600 })
+                                .add({ targets: '.hero-subtitle', translateY: [12, 0], opacity: [0, 1], duration: 500 }, '-=300')
+                                .add({ targets: '.hero-cta', scale: [0.96, 1], opacity: [0, 1], duration: 400 }, '-=300');
+
+                            // Stat count-up animation
+                            const nums = document.querySelectorAll('.stat-count');
+                            nums.forEach(function(el) {
+                                const end = Number(el.textContent || '0');
+                                el.textContent = '0';
+                                anime({
+                                    targets: el,
+                                    innerHTML: [0, end],
+                                    easing: 'easeOutCubic',
+                                    round: 1,
+                                    duration: 900
+                                });
+                            });
+
+                            // Tab transition animation handler
+                            const animateTab = function(tab) {
+                                anime({
+                                    targets: `[data-tab="${tab}"] .card, [data-tab="${tab}"] .list-item`,
+                                    translateY: [12, 0],
+                                    opacity: [0, 1],
+                                    easing: 'easeOutCubic',
+                                    delay: anime.stagger(40)
+                                });
+                            };
+                            this.$watch('activeTab', function(tab) { animateTab(tab); });
+                        }
+                    } catch(e) {}
                 },
 
                 async validateToken() {
                     try {
-                        const response = await fetch('/api/auth/validate?token=' + this.token);
+                        const response = await fetch('/api/auth/validate', {
+                            headers: {
+                                'Authorization': 'Bearer ' + this.token
+                            }
+                        });
                         if (response.ok) {
+                            const data = await response.json();
                             this.isAuthenticated = true;
-                            this.loadUserData();
+                            this.user = data.user;
+                            this.loadData();
                         } else {
                             this.logout();
                         }
@@ -503,18 +997,8 @@
                 },
 
                 async loadUserData() {
-                    try {
-                        const response = await fetch('/api/users/email/' + this.loginForm.email, {
-                            headers: {
-                                'Authorization': 'Bearer ' + this.token
-                            }
-                        });
-                        if (response.ok) {
-                            this.user = await response.json();
-                        }
-                    } catch (error) {
-                        console.error('Failed to load user data:', error);
-                    }
+                    // This method is now handled in validateToken
+                    // Keep for backward compatibility
                 },
 
                 async loadData() {
@@ -674,6 +1158,30 @@
 
                 async createPost() {
                     try {
+                        // Debug logging
+                        console.log('Creating post with data:', {
+                            ...this.postForm,
+                            createdBy: this.user?.id,
+                            token: this.token ? 'present' : 'missing',
+                            user: this.user ? 'present' : 'missing'
+                        });
+
+                        // Validation
+                        if (!this.token) {
+                            alert('Please log in to create a post');
+                            return;
+                        }
+
+                        if (!this.user || !this.user.id) {
+                            alert('User data not loaded. Please refresh and try again.');
+                            return;
+                        }
+
+                        if (!this.postForm.title || !this.postForm.sourceDiscussion) {
+                            alert('Please fill in all required fields');
+                            return;
+                        }
+
                         const response = await fetch('/api/posts', {
                             method: 'POST',
                             headers: {
@@ -681,21 +1189,34 @@
                                 'Authorization': 'Bearer ' + this.token
                             },
                             body: JSON.stringify({
-                                ...this.postForm,
+                                title: this.postForm.title,
+                                sourceDiscussion: this.postForm.sourceDiscussion,
+                                targetPlatforms: this.postForm.targetPlatforms,
                                 createdBy: this.user.id
                             })
                         });
 
+                        console.log('Response status:', response.status);
+                        
                         if (response.ok) {
+                            const createdPost = await response.json();
+                            console.log('Post created successfully:', createdPost);
+                            
                             this.showCreatePost = false;
                             this.postForm = { title: '', sourceDiscussion: '', targetPlatforms: 'linkedin' };
-                            this.loadPosts();
+                            await this.loadPosts();
+                            await this.loadStats();
+                            
+                            // Show success message
+                            alert('Post created successfully!');
                         } else {
-                            alert('Failed to create post');
+                            const errorText = await response.text();
+                            console.error('Failed to create post:', response.status, errorText);
+                            alert(`Failed to create post: ${response.status} - ${errorText}`);
                         }
                     } catch (error) {
                         console.error('Create post error:', error);
-                        alert('Failed to create post');
+                        alert(`Failed to create post: ${error.message}`);
                     }
                 },
 
