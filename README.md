@@ -1,3 +1,4 @@
+
 # AI Auto Poster
 
 A comprehensive web application for AI-powered content generation and LinkedIn posting with approval workflows.
@@ -256,3 +257,4 @@ tail -f logs/application.log
 ## License
 
 This project is licensed under the MIT License.
+
