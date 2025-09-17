@@ -53,8 +53,8 @@ ai:
     apiKey: YOUR_API_KEY_HERE
     url: API_URL
   azure:
-    apiKey: YOUR_API_KEY_HERE
-    url: API_URL
+    apiKey: 21ca2ad4962e432191b93a12ccf14adb
+    url: https://devaianakage.openai.azure.com/openai/deployments/Gpt-internal/chat/completions?api-version=2025-01-01-preview
 
 linkedin:
   client:
