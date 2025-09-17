@@ -42,16 +42,6 @@ public class User {
     @Column(name = "is_active")
     private Boolean isActive = true;
     
-    // Relationships
-    @OneToMany(mappedBy = "creator", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Post> posts;
-    
-    @OneToMany(mappedBy = "assignedUser", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<ApprovalRequest> approvalRequests;
-    
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Notification> notifications;
-    
     // Constructors
     public User() {
         this.createdAt = LocalDateTime.now();
@@ -137,30 +127,6 @@ public class User {
     
     public void setIsActive(Boolean isActive) {
         this.isActive = isActive;
-    }
-    
-    public List<Post> getPosts() {
-        return posts;
-    }
-    
-    public void setPosts(List<Post> posts) {
-        this.posts = posts;
-    }
-    
-    public List<ApprovalRequest> getApprovalRequests() {
-        return approvalRequests;
-    }
-    
-    public void setApprovalRequests(List<ApprovalRequest> approvalRequests) {
-        this.approvalRequests = approvalRequests;
-    }
-    
-    public List<Notification> getNotifications() {
-        return notifications;
-    }
-    
-    public void setNotifications(List<Notification> notifications) {
-        this.notifications = notifications;
     }
     
     @PreUpdate

@@ -48,9 +48,9 @@ public class PostService {
         generateAIContent(savedPost);
         
         // Create approval request if user has a manager
-        if (post.getCreatedBy() != null) {
-            approvalService.createApprovalRequest(savedPost);
-        }
+//        if (post.getCreatedBy() != null) {
+//            approvalService.createApprovalRequest(savedPost);
+//        }
         
         return savedPost;
     }

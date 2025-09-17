@@ -37,27 +37,10 @@ public class Post {
     private LocalDateTime updatedAt;
     
     // Relationships
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "created_by", insertable = false, updatable = false)
     private User creator;
-    
-    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<PostContent> postContents;
-    
-    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Image> images;
-    
-    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Schedule> schedules;
-    
-    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Notification> notifications;
-    
-    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<AIWorkflowStep> aiWorkflowSteps;
-    
-    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<ApprovalRequest> approvalRequests;
+
     
     // Constructors
     public Post() {
@@ -145,54 +128,6 @@ public class Post {
     
     public void setCreator(User creator) {
         this.creator = creator;
-    }
-    
-    public List<PostContent> getPostContents() {
-        return postContents;
-    }
-    
-    public void setPostContents(List<PostContent> postContents) {
-        this.postContents = postContents;
-    }
-    
-    public List<Image> getImages() {
-        return images;
-    }
-    
-    public void setImages(List<Image> images) {
-        this.images = images;
-    }
-    
-    public List<Schedule> getSchedules() {
-        return schedules;
-    }
-    
-    public void setSchedules(List<Schedule> schedules) {
-        this.schedules = schedules;
-    }
-    
-    public List<Notification> getNotifications() {
-        return notifications;
-    }
-    
-    public void setNotifications(List<Notification> notifications) {
-        this.notifications = notifications;
-    }
-    
-    public List<AIWorkflowStep> getAiWorkflowSteps() {
-        return aiWorkflowSteps;
-    }
-    
-    public void setAiWorkflowSteps(List<AIWorkflowStep> aiWorkflowSteps) {
-        this.aiWorkflowSteps = aiWorkflowSteps;
-    }
-    
-    public List<ApprovalRequest> getApprovalRequests() {
-        return approvalRequests;
-    }
-    
-    public void setApprovalRequests(List<ApprovalRequest> approvalRequests) {
-        this.approvalRequests = approvalRequests;
     }
     
     @PreUpdate

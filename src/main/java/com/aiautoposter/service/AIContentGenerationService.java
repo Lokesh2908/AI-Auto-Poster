@@ -7,7 +7,9 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -95,54 +97,68 @@ public class AIContentGenerationService {
             return null;
         }
     }
-    
+
     private String tryAzureOpenAI(String sourceDiscussion, String title) {
         try {
-            String prompt = String.format(
-                "Generate a professional LinkedIn post based on the following discussion and title:\n\n" +
-                "Title: %s\n\n" +
-                "Discussion: %s\n\n" +
-                "Please create engaging content that:\n" +
-                "1. Is professional and appropriate for LinkedIn\n" +
-                "2. Includes relevant hashtags\n" +
-                "3. Encourages engagement\n" +
-                "4. Is between 100-300 words\n" +
-                "5. Has a clear call-to-action",
-                title, sourceDiscussion
-            );
-            
+            String systemMessage = "Generate a professional LinkedIn post based on the following discussion and title. " +
+                    "Please create engaging content that: " +
+                    "1. Is professional and appropriate for LinkedIn " +
+                    "2. Includes relevant hashtags " +
+                    "3. Encourages engagement " +
+                    "4. Is between 100-300 words " +
+                    "5. Has a clear call-to-action";
+
+            String userMessage = String.format("Title: %s\n\nDiscussion: %s", title, sourceDiscussion);
+
+            // Create messages array for chat completions
+            List<Map<String, String>> messages = new ArrayList<>();
+
+            Map<String, String> systemMsg = new HashMap<>();
+            systemMsg.put("role", "system");
+            systemMsg.put("content", systemMessage);
+            messages.add(systemMsg);
+
+            Map<String, String> userMsg = new HashMap<>();
+            userMsg.put("role", "user");
+            userMsg.put("content", userMessage);
+            messages.add(userMsg);
+
             Map<String, Object> requestBody = new HashMap<>();
-            requestBody.put("prompt", prompt);
+            requestBody.put("messages", messages);  // Use messages instead of prompt
             requestBody.put("max_tokens", 500);
             requestBody.put("temperature", 0.7);
-            
+
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.set("api-key", azureApiKey);
-            
+
             HttpEntity<Map<String, Object>> request = new HttpEntity<>(requestBody, headers);
-            
-            ResponseEntity<Map> response = restTemplate.postForEntity(azureApiUrl + "/openai/deployments/gpt-35-turbo/completions?api-version=2023-05-15", request, Map.class);
-            
+
+            ResponseEntity<Map> response = restTemplate.postForEntity(azureApiUrl, request, Map.class);
+
             if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
                 Map<String, Object> responseBody = response.getBody();
                 if (responseBody.containsKey("choices")) {
-                    Object[] choices = (Object[]) responseBody.get("choices");
-                    if (choices.length > 0) {
-                        Map<String, Object> choice = (Map<String, Object>) choices[0];
-                        return (String) choice.get("text");
+                    List<Map<String, Object>> choices = (List<Map<String, Object>>) responseBody.get("choices");
+                    if (!choices.isEmpty()) {
+                        Map<String, Object> choice = choices.get(0);
+                        Map<String, Object> message = (Map<String, Object>) choice.get("message");
+                        return (String) message.get("content");
                     }
                 }
             }
-            
+
+
+
             return null;
-            
+
         } catch (Exception e) {
             System.err.println("Error calling Azure OpenAI API: " + e.getMessage());
             return null;
         }
     }
-    
+
+
     public String generateImagePrompt(String content) {
         // Try OpenAI first
         String prompt = tryOpenAIImagePrompt(content);
