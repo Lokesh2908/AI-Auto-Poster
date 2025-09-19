@@ -1,5 +1,6 @@
 package com.aiautoposter.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
@@ -31,16 +32,21 @@ public class PostContent {
     @Column(name = "ai_confidence_score")
     private Double aiConfidenceScore;
     
+    // Temporarily commented out to fix 500 error - will add back after database is updated
+    // @Column(name = "hashtags", columnDefinition = "TEXT", nullable = true)
+    // private String hashtags;
+    
     @Column(name = "created_at")
     private LocalDateTime createdAt;
     
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
     
-    // Relationships
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "post_id", insertable = false, updatable = false)
-    private Post post;
+    // Relationships - temporarily commented out to fix serialization issue
+    // @ManyToOne(fetch = FetchType.LAZY)
+    // @JoinColumn(name = "post_id", insertable = false, updatable = false)
+    // @JsonIgnore
+    // private Post post;
     
     // Constructors
     public PostContent() {
@@ -56,6 +62,19 @@ public class PostContent {
         this.content = content;
         this.aiConfidenceScore = aiConfidenceScore;
     }
+    
+    // Temporarily commented out - will add back after database is updated
+    /*
+    public PostContent(Long postId, String platform, String title, String content, Double aiConfidenceScore, String hashtags) {
+        this();
+        this.postId = postId;
+        this.platform = platform;
+        this.title = title;
+        this.content = content;
+        this.aiConfidenceScore = aiConfidenceScore;
+        this.hashtags = hashtags;
+    }
+    */
     
     // Getters and Setters
     public Long getId() {
@@ -106,6 +125,15 @@ public class PostContent {
         this.aiConfidenceScore = aiConfidenceScore;
     }
     
+    // Temporarily commented out - will add back after database is updated
+    public String getHashtags() {
+        return ""; // hashtags != null ? hashtags : "";
+    }
+    
+    public void setHashtags(String hashtags) {
+        // this.hashtags = hashtags;
+    }
+    
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -122,13 +150,14 @@ public class PostContent {
         this.updatedAt = updatedAt;
     }
     
-    public Post getPost() {
-        return post;
-    }
-    
-    public void setPost(Post post) {
-        this.post = post;
-    }
+    // Temporarily commented out to fix serialization issue
+    // public Post getPost() {
+    //     return post;
+    // }
+    // 
+    // public void setPost(Post post) {
+    //     this.post = post;
+    // }
     
     @PreUpdate
     public void preUpdate() {

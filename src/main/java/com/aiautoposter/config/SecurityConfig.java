@@ -57,6 +57,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             .authorizeRequests()
                 .antMatchers("/", "/index", "/dashboard").permitAll()
                 .antMatchers("/api/auth/**").permitAll()
+                .antMatchers("/api/posts/debug/**").permitAll()
+                .antMatchers("/api/posts/test/**").permitAll()
+                .antMatchers("/api/posts/*/test-approval").permitAll()
                 // Auth endpoints are under /api/auth/**
                 .antMatchers("/h2-console/**").permitAll()
                 .antMatchers("/actuator/**").permitAll()

@@ -2,8 +2,11 @@ package com.aiautoposter.controller;
 
 import com.aiautoposter.entity.Post;
 import com.aiautoposter.entity.PostContent;
-import com.aiautoposter.entity.Image;
+import com.aiautoposter.entity.User;
 import com.aiautoposter.service.PostService;
+import com.aiautoposter.service.UserService;
+import com.aiautoposter.security.JwtTokenUtil;
+import com.aiautoposter.entity.Image;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -22,6 +25,12 @@ public class PostController {
     
     @Autowired
     private PostService postService;
+    
+    @Autowired
+    private UserService userService;
+    
+    @Autowired
+    private JwtTokenUtil jwtTokenUtil;
     
     @PostMapping
     public ResponseEntity<Post> createPost(@Valid @RequestBody Post post) {
@@ -82,10 +91,22 @@ public class PostController {
     @PutMapping("/{id}")
     public ResponseEntity<Post> updatePost(@PathVariable Long id, @Valid @RequestBody Post post) {
         try {
+            System.out.println("=== UPDATE POST CONTROLLER ===");
+            System.out.println("Updating post ID: " + id);
+            System.out.println("New title: " + post.getTitle());
+            System.out.println("New source discussion: " + post.getSourceDiscussion());
+            System.out.println("New target platforms: " + post.getTargetPlatforms());
+            
             post.setId(id);
             Post updatedPost = postService.updatePost(post);
+            
+            System.out.println("Post updated successfully. ID: " + updatedPost.getId());
+            System.out.println("=== END UPDATE POST CONTROLLER ===");
+            
             return new ResponseEntity<>(updatedPost, HttpStatus.OK);
         } catch (Exception e) {
+            System.err.println("UPDATE POST ERROR: " + e.getMessage());
+            e.printStackTrace();
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
@@ -102,12 +123,21 @@ public class PostController {
     }
     
     @PostMapping("/{id}/submit-approval")
-    public ResponseEntity<Post> submitForApproval(@PathVariable Long id) {
+    public ResponseEntity<?> submitForApproval(@PathVariable Long id) {
         try {
+            System.out.println("=== SUBMIT FOR APPROVAL CONTROLLER ===");
+            System.out.println("Submitting post ID: " + id + " for approval");
+            
             Post post = postService.submitForApproval(id);
+            
+            System.out.println("Post submitted successfully. New status: " + post.getCurrentStatus());
+            System.out.println("=== END SUBMIT FOR APPROVAL CONTROLLER ===");
+            
             return new ResponseEntity<>(post, HttpStatus.OK);
         } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            System.err.println("SUBMIT FOR APPROVAL ERROR: " + e.getMessage());
+            e.printStackTrace();
+            return new ResponseEntity<>("Error: " + e.getMessage(), HttpStatus.BAD_REQUEST);
         }
     }
     
@@ -144,9 +174,42 @@ public class PostController {
     }
     
     @GetMapping("/{id}/content")
-    public ResponseEntity<List<PostContent>> getPostContents(@PathVariable Long id) {
-        List<PostContent> contents = postService.getPostContents(id);
-        return new ResponseEntity<>(contents, HttpStatus.OK);
+    public ResponseEntity<?> getPostContents(@PathVariable Long id) {
+        try {
+            System.out.println("=== POST CONTENT CONTROLLER ===");
+            System.out.println("Getting content for post ID: " + id);
+            System.out.println("Authentication: " + org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication());
+            
+            List<PostContent> contents = postService.getPostContents(id);
+            System.out.println("Found " + contents.size() + " content items");
+            
+            // Create a simple map to avoid serialization issues
+            java.util.List<java.util.Map<String, Object>> result = new java.util.ArrayList<>();
+            for (PostContent content : contents) {
+                java.util.Map<String, Object> contentMap = new java.util.HashMap<>();
+                contentMap.put("id", content.getId());
+                contentMap.put("postId", content.getPostId());
+                contentMap.put("platform", content.getPlatform());
+                contentMap.put("title", content.getTitle());
+                contentMap.put("content", content.getContent());
+                contentMap.put("aiConfidenceScore", content.getAiConfidenceScore());
+                contentMap.put("hashtags", content.getHashtags());
+                contentMap.put("createdAt", content.getCreatedAt());
+                result.add(contentMap);
+                
+                System.out.println("Content ID: " + content.getId());
+                System.out.println("Platform: " + content.getPlatform());
+                System.out.println("Content preview: " + content.getContent().substring(0, Math.min(50, content.getContent().length())) + "...");
+                System.out.println("Hashtags: " + content.getHashtags());
+            }
+            
+            System.out.println("=== END POST CONTENT CONTROLLER ===");
+            return new ResponseEntity<>(result, HttpStatus.OK);
+        } catch (Exception e) {
+            System.err.println("POST CONTENT CONTROLLER ERROR: " + e.getMessage());
+            e.printStackTrace();
+            return new ResponseEntity<>("Error: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
     
     @PostMapping("/{id}/images")
@@ -187,5 +250,111 @@ public class PostController {
                                                            @PathVariable Post.PostStatus status) {
         Long count = postService.countByCreatedByAndCurrentStatus(userId, status);
         return new ResponseEntity<>(count, HttpStatus.OK);
+    }
+    
+    // Fix post creator endpoint
+    @PostMapping("/{id}/fix-creator")
+    public ResponseEntity<?> fixPostCreator(@PathVariable Long id, @RequestHeader("Authorization") String authHeader) {
+        try {
+            System.out.println("=== FIX POST CREATOR ===");
+            System.out.println("Fixing creator for post ID: " + id);
+            
+            // Get current user from JWT token
+            String token = authHeader.replace("Bearer ", "");
+            String username = jwtTokenUtil.getUsernameFromToken(token);
+            User currentUser = userService.findByEmail(username).orElse(null);
+            
+            if (currentUser == null) {
+                return new ResponseEntity<>("User not found", HttpStatus.BAD_REQUEST);
+            }
+            
+            // Update the post
+            Post post = postService.findById(id).orElse(null);
+            if (post == null) {
+                return new ResponseEntity<>("Post not found", HttpStatus.NOT_FOUND);
+            }
+            
+            System.out.println("Assigning post to user: " + currentUser.getEmail() + " (ID: " + currentUser.getId() + ")");
+            post.setCreatedBy(currentUser.getId());
+            Post updatedPost = postService.updatePost(post);
+            
+            System.out.println("Post creator updated successfully");
+            return new ResponseEntity<>(updatedPost, HttpStatus.OK);
+            
+        } catch (Exception e) {
+            System.err.println("Fix creator error: " + e.getMessage());
+            e.printStackTrace();
+            return new ResponseEntity<>("Error: " + e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    // Simple test endpoint for approval without complex dependencies
+    @PostMapping("/{id}/test-approval")
+    public ResponseEntity<?> testSubmitForApproval(@PathVariable Long id) {
+        try {
+            System.out.println("=== TEST APPROVAL ENDPOINT ===");
+            System.out.println("Testing approval for post ID: " + id);
+            
+            // Just update the post status without approval request or notification
+            Post post = postService.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Post not found"));
+            
+            System.out.println("Found post: " + post.getTitle());
+            System.out.println("Current status: " + post.getCurrentStatus());
+            System.out.println("Created by: " + post.getCreatedBy());
+            
+            post.setCurrentStatus(Post.PostStatus.PENDING_APPROVAL);
+            Post updatedPost = postService.updatePostStatus(id, Post.PostStatus.PENDING_APPROVAL);
+            
+            System.out.println("Updated post status to: " + updatedPost.getCurrentStatus());
+            System.out.println("=== END TEST APPROVAL ENDPOINT ===");
+            
+            return new ResponseEntity<>(updatedPost, HttpStatus.OK);
+        } catch (Exception e) {
+            System.err.println("TEST APPROVAL ERROR: " + e.getMessage());
+            e.printStackTrace();
+            return new ResponseEntity<>("Error: " + e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    // Test endpoint that returns JSON like the authenticated one but without auth
+    @GetMapping("/test/{id}/content")
+    public ResponseEntity<?> testGetPostContents(@PathVariable Long id) {
+        try {
+            System.out.println("=== TEST ENDPOINT ===");
+            System.out.println("Testing content retrieval for post ID: " + id);
+            
+            List<PostContent> contents = postService.getPostContents(id);
+            System.out.println("Test endpoint returning " + contents.size() + " items");
+            
+            return new ResponseEntity<>(contents, HttpStatus.OK);
+        } catch (Exception e) {
+            System.err.println("TEST ENDPOINT ERROR: " + e.getMessage());
+            e.printStackTrace();
+            return new ResponseEntity<>("Error: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+    
+    // Debug endpoint to check content without authentication
+    @GetMapping("/debug/{id}/content")
+    public ResponseEntity<String> debugGetPostContents(@PathVariable Long id) {
+        try {
+            List<PostContent> contents = postService.getPostContents(id);
+            StringBuilder debug = new StringBuilder();
+            debug.append("Post ID: ").append(id).append("\n");
+            debug.append("Content count: ").append(contents.size()).append("\n");
+            for (int i = 0; i < contents.size(); i++) {
+                PostContent content = contents.get(i);
+                debug.append("Content ").append(i + 1).append(":\n");
+                debug.append("  Platform: ").append(content.getPlatform()).append("\n");
+                debug.append("  Title: ").append(content.getTitle()).append("\n");
+                debug.append("  Content length: ").append(content.getContent().length()).append("\n");
+                debug.append("  Hashtags: ").append(content.getHashtags()).append("\n");
+                debug.append("  Created: ").append(content.getCreatedAt()).append("\n");
+            }
+            return new ResponseEntity<>(debug.toString(), HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 }

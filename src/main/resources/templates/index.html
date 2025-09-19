@@ -73,254 +73,76 @@
         }
     </script>
     
-    <style>
-        * {
-            font-family: 'Inter', sans-serif;
-        }
-        
-        .bg-gradient-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-        
-        .bg-gradient-secondary {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-        }
-        
-        .bg-gradient-success {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-        }
-        
-        .bg-gradient-warning {
-            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-        }
-        
-        .bg-gradient-danger {
-            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-        }
-        
-        .bg-gradient-dark {
-            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
-        }
-        
-        .bg-gradient-rainbow {
-            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #ffeaa7, #dda0dd, #98d8c8);
-            background-size: 400% 400%;
-            animation: gradient-xy 15s ease infinite;
-        }
-        
-        .text-gradient {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            background-size: 200% 200%;
-            animation: gradient-x 3s ease infinite;
-        }
-        
-        .text-gradient-rainbow {
-            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #ffeaa7);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            background-size: 400% 400%;
-            animation: gradient-x 5s ease infinite;
-        }
-        
-        .glass {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        
-        .glass-dark {
-            background: rgba(0, 0, 0, 0.1);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        .card {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            transform-style: preserve-3d;
-        }
-        
-        .card:hover {
-            transform: translateY(-8px) rotateX(5deg);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-        }
-        
-        .card-glow {
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .card-glow::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: left 0.5s;
-        }
-        
-        .card-glow:hover::before {
-            left: 100%;
-        }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .btn-primary::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: left 0.5s;
-        }
-        
-        .btn-primary:hover::before {
-            left: 100%;
-        }
-        
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
-        }
-        
-        .floating-shapes {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: -1;
-        }
-        
-        .shape {
-            position: absolute;
-            opacity: 0.1;
-            animation: float 6s ease-in-out infinite;
-        }
-        
-        .shape:nth-child(1) { top: 20%; left: 10%; animation-delay: 0s; }
-        .shape:nth-child(2) { top: 60%; left: 80%; animation-delay: 2s; }
-        .shape:nth-child(3) { top: 80%; left: 20%; animation-delay: 4s; }
-        .shape:nth-child(4) { top: 40%; left: 60%; animation-delay: 1s; }
-        .shape:nth-child(5) { top: 10%; left: 70%; animation-delay: 3s; }
-        
-        .tab-indicator {
-            position: absolute;
-            bottom: 0;
-            height: 3px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border-radius: 2px 2px 0 0;
-        }
-        
-        .notification-badge {
-            animation: pulse 2s infinite;
-        }
-        
-        .status-badge {
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .status-badge::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-            transition: left 0.8s;
-        }
-        
-        .status-badge:hover::before {
-            left: 100%;
-        }
-        
-        .modal-backdrop {
-            backdrop-filter: blur(10px);
-            background: rgba(0, 0, 0, 0.5);
-        }
-        
-        .modal-content {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        
-        .input-glow:focus {
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1), 0 0 20px rgba(102, 126, 234, 0.2);
-            border-color: #667eea;
-        }
-        
-        .chart-container {
-            position: relative;
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border-radius: 16px;
-            padding: 20px;
-        }
-        
-        @media (max-width: 768px) {
-            .card:hover {
-                transform: translateY(-4px);
-            }
-        }
-        
-        .loading-spinner {
-            border: 3px solid rgba(102, 126, 234, 0.1);
-            border-top: 3px solid #667eea;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            animation: spin 1s linear infinite;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        .hero-bg {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
-            background-size: 400% 400%;
-            animation: gradient-xy 15s ease infinite;
-        }
-        
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 1.5rem;
-        }
-        
-        .feature-card {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            transition: all 0.3s ease;
-        }
-        
-        .feature-card:hover {
-            background: rgba(255, 255, 255, 0.15);
-            transform: translateY(-5px);
-        }
-    </style>
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body class="bg-gray-100 min-h-screen transition-colors duration-300">
     <div id="app" x-data="appData()">
+        <!-- Professional Notification Toast -->
+        <div x-show="showNotification" 
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 transform translate-y-2"
+             x-transition:enter-end="opacity-100 transform translate-y-0"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100 transform translate-y-0"
+             x-transition:leave-end="opacity-0 transform translate-y-2"
+             class="fixed top-4 right-4 z-50 max-w-sm w-full">
+            <div :class="{
+                'bg-green-500': notificationType === 'success',
+                'bg-red-500': notificationType === 'error', 
+                'bg-blue-500': notificationType === 'info'
+            }" class="rounded-lg shadow-lg p-4 text-white">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <template x-if="notificationType === 'success'">
+                            <i class="fas fa-check-circle text-xl"></i>
+                        </template>
+                        <template x-if="notificationType === 'error'">
+                            <i class="fas fa-exclamation-circle text-xl"></i>
+                        </template>
+                        <template x-if="notificationType === 'info'">
+                            <i class="fas fa-info-circle text-xl"></i>
+                        </template>
+                    </div>
+                    <div class="ml-3 flex-1">
+                        <p class="text-sm font-medium" x-text="notificationMessage"></p>
+                    </div>
+                    <div class="ml-4 flex-shrink-0">
+                        <button @click="hideNotification()" class="text-white hover:text-gray-200">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Overlay -->
+        <div x-show="isCreatingPost || isSubmittingApproval" 
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             class="fixed inset-0 z-40 bg-black bg-opacity-50 flex items-center justify-center">
+            <div class="bg-white rounded-2xl p-8 max-w-sm mx-4 text-center shadow-2xl">
+                <div class="mb-4">
+                    <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
+                        <div class="loading-spinner"></div>
+                    </div>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2" x-text="isCreatingPost ? 'Creating Your Post...' : 'Submitting for Approval...'"></h3>
+                <p class="text-gray-600 text-sm" x-text="isCreatingPost ? 'AI is generating amazing content for you!' : 'Processing your approval request...'"></p>
+                <div class="mt-4">
+                    <div class="flex items-center justify-center space-x-1">
+                        <div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style="animation-delay: 0ms;"></div>
+                        <div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style="animation-delay: 150ms;"></div>
+                        <div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style="animation-delay: 300ms;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Navigation -->
         <div th:replace="fragments/header :: header"></div>
 
@@ -406,7 +228,8 @@
                                 <span>Posts</span>
                                 <span x-show="posts.length > 0" class="ml-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-full" x-text="posts.length"></span>
                             </button>
-                            <button @click="activeTab = 'approvals'" 
+                            <button x-show="user?.role === 'MANAGER' || user?.role === 'ADMIN'" 
+                                    @click="activeTab = 'approvals'" 
                                     :class="activeTab === 'approvals' ? 'bg-gradient-primary text-white shadow-lg' : 'text-gray-600 hover:text-gray-800'"
                                     class="relative px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-300 flex items-center space-x-2">
                                 <i class="fas fa-check-circle"></i>
@@ -582,7 +405,14 @@
                     <!-- Posts Tab -->
                     <div x-show="activeTab === 'posts'" data-tab="posts">
                         <div class="flex justify-between items-center mb-6">
-                            <h2 class="text-2xl font-bold text-gray-900">Posts</h2>
+                            <div>
+                                <h2 class="text-2xl font-bold text-gray-900">Posts</h2>
+                                <p class="text-sm text-gray-600 mt-1" x-text="
+                                    user?.role === 'USER' ? 'Showing your posts only' : 
+                                    user?.role === 'MANAGER' ? 'Showing posts from your team members' : 
+                                    'Showing all posts (Admin view)'
+                                "></p>
+                            </div>
                             <button @click="showCreatePost = true" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
                                 Create New Post
                             </button>
@@ -653,6 +483,7 @@
                     <div x-show="activeTab === 'approvals'" data-tab="approvals">
                         <div class="mb-6">
                             <h2 class="text-2xl font-bold text-gray-900">Approval Requests</h2>
+                            <p class="text-sm text-gray-600 mt-1" x-text="`Found ${pendingApprovals.length} pending approval(s) for manager`"></p>
                         </div>
 
                         <div class="bg-white rounded-lg shadow">
@@ -767,27 +598,48 @@
         <div th:replace="fragments/footer :: footer"></div>
 
         <!-- Login Modal -->
-        <div x-show="showLogin" class="fixed inset-0 bg-gray-900/60 overflow-y-auto h-full w-full z-50" style="display: none;">
-            <div class="relative top-20 mx-auto p-5 border border-gray-200 dark:border-gray-700 w-96 shadow-xl rounded-xl bg-white dark:bg-gray-800">
-                <div class="mt-3">
-                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Login</h3>
+        <div x-show="showLogin" class="fixed inset-0 modal-backdrop overflow-y-auto h-full w-full z-50" style="display: none;">
+            <div class="relative top-10 mx-auto p-8 border border-white/20 max-w-md shadow-2xl rounded-3xl modal-content">
+                <div class="relative">
+                    <!-- Modal Header with Icon -->
+                    <div class="text-center mb-8">
+                        <div class="w-16 h-16 bg-gradient-primary rounded-2xl flex items-center justify-center mx-auto mb-4 animate-float">
+                            <i class="fas fa-sign-in-alt text-white text-2xl"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gradient mb-2">Welcome Back</h3>
+                        <p class="text-gray-600">Sign in to your account</p>
+                    </div>
+                    
                     <form @submit.prevent="login()">
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
-                            <input type="email" x-model="loginForm.email" required
-                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        <div class="space-y-6">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                    <i class="fas fa-envelope text-blue-500 mr-2"></i>
+                                    Email Address
+                                </label>
+                                <input type="email" x-model="loginForm.email" required
+                                       placeholder="Enter your email..."
+                                       class="input-glow w-full px-4 py-3 border border-gray-200 bg-white/80 backdrop-blur-sm text-gray-900 rounded-xl shadow-sm focus:outline-none transition-all duration-300">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                    <i class="fas fa-lock text-blue-500 mr-2"></i>
+                                    Password
+                                </label>
+                                <input type="password" x-model="loginForm.password" required
+                                       placeholder="Enter your password..."
+                                       class="input-glow w-full px-4 py-3 border border-gray-200 bg-white/80 backdrop-blur-sm text-gray-900 rounded-xl shadow-sm focus:outline-none transition-all duration-300">
+                            </div>
                         </div>
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
-                            <input type="password" x-model="loginForm.password" required
-                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                        </div>
-                        <div class="flex justify-end space-x-2">
-                            <button type="button" @click="showLogin = false" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600">
-                                Cancel
+                        
+                        <div class="flex flex-col space-y-3 mt-8">
+                            <button type="submit" class="btn-gradient w-full py-3 px-6 rounded-xl font-semibold text-black shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300">
+                                <i class="fas fa-sign-in-alt mr-2"></i>
+                                Sign In
                             </button>
-                            <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">
-                                Login
+                            <button type="button" @click="showLogin = false" class="w-full py-3 px-6 rounded-xl font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-all duration-300">
+                                Cancel
                             </button>
                         </div>
                     </form>
@@ -796,41 +648,94 @@
         </div>
 
         <!-- Register Modal -->
-        <div x-show="showRegister" class="fixed inset-0 bg-gray-900/60 overflow-y-auto h-full w-full z-50" style="display: none;">
-            <div class="relative top-20 mx-auto p-5 border border-gray-200 dark:border-gray-700 w-96 shadow-xl rounded-xl bg-white dark:bg-gray-800">
-                <div class="mt-3">
-                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Register</h3>
+        <div x-show="showRegister" x-init="loadAvailableManagers()" class="fixed inset-0 modal-backdrop overflow-y-auto h-full w-full z-50" style="display: none;">
+            <div class="relative top-5 mx-auto p-8 border border-white/20 max-w-lg shadow-2xl rounded-3xl modal-content">
+                <div class="relative">
+                    <!-- Modal Header with Icon -->
+                    <div class="text-center mb-8">
+                        <div class="w-16 h-16 bg-gradient-success rounded-2xl flex items-center justify-center mx-auto mb-4 animate-float">
+                            <i class="fas fa-user-plus text-white text-2xl"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gradient mb-2">Join Our Team</h3>
+                        <p class="text-gray-600">Create your account to get started</p>
+                    </div>
                     <form @submit.prevent="register()">
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
-                            <input type="email" x-model="registerForm.email" required
-                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        <div class="space-y-6">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                    <i class="fas fa-envelope text-green-500 mr-2"></i>
+                                    Email Address
+                                </label>
+                                <input type="email" x-model="registerForm.email" required
+                                       placeholder="Enter your email..."
+                                       class="input-glow w-full px-4 py-3 border border-gray-200 bg-white/80 backdrop-blur-sm text-gray-900 rounded-xl shadow-sm focus:outline-none transition-all duration-300">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                    <i class="fas fa-lock text-green-500 mr-2"></i>
+                                    Password
+                                </label>
+                                <input type="password" x-model="registerForm.password" required
+                                       placeholder="Create a secure password..."
+                                       class="input-glow w-full px-4 py-3 border border-gray-200 bg-white/80 backdrop-blur-sm text-gray-900 rounded-xl shadow-sm focus:outline-none transition-all duration-300">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                    <i class="fas fa-building text-green-500 mr-2"></i>
+                                    Department
+                                </label>
+                                <select x-model="registerForm.department" required
+                                        class="input-glow w-full px-4 py-3 border border-gray-200 bg-white/80 backdrop-blur-sm text-gray-900 rounded-xl shadow-sm focus:outline-none transition-all duration-300">
+                                    <option value="">Select Department...</option>
+                                    <option value="Development">Development</option>
+                                    <option value="Marketing">Marketing</option>
+                                    <option value="PreSales">PreSales</option>
+                                    <option value="PostSales">PostSales</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                    <i class="fas fa-user-tag text-green-500 mr-2"></i>
+                                    Role
+                                </label>
+                                <select x-model="registerForm.role" required
+                                        class="input-glow w-full px-4 py-3 border border-gray-200 bg-white/80 backdrop-blur-sm text-gray-900 rounded-xl shadow-sm focus:outline-none transition-all duration-300">
+                                    <option value="USER">User</option>
+                                    <option value="MANAGER">Manager</option>
+                                    <option value="ADMIN">Admin</option>
+                                </select>
+                            </div>
+                            
+                            <div x-show="registerForm.role === 'USER'" x-transition class="space-y-2">
+                                <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                    <i class="fas fa-user-tie text-green-500 mr-2"></i>
+                                    Select Manager
+                                </label>
+                                <select x-model="registerForm.managerId" 
+                                        :required="registerForm.role === 'USER'"
+                                        class="input-glow w-full px-4 py-3 border border-gray-200 bg-white/80 backdrop-blur-sm text-gray-900 rounded-xl shadow-sm focus:outline-none transition-all duration-300">
+                                    <option value="">Choose your manager...</option>
+                                    <template x-for="manager in availableManagers" :key="manager.id">
+                                        <option :value="manager.id" x-text="`${manager.email} (${manager.department})`"></option>
+                                    </template>
+                                </select>
+                                <p class="text-xs text-gray-500 flex items-center">
+                                    <i class="fas fa-info-circle text-blue-400 mr-1"></i>
+                                    Select the manager who will approve your posts
+                                </p>
+                            </div>
                         </div>
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
-                            <input type="password" x-model="registerForm.password" required
-                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                        </div>
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Department</label>
-                            <input type="text" x-model="registerForm.department" required
-                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                        </div>
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Role</label>
-                            <select x-model="registerForm.role" required
-                                    class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                                <option value="USER">User</option>
-                                <option value="MANAGER">Manager</option>
-                                <option value="ADMIN">Admin</option>
-                            </select>
-                        </div>
-                        <div class="flex justify-end space-x-2">
-                            <button type="button" @click="showRegister = false" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600">
-                                Cancel
+                        
+                        <div class="flex flex-col space-y-3 mt-8">
+                            <button type="submit" class="btn-gradient w-full py-3 px-6 rounded-xl font-semibold text-black shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300">
+                                <i class="fas fa-user-plus mr-2"></i>
+                                Create Account
                             </button>
-                            <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700">
-                                Register
+                            <button type="button" @click="showRegister = false" class="w-full py-3 px-6 rounded-xl font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-all duration-300">
+                                Cancel
                             </button>
                         </div>
                     </form>
@@ -839,32 +744,319 @@
         </div>
 
         <!-- Create Post Modal -->
-        <div x-show="showCreatePost" class="fixed inset-0 bg-gray-900/60 overflow-y-auto h-full w-full z-50" style="display: none;">
-            <div class="relative top-20 mx-auto p-5 border border-gray-200 dark:border-gray-700 w-2xl shadow-xl rounded-xl bg-white dark:bg-gray-800">
-                <div class="mt-3">
-                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Create New Post</h3>
+        <div x-show="showCreatePost" class="fixed inset-0 modal-backdrop overflow-y-auto h-full w-full z-50">
+            <div class="relative top-10 mx-auto p-8 border border-white/20 max-w-2xl shadow-2xl rounded-3xl modal-content">
+                <div class="relative">
+                    <!-- Modal Header with Icon -->
+                    <div class="text-center mb-8">
+                        <div class="w-16 h-16 bg-gradient-primary rounded-2xl flex items-center justify-center mx-auto mb-4 animate-float">
+                            <i class="fas fa-plus-circle text-white text-2xl"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gradient mb-2">Create New Post</h3>
+                        <p class="text-gray-600">Let AI transform your ideas into engaging LinkedIn content</p>
+                    </div>
+                    
                     <form @submit.prevent="createPost()">
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Title</label>
-                            <input type="text" x-model="postForm.title" required
-                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        <div class="space-y-6">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                    <i class="fas fa-heading text-blue-500 mr-2"></i>
+                                    Post Title
+                                </label>
+                                <input type="text" x-model="postForm.title" required
+                                       placeholder="Enter a compelling title for your post..."
+                                       class="input-glow w-full px-4 py-3 border border-gray-200 bg-white/80 backdrop-blur-sm text-gray-900 rounded-xl shadow-sm focus:outline-none transition-all duration-300">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                    <i class="fas fa-comments text-green-500 mr-2"></i>
+                                    Source Discussion
+                                </label>
+                                <textarea x-model="postForm.sourceDiscussion" rows="5" required
+                                          placeholder="Share the key points, insights, or discussion topics that should be transformed into a LinkedIn post..."
+                                          class="input-glow w-full px-4 py-3 border border-gray-200 bg-white/80 backdrop-blur-sm text-gray-900 rounded-xl shadow-sm focus:outline-none transition-all duration-300 resize-none"></textarea>
+                                <p class="text-xs text-gray-500 mt-2">💡 Tip: The more detailed your discussion, the better AI can craft your content</p>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                    <i class="fab fa-linkedin text-blue-600 mr-2"></i>
+                                    Target Platforms
+                                </label>
+                                <div class="relative">
+                                    <input type="text" x-model="postForm.targetPlatforms" value="linkedin" readonly
+                                           class="w-full px-4 py-3 border border-gray-200 bg-gray-50 text-gray-700 rounded-xl shadow-sm cursor-not-allowed">
+                                    <div class="absolute right-3 top-3">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                            <i class="fab fa-linkedin mr-1"></i>
+                                            LinkedIn
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Source Discussion</label>
-                            <textarea x-model="postForm.sourceDiscussion" rows="4" required
-                                      class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"></textarea>
-                        </div>
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Target Platforms</label>
-                            <input type="text" x-model="postForm.targetPlatforms" value="linkedin"
-                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                        </div>
-                        <div class="flex justify-end space-x-2">
-                            <button type="button" @click="showCreatePost = false" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600">
-                                Cancel
+                        
+                        <!-- Action Buttons -->
+                        <div class="flex justify-end space-x-4 mt-8 pt-6 border-t border-gray-100">
+                            <button type="button" @click="showCreatePost = false" 
+                                    class="px-6 py-3 text-sm font-semibold text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition-all duration-300 flex items-center space-x-2">
+                                <i class="fas fa-times"></i>
+                                <span>Cancel</span>
                             </button>
-                            <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">
-                                Create Post
+                            <button type="submit" 
+                                    class="btn-primary px-8 py-3 text-sm font-semibold text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center space-x-2">
+                                <i class="fas fa-magic"></i>
+                                <span>Create with AI</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- View Post Modal -->
+        <div x-show="showViewPost" class="fixed inset-0 modal-backdrop overflow-y-auto h-full w-full z-50" style="display: none;">
+            <div class="relative top-10 mx-auto p-8 border border-white/20 max-w-2xl shadow-2xl rounded-3xl modal-content">
+                <div class="relative">
+                    <!-- Modal Header -->
+                    <div class="text-center mb-8">
+                        <div class="w-16 h-16 bg-gradient-success rounded-2xl flex items-center justify-center mx-auto mb-4 animate-float">
+                            <i class="fas fa-eye text-white text-2xl"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gradient mb-2">View Post Details</h3>
+                        <p class="text-gray-600">Review your post content and status</p>
+                    </div>
+                    
+                    <template x-if="selectedPost">
+                        <div class="space-y-6">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                    <i class="fas fa-heading text-blue-500 mr-2"></i>
+                                    Post Title
+                                </label>
+                                <div class="w-full px-4 py-3 border border-gray-200 bg-gray-50 text-gray-900 rounded-xl shadow-sm" x-text="selectedPost.title"></div>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                    <i class="fas fa-comments text-green-500 mr-2"></i>
+                                    Source Discussion
+                                </label>
+                                <div class="w-full px-4 py-3 border border-gray-200 bg-gray-50 text-gray-900 rounded-xl shadow-sm min-h-[120px] whitespace-pre-wrap" x-text="selectedPost.sourceDiscussion"></div>
+                            </div>
+                            
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                        <i class="fas fa-info-circle text-purple-500 mr-2"></i>
+                                        Status
+                                    </label>
+                                    <span class="inline-flex items-center px-3 py-2 rounded-xl text-sm font-medium"
+                                          :class="getStatusColor(selectedPost.currentStatus)"
+                                          x-text="selectedPost.currentStatus"></span>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                        <i class="fab fa-linkedin text-blue-600 mr-2"></i>
+                                        Platform
+                                    </label>
+                                    <span class="inline-flex items-center px-3 py-2 rounded-xl text-sm font-medium bg-blue-100 text-blue-800">
+                                        <i class="fab fa-linkedin mr-1"></i>
+                                        LinkedIn
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                    <i class="fas fa-calendar text-orange-500 mr-2"></i>
+                                    Created Date
+                                </label>
+                                <div class="w-full px-4 py-3 border border-gray-200 bg-gray-50 text-gray-900 rounded-xl shadow-sm" x-text="formatDateTime(selectedPost.createdAt)"></div>
+                            </div>
+                            
+                            <!-- AI Generated Content Section -->
+                            <div x-show="selectedPostContent.length > 0">
+                                <label class="block text-sm font-semibold text-gray-700 mb-4 flex items-center">
+                                    <i class="fas fa-robot text-purple-500 mr-2"></i>
+                                    AI Generated Content
+                                </label>
+                                <template x-for="content in selectedPostContent" :key="content.id">
+                                    <div class="mb-4 p-4 border border-purple-200 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl shadow-sm">
+                                        <div class="flex items-center justify-between mb-3">
+                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                                <i class="fab fa-linkedin mr-1"></i>
+                                                <span x-text="content.platform || 'LinkedIn'"></span>
+                                            </span>
+                                            <span class="text-xs text-gray-500" x-text="formatDateTime(content.createdAt)"></span>
+                                        </div>
+                                        <div class="prose prose-sm max-w-none">
+                                            <div class="whitespace-pre-wrap text-gray-800 leading-relaxed" x-text="content.content"></div>
+                                        </div>
+                                        <div x-show="content.hashtags" class="mt-3 pt-3 border-t border-purple-200">
+                                            <div class="flex flex-wrap gap-1">
+                                                <template x-for="hashtag in (content.hashtags || '').split(' ').filter(h => h.trim())" :key="hashtag">
+                                                    <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-800" x-text="hashtag"></span>
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                            
+                            <!-- No Content Message -->
+                            <div x-show="selectedPostContent.length === 0" class="text-center py-8">
+                                <div class="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                                    <i class="fas fa-robot text-gray-400 text-2xl"></i>
+                                </div>
+                                <p class="text-gray-500 text-sm">No AI-generated content available yet</p>
+                                <p class="text-gray-400 text-xs mt-1">Content will be generated when the post is created</p>
+                                <div class="mt-4 p-3 bg-blue-50 rounded-lg">
+                                    <p class="text-xs text-blue-600">Debug Info:</p>
+                                    <p class="text-xs text-blue-500" x-text="'Post ID: ' + (selectedPost ? selectedPost.id : 'N/A')"></p>
+                                    <p class="text-xs text-blue-500" x-text="'Content Array Length: ' + selectedPostContent.length"></p>
+                                    <p class="text-xs text-blue-500" x-text="'Token: ' + (token ? 'Available' : 'Missing')"></p>
+                                    <button @click="debugPostContent()" class="mt-2 px-3 py-1 bg-blue-500 text-white text-xs rounded mr-2">
+                                        Debug Database
+                                    </button>
+                                    <button @click="testPostContent()" class="mt-2 px-3 py-1 bg-green-500 text-white text-xs rounded mr-2">
+                                        Test API
+                                    </button>
+                                    <button @click="testApproval()" class="mt-2 px-3 py-1 bg-orange-500 text-white text-xs rounded mr-2">
+                                        Test Approval
+                                    </button>
+                                    <button @click="fixPostCreator()" class="mt-2 px-3 py-1 bg-red-500 text-white text-xs rounded">
+                                        Fix Creator
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                    
+                    <!-- Action Buttons -->
+                    <div class="flex justify-end space-x-4 mt-8 pt-6 border-t border-gray-100">
+                        <button @click="showViewPost = false" 
+                                class="px-6 py-3 text-sm font-semibold text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition-all duration-300 flex items-center space-x-2">
+                            <i class="fas fa-times"></i>
+                            <span>Close</span>
+                        </button>
+                        <template x-if="selectedPost && selectedPost.currentStatus === 'DRAFT'">
+                            <button @click="editPost(selectedPost); showViewPost = false" 
+                                    class="btn-primary px-6 py-3 text-sm font-semibold text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center space-x-2">
+                                <i class="fas fa-edit"></i>
+                                <span>Edit Post</span>
+                            </button>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Post Modal -->
+        <div x-show="showEditPost" class="fixed inset-0 modal-backdrop overflow-y-auto h-full w-full z-50" style="display: none;">
+            <div class="relative top-10 mx-auto p-8 border border-white/20 max-w-2xl shadow-2xl rounded-3xl modal-content">
+                <div class="relative">
+                    <!-- Modal Header -->
+                    <div class="text-center mb-8">
+                        <div class="w-16 h-16 bg-gradient-warning rounded-2xl flex items-center justify-center mx-auto mb-4 animate-float">
+                            <i class="fas fa-edit text-white text-2xl"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gradient mb-2">Edit Post</h3>
+                        <p class="text-gray-600">Update your post content and regenerate AI content</p>
+                    </div>
+                    
+                    <form @submit.prevent="updatePost()">
+                        <div class="space-y-6">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                    <i class="fas fa-heading text-blue-500 mr-2"></i>
+                                    Post Title
+                                </label>
+                                <input type="text" x-model="editForm.title" required
+                                       placeholder="Enter a compelling title for your post..."
+                                       class="input-glow w-full px-4 py-3 border border-gray-200 bg-white/80 backdrop-blur-sm text-gray-900 rounded-xl shadow-sm focus:outline-none transition-all duration-300">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                    <i class="fas fa-comments text-green-500 mr-2"></i>
+                                    Source Discussion
+                                </label>
+                                <textarea x-model="editForm.sourceDiscussion" rows="5" required
+                                          placeholder="Share the key points, insights, or discussion topics that should be transformed into a LinkedIn post..."
+                                          class="input-glow w-full px-4 py-3 border border-gray-200 bg-white/80 backdrop-blur-sm text-gray-900 rounded-xl shadow-sm focus:outline-none transition-all duration-300 resize-none"></textarea>
+                                <p class="text-xs text-gray-500 mt-2">💡 Tip: Changes will trigger AI to regenerate the content</p>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                    <i class="fab fa-linkedin text-blue-600 mr-2"></i>
+                                    Target Platforms
+                                </label>
+                                <div class="relative">
+                                    <input type="text" x-model="editForm.targetPlatforms" value="linkedin" readonly
+                                           class="w-full px-4 py-3 border border-gray-200 bg-gray-50 text-gray-700 rounded-xl shadow-sm cursor-not-allowed">
+                                    <div class="absolute right-3 top-3">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                            <i class="fab fa-linkedin mr-1"></i>
+                                            LinkedIn
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Current AI Generated Content (if exists) -->
+                        <div x-show="selectedPostContent.length > 0" class="mt-6 pt-6 border-t border-gray-100">
+                            <label class="block text-sm font-semibold text-gray-700 mb-4 flex items-center">
+                                <i class="fas fa-robot text-purple-500 mr-2"></i>
+                                Current AI Generated Content
+                            </label>
+                            <template x-for="content in selectedPostContent" :key="content.id">
+                                <div class="mb-4 p-4 border border-purple-200 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl shadow-sm">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                            <i class="fab fa-linkedin mr-1"></i>
+                                            <span x-text="content.platform || 'LinkedIn'"></span>
+                                        </span>
+                                        <span class="text-xs text-gray-500" x-text="formatDateTime(content.createdAt)"></span>
+                                    </div>
+                                    <div class="prose prose-sm max-w-none">
+                                        <div class="whitespace-pre-wrap text-gray-800 leading-relaxed" x-text="content.content"></div>
+                                    </div>
+                                    <div x-show="content.hashtags" class="mt-3 pt-3 border-t border-purple-200">
+                                        <div class="flex flex-wrap gap-1">
+                                            <template x-for="hashtag in (content.hashtags || '').split(' ').filter(h => h.trim())" :key="hashtag">
+                                                <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-800" x-text="hashtag"></span>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                            <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
+                                <div class="flex items-start">
+                                    <i class="fas fa-info-circle text-yellow-500 mt-0.5 mr-3"></i>
+                                    <div>
+                                        <p class="text-sm text-yellow-800 font-medium">Content Regeneration</p>
+                                        <p class="text-xs text-yellow-700 mt-1">Updating the post will trigger AI to regenerate new content based on your changes.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Action Buttons -->
+                        <div class="flex justify-end space-x-4 mt-8 pt-6 border-t border-gray-100">
+                            <button type="button" @click="showEditPost = false" 
+                                    class="px-6 py-3 text-sm font-semibold text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition-all duration-300 flex items-center space-x-2">
+                                <i class="fas fa-times"></i>
+                                <span>Cancel</span>
+                            </button>
+                            <button type="submit" 
+                                    class="btn-primary px-8 py-3 text-sm font-semibold text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center space-x-2">
+                                <i class="fas fa-save"></i>
+                                <span>Update Post</span>
                             </button>
                         </div>
                     </form>
@@ -887,6 +1079,8 @@
                 showCreatePost: false,
                 showScheduleModal: false,
                 showRejectModal: false,
+                showViewPost: false,
+                showEditPost: false,
                 stats: {
                     totalPosts: 0,
                     pendingApprovals: 0,
@@ -898,6 +1092,12 @@
                 pendingApprovals: [],
                 scheduledPosts: [],
                 notifications: [],
+                // UI State Management
+                isCreatingPost: false,
+                isSubmittingApproval: false,
+                showNotification: false,
+                notificationMessage: '',
+                notificationType: 'success', // success, error, info
                 loginForm: {
                     email: '',
                     password: ''
@@ -906,13 +1106,23 @@
                     email: '',
                     password: '',
                     department: '',
-                    role: 'USER'
+                    role: 'USER',
+                    managerId: null
                 },
+                availableManagers: [],
                 postForm: {
                     title: '',
                     sourceDiscussion: '',
                     targetPlatforms: 'linkedin'
                 },
+                editForm: {
+                    id: null,
+                    title: '',
+                    sourceDiscussion: '',
+                    targetPlatforms: 'linkedin'
+                },
+                selectedPost: null,
+                selectedPostContent: [],
                 selectedApproval: null,
                 rejectFeedback: '',
 
@@ -984,10 +1194,16 @@
                         });
                         if (response.ok) {
                             const data = await response.json();
+                            console.log('Token validation response:', data);
+                            console.log('User from validation:', data.user);
+                            
                             this.isAuthenticated = true;
                             this.user = data.user;
                             this.loadData();
+                            
+                            console.log('User after validation:', this.user);
                         } else {
+                            console.error('Token validation failed');
                             this.logout();
                         }
                     } catch (error) {
@@ -1015,33 +1231,61 @@
 
                 async loadPosts() {
                     try {
-                        const response = await fetch('/api/posts', {
+                        // Load posts based on user role and hierarchy
+                        let url = '/api/posts';
+                        
+                        if (this.user) {
+                            if (this.user.role === 'USER') {
+                                // Users see only their own posts
+                                url = `/api/posts/user/${this.user.id}`;
+                            } else if (this.user.role === 'MANAGER') {
+                                // Managers see posts from their team members + their own posts
+                                url = `/api/posts/manager/${this.user.id}`;
+                            } else if (this.user.role === 'ADMIN') {
+                                // Admins see all posts
+                                url = '/api/posts';
+                            }
+                        }
+                        
+                        const response = await fetch(url, {
                             headers: {
                                 'Authorization': 'Bearer ' + this.token
                             }
                         });
                         if (response.ok) {
                             this.posts = await response.json();
-                            this.filteredPosts = this.posts;
-                            this.recentPosts = this.posts.slice(0, 5);
+                            this.filterPosts(); // Apply current filter
+                            console.log(`Posts loaded for ${this.user?.role || 'unknown'} user:`, this.posts.length);
+                        } else {
+                            console.error('Failed to load posts');
                         }
                     } catch (error) {
-                        console.error('Failed to load posts:', error);
+                        console.error('Error loading posts:', error);
                     }
                 },
 
                 async loadApprovals() {
                     try {
-                        const response = await fetch('/api/approvals/manager/' + this.user.id + '/pending', {
-                            headers: {
-                                'Authorization': 'Bearer ' + this.token
+                        // Only managers and admins can see approval requests
+                        if (this.user && (this.user.role === 'MANAGER' || this.user.role === 'ADMIN')) {
+                            const response = await fetch('/api/approvals/manager/' + this.user.id + '/pending', {
+                                headers: {
+                                    'Authorization': 'Bearer ' + this.token
+                                }
+                            });
+                            if (response.ok) {
+                                this.pendingApprovals = await response.json();
+                                console.log('Pending approvals loaded for manager:', this.pendingApprovals.length);
+                            } else {
+                                console.error('Failed to load pending approvals');
                             }
-                        });
-                        if (response.ok) {
-                            this.pendingApprovals = await response.json();
+                        } else {
+                            // Regular users don't see approval requests
+                            this.pendingApprovals = [];
+                            console.log('Regular user - no approvals to load');
                         }
                     } catch (error) {
-                        console.error('Failed to load approvals:', error);
+                        console.error('Error loading approvals:', error);
                     }
                 },
 
@@ -1116,6 +1360,9 @@
 
                         if (response.ok) {
                             const data = await response.json();
+                            console.log('Login response data:', data);
+                            console.log('User data:', data.user);
+                            
                             this.token = data.token;
                             this.user = data.user;
                             this.isAuthenticated = true;
@@ -1123,8 +1370,12 @@
                             this.showLogin = false;
                             this.loginForm = { email: '', password: '' };
                             this.loadData();
+                            
+                            console.log('User after login:', this.user);
                         } else {
-                            alert('Login failed');
+                            const errorText = await response.text();
+                            console.error('Login failed:', errorText);
+                            alert('Login failed: ' + errorText);
                         }
                     } catch (error) {
                         console.error('Login error:', error);
@@ -1143,44 +1394,40 @@
                         });
 
                         if (response.ok) {
-                            alert('Registration successful! Please login.');
+                            const result = await response.json();
                             this.showRegister = false;
-                            this.registerForm = { email: '', password: '', department: '', role: 'USER' };
+                            this.registerForm = { email: '', password: '', department: '', role: 'USER', managerId: null };
+                            this.showNotificationMessage('✅ Registration successful! Please login.', 'success');
                         } else {
                             const error = await response.text();
-                            alert('Registration failed: ' + error);
+                            this.showNotificationMessage(`Registration failed: ${error}`, 'error');
                         }
                     } catch (error) {
                         console.error('Registration error:', error);
-                        alert('Registration failed');
+                        this.showNotificationMessage('Registration failed', 'error');
                     }
                 },
 
                 async createPost() {
                     try {
-                        // Debug logging
-                        console.log('Creating post with data:', {
-                            ...this.postForm,
-                            createdBy: this.user?.id,
-                            token: this.token ? 'present' : 'missing',
-                            user: this.user ? 'present' : 'missing'
-                        });
-
                         // Validation
                         if (!this.token) {
-                            alert('Please log in to create a post');
+                            this.showNotificationMessage('Please log in to create a post', 'error');
                             return;
                         }
 
                         if (!this.user || !this.user.id) {
-                            alert('User data not loaded. Please refresh and try again.');
+                            this.showNotificationMessage('User data not loaded. Please refresh and try again.', 'error');
                             return;
                         }
 
                         if (!this.postForm.title || !this.postForm.sourceDiscussion) {
-                            alert('Please fill in all required fields');
+                            this.showNotificationMessage('Please fill in all required fields', 'error');
                             return;
                         }
+
+                        // Show loading state
+                        this.isCreatingPost = true;
 
                         const response = await fetch('/api/posts', {
                             method: 'POST',
@@ -1195,8 +1442,6 @@
                                 createdBy: this.user.id
                             })
                         });
-
-                        console.log('Response status:', response.status);
                         
                         if (response.ok) {
                             const createdPost = await response.json();
@@ -1207,21 +1452,32 @@
                             await this.loadPosts();
                             await this.loadStats();
                             
-                            // Show success message
-                            alert('Post created successfully!');
+                            // Show success notification
+                            this.showNotificationMessage('🎉 Post created successfully! AI content has been generated.', 'success');
                         } else {
                             const errorText = await response.text();
-                            console.error('Failed to create post:', response.status, errorText);
-                            alert(`Failed to create post: ${response.status} - ${errorText}`);
+                            console.error('Create post failed:', response.status, errorText);
+                            this.showNotificationMessage(`Failed to create post: ${errorText}`, 'error');
                         }
                     } catch (error) {
                         console.error('Create post error:', error);
-                        alert(`Failed to create post: ${error.message}`);
+                        this.showNotificationMessage(`Failed to create post: ${error.message}`, 'error');
+                    } finally {
+                        // Hide loading state
+                        this.isCreatingPost = false;
                     }
                 },
 
                 async submitForApproval(postId) {
                     try {
+                        console.log('=== SUBMIT FOR APPROVAL DEBUG ===');
+                        console.log('Post ID:', postId);
+                        console.log('Token available:', this.token ? 'Yes' : 'No');
+                        console.log('User:', this.user);
+                        
+                        // Show loading state
+                        this.isSubmittingApproval = true;
+                        
                         const response = await fetch(`/api/posts/${postId}/submit-approval`, {
                             method: 'POST',
                             headers: {
@@ -1230,18 +1486,39 @@
                         });
 
                         if (response.ok) {
-                            this.loadPosts();
+                            await this.loadPosts();
+                            await this.loadStats();
+                            
+                            // Show success notification
+                            this.showNotificationMessage('✅ Post submitted for approval successfully!', 'success');
                         } else {
-                            alert('Failed to submit for approval');
+                            console.error('Submit for approval failed. Status:', response.status);
+                            
+                            let errorText = '';
+                            try {
+                                errorText = await response.text();
+                                console.error('Error response body:', errorText);
+                            } catch (e) {
+                                console.error('Could not read error response:', e);
+                                errorText = 'Could not read error details';
+                            }
+                            
+                            this.showNotificationMessage(`Failed to submit for approval: ${errorText || 'Unknown error'}`, 'error');
                         }
                     } catch (error) {
                         console.error('Submit for approval error:', error);
-                        alert('Failed to submit for approval');
+                        this.showNotificationMessage(`Failed to submit for approval: ${error.message}`, 'error');
+                    } finally {
+                        // Hide loading state
+                        this.isSubmittingApproval = false;
                     }
                 },
 
                 async approvePost(postId) {
                     try {
+                        // Show loading state
+                        this.isSubmittingApproval = true;
+                        
                         const response = await fetch(`/api/posts/${postId}/approve`, {
                             method: 'POST',
                             headers: {
@@ -1250,19 +1527,26 @@
                         });
 
                         if (response.ok) {
-                            this.loadApprovals();
-                            this.loadPosts();
+                            await this.loadApprovals();
+                            await this.loadPosts();
+                            this.showNotificationMessage('✅ Post approved successfully!', 'success');
                         } else {
-                            alert('Failed to approve post');
+                            const errorText = await response.text();
+                            this.showNotificationMessage(`Failed to approve post: ${errorText}`, 'error');
                         }
                     } catch (error) {
                         console.error('Approve post error:', error);
-                        alert('Failed to approve post');
+                        this.showNotificationMessage(`Failed to approve post: ${error.message}`, 'error');
+                    } finally {
+                        this.isSubmittingApproval = false;
                     }
                 },
 
                 async rejectPost(postId, feedback) {
                     try {
+                        // Show loading state
+                        this.isSubmittingApproval = true;
+                        
                         const response = await fetch(`/api/posts/${postId}/reject?feedback=${encodeURIComponent(feedback)}`, {
                             method: 'POST',
                             headers: {
@@ -1271,14 +1555,19 @@
                         });
 
                         if (response.ok) {
-                            this.loadApprovals();
-                            this.loadPosts();
+                            this.showRejectModal = false;
+                            await this.loadApprovals();
+                            await this.loadPosts();
+                            this.showNotificationMessage('❌ Post rejected successfully!', 'info');
                         } else {
-                            alert('Failed to reject post');
+                            const errorText = await response.text();
+                            this.showNotificationMessage(`Failed to reject post: ${errorText}`, 'error');
                         }
                     } catch (error) {
                         console.error('Reject post error:', error);
-                        alert('Failed to reject post');
+                        this.showNotificationMessage(`Failed to reject post: ${error.message}`, 'error');
+                    } finally {
+                        this.isSubmittingApproval = false;
                     }
                 },
 
@@ -1357,19 +1646,245 @@
                     return new Date(dateString).toLocaleString();
                 },
 
-                viewPost(post) {
-                    // Implementation for viewing post details
-                    console.log('View post:', post);
+                async viewPost(post) {
+                    console.log('Viewing post:', post);
+                    this.selectedPost = post;
+                    await this.loadPostContent(post.id);
+                    this.showViewPost = true;
                 },
 
-                editPost(post) {
-                    // Implementation for editing post
-                    console.log('Edit post:', post);
+                async loadPostContent(postId) {
+                    try {
+                        console.log('Loading content for post ID:', postId);
+                        console.log('Token available:', this.token ? 'Yes' : 'No');
+                        
+                        const response = await fetch(`/api/posts/${postId}/content`, {
+                            headers: {
+                                'Authorization': 'Bearer ' + this.token
+                            }
+                        });
+                        
+                        console.log('Response status:', response.status);
+                        console.log('Response ok:', response.ok);
+                        
+                        if (response.ok) {
+                            const content = await response.json();
+                            console.log('Loaded content:', content);
+                            console.log('Content type:', typeof content);
+                            console.log('Is array:', Array.isArray(content));
+                            if (Array.isArray(content)) {
+                                console.log('Array length:', content.length);
+                                content.forEach((item, index) => {
+                                    console.log(`Content ${index}:`, item);
+                                });
+                            }
+                            this.selectedPostContent = content;
+                        } else {
+                            const errorText = await response.text();
+                            console.error('Failed to load content. Status:', response.status, 'Error:', errorText);
+                            console.error('Response headers:', response.headers);
+                            this.selectedPostContent = [];
+                        }
+                    } catch (error) {
+                        console.error('Failed to load post content:', error);
+                        this.selectedPostContent = [];
+                    }
+                },
+
+                async editPost(post) {
+                    this.editForm = {
+                        id: post.id,
+                        title: post.title,
+                        sourceDiscussion: post.sourceDiscussion,
+                        targetPlatforms: post.targetPlatforms || 'linkedin'
+                    };
+                    await this.loadPostContent(post.id);
+                    this.showEditPost = true;
+                },
+
+                async updatePost() {
+                    try {
+                        const response = await fetch(`/api/posts/${this.editForm.id}`, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': 'Bearer ' + this.token
+                            },
+                            body: JSON.stringify({
+                                title: this.editForm.title,
+                                sourceDiscussion: this.editForm.sourceDiscussion,
+                                targetPlatforms: this.editForm.targetPlatforms
+                            })
+                        });
+
+                        if (response.ok) {
+                            this.showEditPost = false;
+                            this.editForm = { id: null, title: '', sourceDiscussion: '', targetPlatforms: 'linkedin' };
+                            await this.loadPosts();
+                            alert('Post updated successfully!');
+                        } else {
+                            const errorText = await response.text();
+                            alert(`Failed to update post: ${errorText}`);
+                        }
+                    } catch (error) {
+                        console.error('Update post error:', error);
+                        alert('Failed to update post');
+                    }
                 },
 
                 showRejectModal(approval) {
                     this.selectedApproval = approval;
                     this.showRejectModal = true;
+                },
+
+                async debugPostContent() {
+                    if (!this.selectedPost) {
+                        alert('No post selected');
+                        return;
+                    }
+                    
+                    try {
+                        const response = await fetch(`/api/posts/debug/${this.selectedPost.id}/content`);
+                        const debugInfo = await response.text();
+                        console.log('Debug info:', debugInfo);
+                        alert('Debug info logged to console:\n\n' + debugInfo);
+                    } catch (error) {
+                        console.error('Debug failed:', error);
+                        alert('Debug failed: ' + error.message);
+                    }
+                },
+
+                async testPostContent() {
+                    if (!this.selectedPost) {
+                        alert('No post selected');
+                        return;
+                    }
+                    
+                    try {
+                        console.log('Testing API endpoint without authentication...');
+                        const response = await fetch(`/api/posts/test/${this.selectedPost.id}/content`);
+                        console.log('Test API response status:', response.status);
+                        
+                        if (response.ok) {
+                            const content = await response.json();
+                            console.log('Test API content:', content);
+                            console.log('Test API content length:', content.length);
+                            
+                            // Temporarily populate the view with this data
+                            this.selectedPostContent = content;
+                            alert(`Test API Success! Found ${content.length} content items. Check console for details.`);
+                        } else {
+                            const errorText = await response.text();
+                            console.error('Test API failed:', response.status, errorText);
+                            alert('Test API failed: ' + response.status);
+                        }
+                    } catch (error) {
+                        console.error('Test API error:', error);
+                        alert('Test API error: ' + error.message);
+                    }
+                },
+
+                async testApproval() {
+                    if (!this.selectedPost) {
+                        alert('No post selected');
+                        return;
+                    }
+                    
+                    try {
+                        console.log('Testing approval endpoint without authentication...');
+                        const response = await fetch(`/api/posts/${this.selectedPost.id}/test-approval`, {
+                            method: 'POST'
+                        });
+                        console.log('Test approval response status:', response.status);
+                        
+                        if (response.ok) {
+                            const result = await response.json();
+                            console.log('Test approval result:', result);
+                            alert(`Test Approval Success! Post status changed to: ${result.currentStatus}`);
+                            await this.loadPosts(); // Refresh the posts list
+                        } else {
+                            const errorText = await response.text();
+                            console.error('Test approval failed:', response.status, errorText);
+                            alert('Test approval failed: ' + response.status + '\n' + errorText);
+                        }
+                    } catch (error) {
+                        console.error('Test approval error:', error);
+                        alert('Test approval error: ' + error.message);
+                    }
+                },
+
+                async fixPostCreator() {
+                    if (!this.selectedPost) {
+                        alert('No post selected');
+                        return;
+                    }
+                    
+                    try {
+                        console.log('Fixing post creator...');
+                        const response = await fetch(`/api/posts/${this.selectedPost.id}/fix-creator`, {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': 'Bearer ' + this.token
+                            }
+                        });
+                        console.log('Fix creator response status:', response.status);
+                        
+                        if (response.ok) {
+                            const result = await response.json();
+                            console.log('Fix creator result:', result);
+                            alert(`Post creator fixed! Now assigned to user ID: ${result.createdBy}`);
+                            await this.loadPosts(); // Refresh the posts list
+                        } else {
+                            const errorText = await response.text();
+                            console.error('Fix creator failed:', response.status, errorText);
+                            alert('Fix creator failed: ' + response.status + '\n' + errorText);
+                        }
+                    } catch (error) {
+                        console.error('Fix creator error:', error);
+                        alert('Fix creator error: ' + error.message);
+                    }
+                },
+
+                filterPosts() {
+                    if (this.postFilter === 'all') {
+                        this.filteredPosts = this.posts;
+                    } else {
+                        this.filteredPosts = this.posts.filter(post => {
+                            const status = post.currentStatus.toLowerCase();
+                            if (this.postFilter === 'draft') {
+                                return status === 'draft';
+                            } else if (this.postFilter === 'pending_approval') {
+                                return status === 'pending_approval';
+                            } else if (this.postFilter === 'approved') {
+                                return status === 'approved';
+                            }
+                            return false;
+                        });
+                    }
+                    console.log(`Filtered posts for '${this.postFilter}':`, this.filteredPosts.length, 'out of', this.posts.length);
+                },
+
+                // Notification helper functions
+                showNotificationMessage(message, type = 'success') {
+                    this.notificationMessage = message;
+                    this.notificationType = type;
+                    this.showNotification = true;
+                    
+                    // Auto-hide after 4 seconds
+                    setTimeout(() => {
+                        this.hideNotification();
+                    }, 4000);
+                },
+
+                hideNotification() {
+                    this.showNotification = false;
+                },
+
+                init() {
+                    // Watch for postFilter changes
+                    this.$watch('postFilter', () => {
+                        this.filterPosts();
+                    });
                 }
             }
         }

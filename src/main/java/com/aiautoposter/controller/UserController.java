@@ -119,4 +119,14 @@ public class UserController {
         boolean exists = userService.existsByEmail(email);
         return new ResponseEntity<>(exists, HttpStatus.OK);
     }
+    
+    @GetMapping("/managers")
+    public ResponseEntity<List<User>> getManagers() {
+        try {
+            List<User> managers = userService.findManagersAndAdmins();
+            return new ResponseEntity<>(managers, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }

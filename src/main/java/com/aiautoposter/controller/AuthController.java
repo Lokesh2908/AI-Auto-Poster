@@ -43,9 +43,12 @@ public class AuthController {
         final UserDetails userDetails = userService.loadUserByUsername(loginRequest.getEmail());
         final String token = jwtTokenUtil.generateToken(userDetails);
         
+        // Get the actual User entity instead of UserDetails
+        User user = userService.findByEmail(loginRequest.getEmail()).orElse(null);
+        
         Map<String, Object> response = new HashMap<>();
         response.put("token", token);
-        response.put("user", userDetails);
+        response.put("user", user);
         
         return ResponseEntity.ok(response);
     }

@@ -27,13 +27,30 @@ public class NotificationService {
     private UserService userService;
     
     public Notification createNotification(Long postId, Long userId, Notification.NotificationType type, String message) {
-        Notification notification = new Notification(postId, userId, type, message);
-        Notification savedNotification = notificationRepository.save(notification);
-        
-        // Send email notification
-        sendEmailNotification(userId, type, message);
-        
-        return savedNotification;
+        try {
+            System.out.println("NotificationService - Creating notification for user ID: " + userId);
+            System.out.println("NotificationService - Post ID: " + postId + ", Type: " + type + ", Message: " + message);
+            
+            Notification notification = new Notification(postId, userId, type, message);
+            Notification savedNotification = notificationRepository.save(notification);
+            System.out.println("NotificationService - Saved notification with ID: " + savedNotification.getId());
+            
+            // Send email notification
+            try {
+                sendEmailNotification(userId, type, message);
+                System.out.println("NotificationService - Email notification sent successfully");
+            } catch (Exception e) {
+                System.err.println("NotificationService - Error sending email: " + e.getMessage());
+                // Continue without email
+            }
+            
+            return savedNotification;
+            
+        } catch (Exception e) {
+            System.err.println("NotificationService - Error creating notification: " + e.getMessage());
+            e.printStackTrace();
+            throw e;
+        }
     }
     
     public List<Notification> getUserNotifications(Long userId) {

@@ -31,26 +31,62 @@ public class ApprovalService {
     private NotificationService notificationService;
     
     public ApprovalRequest createApprovalRequest(Post post) {
-        // Find the manager of the post creator
-        User creator = userRepository.findById(post.getCreatedBy())
-                .orElseThrow(() -> new RuntimeException("Post creator not found"));
-        
-        if (creator.getManagerId() == null) {
-            throw new RuntimeException("Post creator has no manager assigned");
+        try {
+            System.out.println("ApprovalService - Creating approval request for post ID: " + post.getId());
+            System.out.println("ApprovalService - Post created by user ID: " + post.getCreatedBy());
+            
+            // Find the manager of the post creator
+            User creator = userRepository.findById(post.getCreatedBy())
+                    .orElseThrow(() -> new RuntimeException("Post creator not found"));
+            
+            System.out.println("ApprovalService - Found creator: " + creator.getEmail());
+            System.out.println("ApprovalService - Creator's manager ID: " + creator.getManagerId());
+            
+            if (creator.getManagerId() == null) {
+                // Handle users without managers (like admins)
+                if ("ADMIN".equals(creator.getRole().toString())) {
+                    System.out.println("ApprovalService - Admin user doesn't need approval, auto-approving post");
+                    // For admin users, we could auto-approve or skip approval
+                    throw new RuntimeException("Admin users don't require approval workflow");
+                } else {
+                    throw new RuntimeException("Post creator has no manager assigned");
+                }
+            }
+            
+            ApprovalRequest approvalRequest = new ApprovalRequest(post.getId(), creator.getManagerId());
+            System.out.println("ApprovalService - Created approval request object");
+            
+            ApprovalRequest savedRequest = approvalRequestRepository.save(approvalRequest);
+            System.out.println("ApprovalService - Saved approval request with ID: " + savedRequest.getId());
+            
+            // Send notification to manager
+            try {
+                Long managerId = creator.getManagerId();
+                if (managerId != null) {
+                    System.out.println("ApprovalService - Sending notification to manager ID: " + managerId);
+                    notificationService.createNotification(
+                        post.getId(),
+                        managerId,
+                        com.aiautoposter.entity.Notification.NotificationType.APPROVAL_REQUEST,
+                        String.format("New post '%s' requires your approval", post.getTitle())
+                    );
+                    System.out.println("ApprovalService - Notification sent to manager successfully");
+                } else {
+                    System.err.println("ApprovalService - Cannot send notification: Manager ID is null");
+                }
+            } catch (Exception e) {
+                System.err.println("ApprovalService - Error sending notification: " + e.getMessage());
+                e.printStackTrace();
+                // Continue without notification
+            }
+            
+            return savedRequest;
+            
+        } catch (Exception e) {
+            System.err.println("ApprovalService - Error creating approval request: " + e.getMessage());
+            e.printStackTrace();
+            throw e;
         }
-        
-        ApprovalRequest approvalRequest = new ApprovalRequest(post.getId(), creator.getManagerId());
-        ApprovalRequest savedRequest = approvalRequestRepository.save(approvalRequest);
-        
-        // Send notification to manager
-        notificationService.createNotification(
-            post.getId(),
-            creator.getManagerId(),
-            com.aiautoposter.entity.Notification.NotificationType.APPROVAL_REQUEST,
-            String.format("New post '%s' requires your approval", post.getTitle())
-        );
-        
-        return savedRequest;
     }
     
     public ApprovalRequest approvePost(Long postId) {
