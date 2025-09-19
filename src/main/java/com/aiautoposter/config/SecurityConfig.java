@@ -50,11 +50,13 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     public AuthenticationManager authenticationManagerBean() throws Exception {
         return super.authenticationManagerBean();
     }
-    
+
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.cors().and().csrf().disable()
             .authorizeRequests()
+                .antMatchers("/api/linkedin/callback").permitAll()
+                .antMatchers("/api/linkedin/callback/**").permitAll()
                 .antMatchers("/", "/index", "/dashboard").permitAll()
                 .antMatchers("/api/auth/**").permitAll()
                 // Auth endpoints are under /api/auth/**
@@ -66,7 +68,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             .exceptionHandling().authenticationEntryPoint(jwtAuthenticationEntryPoint)
             .and()
             .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
-        
+
         http.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
     }
     

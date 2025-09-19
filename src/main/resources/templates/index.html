@@ -874,6 +874,104 @@
     </div>
 
     <script>
+        // Add this to your SPA
+        function connectLinkedIn() {
+            const token = localStorage.getItem('token'); // Your JWT token
+
+            if (!token) {
+                alert('Please login first');
+                return;
+            }
+
+            // Get LinkedIn auth URL
+            fetch('/api/linkedin/auth-url', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.authUrl) {
+                    // Open LinkedIn auth in popup
+                    const popup = window.open(data.authUrl, 'linkedin-auth',
+                        'width=600,height=700,scrollbars=yes,resizable=yes');
+
+                    // Check for popup completion
+                    const checkClosed = setInterval(() => {
+                        if (popup.closed) {
+                            clearInterval(checkClosed);
+                            // Refresh LinkedIn status
+                            checkLinkedInStatus();
+                        }
+                    }, 1000);
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function checkLinkedInStatus() {
+            const token = localStorage.getItem('token');
+
+            fetch('/api/linkedin/status', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const button = document.getElementById('linkedin-connect-btn');
+                if (data.connected) {
+                    button.innerHTML = `✅ Connected as ${data.name}`;
+                    button.onclick = disconnectLinkedIn;
+                } else {
+                    button.innerHTML = '🔗 Connect LinkedIn';
+                    button.onclick = connectLinkedIn;
+                }
+            });
+        }
+
+        function disconnectLinkedIn() {
+            const token = localStorage.getItem('token');
+
+            fetch('/api/linkedin/disconnect', {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message || data.error);
+                checkLinkedInStatus();
+            });
+        }
+
+         function postOnLinkedIn() {
+            const token = localStorage.getItem('token');
+
+            fetch('/api/linkedin/publish-post/6', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message || data.error);
+                checkLinkedInStatus();
+            });
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', checkLinkedInStatus);
+
+
         function appData() {
             return {
                 isDark: false,

@@ -142,7 +142,7 @@ public class ScheduleService {
                 .orElseThrow(() -> new RuntimeException("Post not found"));
         
         // Publish to LinkedIn
-        boolean published = linkedInService.publishPost(post);
+        boolean published = false;// linkedInService.publishPost(post);
         
         if (published) {
             schedule.setStatus(Schedule.ScheduleStatus.PUBLISHED);

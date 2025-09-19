@@ -115,4 +115,8 @@ public class UserService implements UserDetailsService {
         authorities.add(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_" + role.name()));
         return authorities;
     }
+
+    public User findByUsername(String username) {
+        return userRepository.findByEmail(username).get();
+    }
 }

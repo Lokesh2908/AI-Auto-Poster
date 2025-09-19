@@ -60,7 +60,7 @@ linkedin:
   client:
     id: ${LINKEDIN_CLIENT_ID:your-linkedin-client-id}
     secret: ${LINKEDIN_CLIENT_SECRET:your-linkedin-client-secret}
-    redirect-uri: ${LINKEDIN_REDIRECT_URI:http://localhost:8080/auth/linkedin/callback}
+    redirect-uri: ${LINKEDIN_REDIRECT_URI:http://localhost:8080/api/linkedin/callback}
 
 logging:
   level:
