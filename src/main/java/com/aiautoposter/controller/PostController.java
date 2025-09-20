@@ -61,6 +61,30 @@ public class PostController {
         return new ResponseEntity<>(posts, HttpStatus.OK);
     }
     
+    @GetMapping("/manager/{managerId}")
+    public ResponseEntity<List<Post>> getPostsByManager(@PathVariable Long managerId) {
+        try {
+            System.out.println("=== GET POSTS BY MANAGER DEBUG ===");
+            System.out.println("Manager ID: " + managerId);
+            
+            List<Post> posts = postService.findPostsByManager(managerId);
+            System.out.println("Found " + posts.size() + " posts for manager " + managerId);
+            
+            for (Post post : posts) {
+                System.out.println("Post ID: " + post.getId() + 
+                                 ", Title: " + post.getTitle() + 
+                                 ", Created By: " + post.getCreatedBy() +
+                                 ", Status: " + post.getCurrentStatus());
+            }
+            
+            return new ResponseEntity<>(posts, HttpStatus.OK);
+        } catch (Exception e) {
+            System.err.println("Error getting posts by manager: " + e.getMessage());
+            e.printStackTrace();
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+    
     @GetMapping("/status/{status}")
     public ResponseEntity<List<Post>> getPostsByStatus(@PathVariable Post.PostStatus status) {
         List<Post> posts = postService.findByCurrentStatus(status);

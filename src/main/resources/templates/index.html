@@ -1264,20 +1264,58 @@
                     }
                 },
 
+                async loadAvailableManagers() {
+                    try {
+                        console.log('=== LOADING MANAGERS DEBUG ===');
+                        console.log('Making request to: /api/users/managers');
+                        
+                        const response = await fetch('/api/users/managers');
+                        console.log('Response status:', response.status);
+                        console.log('Response ok:', response.ok);
+                        
+                        if (response.ok) {
+                            this.availableManagers = await response.json();
+                            console.log('Available managers loaded:', this.availableManagers.length);
+                            console.log('Managers data:', this.availableManagers);
+                        } else {
+                            const errorText = await response.text();
+                            console.error('Failed to load managers. Status:', response.status);
+                            console.error('Error response:', errorText);
+                        }
+                    } catch (error) {
+                        console.error('Error loading managers:', error);
+                        console.error('Error details:', error.message);
+                    }
+                },
+
                 async loadApprovals() {
                     try {
+                        console.log('=== LOADING APPROVALS DEBUG ===');
+                        console.log('Current user:', this.user);
+                        console.log('User role:', this.user?.role);
+                        console.log('User ID:', this.user?.id);
+                        
                         // Only managers and admins can see approval requests
                         if (this.user && (this.user.role === 'MANAGER' || this.user.role === 'ADMIN')) {
+                            console.log('Making request to: /api/approvals/manager/' + this.user.id + '/pending');
+                            
                             const response = await fetch('/api/approvals/manager/' + this.user.id + '/pending', {
                                 headers: {
                                     'Authorization': 'Bearer ' + this.token
                                 }
                             });
+                            
+                            console.log('Response status:', response.status);
+                            console.log('Response ok:', response.ok);
+                            
                             if (response.ok) {
                                 this.pendingApprovals = await response.json();
                                 console.log('Pending approvals loaded for manager:', this.pendingApprovals.length);
+                                console.log('Approval requests data:', this.pendingApprovals);
                             } else {
-                                console.error('Failed to load pending approvals');
+                                const errorText = await response.text();
+                                console.error('Failed to load pending approvals. Status:', response.status);
+                                console.error('Error response:', errorText);
                             }
                         } else {
                             // Regular users don't see approval requests
@@ -1286,6 +1324,7 @@
                         }
                     } catch (error) {
                         console.error('Error loading approvals:', error);
+                        console.error('Error details:', error.message);
                     }
                 },
 
@@ -1474,6 +1513,9 @@
                         console.log('Post ID:', postId);
                         console.log('Token available:', this.token ? 'Yes' : 'No');
                         console.log('User:', this.user);
+                        console.log('User ID:', this.user?.id);
+                        console.log('User Role:', this.user?.role);
+                        console.log('User Manager ID:', this.user?.managerId);
                         
                         // Show loading state
                         this.isSubmittingApproval = true;

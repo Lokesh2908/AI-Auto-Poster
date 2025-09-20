@@ -86,8 +86,42 @@ public class PostService {
         return postRepository.findById(id);
     }
     
-    public List<Post> findByCreatedBy(Long createdBy) {
-        return postRepository.findByCreatedBy(createdBy);
+    public List<Post> findByCreatedBy(Long userId) {
+        return postRepository.findByCreatedBy(userId);
+    }
+    
+    public List<Post> findPostsByManager(Long managerId) {
+        try {
+            System.out.println("PostService - Finding posts for manager ID: " + managerId);
+            
+            // Find all users who report to this manager
+            List<User> teamMembers = userRepository.findByManagerId(managerId);
+            System.out.println("PostService - Found " + teamMembers.size() + " team members for manager " + managerId);
+            
+            List<Post> allPosts = new java.util.ArrayList<>();
+            
+            // Get posts from all team members
+            for (User teamMember : teamMembers) {
+                System.out.println("PostService - Getting posts for team member: " + teamMember.getEmail() + " (ID: " + teamMember.getId() + ")");
+                List<Post> memberPosts = postRepository.findByCreatedBy(teamMember.getId());
+                System.out.println("PostService - Found " + memberPosts.size() + " posts for " + teamMember.getEmail());
+                allPosts.addAll(memberPosts);
+            }
+            
+            // Also include manager's own posts
+            System.out.println("PostService - Getting manager's own posts");
+            List<Post> managerPosts = postRepository.findByCreatedBy(managerId);
+            System.out.println("PostService - Found " + managerPosts.size() + " posts for manager");
+            allPosts.addAll(managerPosts);
+            
+            System.out.println("PostService - Total posts for manager: " + allPosts.size());
+            return allPosts;
+            
+        } catch (Exception e) {
+            System.err.println("PostService - Error finding posts by manager: " + e.getMessage());
+            e.printStackTrace();
+            return new java.util.ArrayList<>();
+        }
     }
     
     public List<Post> findByCurrentStatus(Post.PostStatus status) {

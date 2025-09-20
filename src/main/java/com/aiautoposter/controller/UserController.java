@@ -123,10 +123,62 @@ public class UserController {
     @GetMapping("/managers")
     public ResponseEntity<List<User>> getManagers() {
         try {
+            System.out.println("=== GET MANAGERS DEBUG ===");
             List<User> managers = userService.findManagersAndAdmins();
+            System.out.println("Found " + managers.size() + " managers/admins");
+            for (User manager : managers) {
+                System.out.println("Manager: " + manager.getEmail() + " - " + manager.getRole() + " - Active: " + manager.getIsActive());
+            }
             return new ResponseEntity<>(managers, HttpStatus.OK);
         } catch (Exception e) {
+            System.err.println("Error getting managers: " + e.getMessage());
+            e.printStackTrace();
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+    
+    @GetMapping("/debug/hierarchy")
+    public ResponseEntity<String> debugUserHierarchy() {
+        try {
+            System.out.println("=== USER HIERARCHY DEBUG ===");
+            List<User> allUsers = userService.findAll();
+            StringBuilder debug = new StringBuilder();
+            debug.append("=== USER HIERARCHY DEBUG ===\n");
+            debug.append("Total users: ").append(allUsers.size()).append("\n\n");
+            
+            for (User user : allUsers) {
+                debug.append("User ID: ").append(user.getId())
+                     .append(", Email: ").append(user.getEmail())
+                     .append(", Role: ").append(user.getRole())
+                     .append(", Manager ID: ").append(user.getManagerId())
+                     .append(", Department: ").append(user.getDepartment())
+                     .append(", Active: ").append(user.getIsActive())
+                     .append("\n");
+                     
+                System.out.println("User: " + user.getEmail() + " - Role: " + user.getRole() + 
+                                 " - Manager ID: " + user.getManagerId() + " - Active: " + user.getIsActive());
+            }
+            
+            debug.append("\n=== MANAGER-USER RELATIONSHIPS ===\n");
+            for (User user : allUsers) {
+                if (user.getManagerId() != null) {
+                    User manager = userService.findById(user.getManagerId()).orElse(null);
+                    if (manager != null) {
+                        debug.append("User: ").append(user.getEmail())
+                             .append(" reports to Manager: ").append(manager.getEmail())
+                             .append(" (ID: ").append(manager.getId()).append(")\n");
+                    } else {
+                        debug.append("User: ").append(user.getEmail())
+                             .append(" has invalid manager ID: ").append(user.getManagerId()).append("\n");
+                    }
+                }
+            }
+            
+            return new ResponseEntity<>(debug.toString(), HttpStatus.OK);
+        } catch (Exception e) {
+            System.err.println("Error in debug hierarchy: " + e.getMessage());
+            e.printStackTrace();
+            return new ResponseEntity<>("Error: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }

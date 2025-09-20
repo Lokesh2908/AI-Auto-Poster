@@ -57,6 +57,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             .authorizeRequests()
                 .antMatchers("/", "/index", "/dashboard").permitAll()
                 .antMatchers("/api/auth/**").permitAll()
+                .antMatchers("/api/users/managers").permitAll() // Allow public access to managers list for registration
+                .antMatchers("/api/users/debug/**").permitAll() // Allow debug endpoints
                 .antMatchers("/api/posts/debug/**").permitAll()
                 .antMatchers("/api/posts/test/**").permitAll()
                 .antMatchers("/api/posts/*/test-approval").permitAll()
