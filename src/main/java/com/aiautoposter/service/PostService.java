@@ -61,12 +61,35 @@ public class PostService {
     }
     
     public Post updatePost(Post post) {
-        Post savedPost = postRepository.save(post);
+        System.out.println("=== UPDATE POST SERVICE ===");
+        System.out.println("Input post ID: " + post.getId());
+        System.out.println("Input post title: " + post.getTitle());
+        
+        // Find the existing post first
+        Post existingPost = postRepository.findById(post.getId())
+                .orElseThrow(() -> new RuntimeException("Post not found with ID: " + post.getId()));
+        
+        System.out.println("Found existing post ID: " + existingPost.getId());
+        System.out.println("Existing post createdBy: " + existingPost.getCreatedBy());
+        System.out.println("Existing post createdAt: " + existingPost.getCreatedAt());
+        
+        // Update only the fields that should change
+        existingPost.setTitle(post.getTitle());
+        existingPost.setSourceDiscussion(post.getSourceDiscussion());
+        existingPost.setTargetPlatforms(post.getTargetPlatforms());
+        existingPost.setUpdatedAt(LocalDateTime.now());
+        
+        // Save the updated existing post (this will update, not create new)
+        Post savedPost = postRepository.save(existingPost);
+        
+        System.out.println("Saved post ID: " + savedPost.getId());
+        System.out.println("Saved post createdBy: " + savedPost.getCreatedBy());
         
         // Delete existing AI content and regenerate
         deleteExistingPostContent(savedPost.getId());
         generateAIContent(savedPost);
         
+        System.out.println("=== END UPDATE POST SERVICE ===");
         return savedPost;
     }
     

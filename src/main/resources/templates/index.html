@@ -86,7 +86,7 @@
              x-transition:leave="transition ease-in duration-200"
              x-transition:leave-start="opacity-100 transform translate-y-0"
              x-transition:leave-end="opacity-0 transform translate-y-2"
-             class="fixed top-4 right-4 z-50 max-w-sm w-full">
+             class="fixed bottom-4 right-4 z-50 max-w-sm w-full">
             <div :class="{
                 'bg-green-500': notificationType === 'success',
                 'bg-red-500': notificationType === 'error', 
@@ -116,28 +116,35 @@
             </div>
         </div>
 
-        <!-- Loading Overlay -->
-        <div x-show="isCreatingPost || isSubmittingApproval" 
+        <!-- Global Loading Overlay for All Form Submissions -->
+        <div x-show="isCreatingPost || isSubmittingApproval || isLoading" 
              x-transition:enter="transition ease-out duration-300"
              x-transition:enter-start="opacity-0"
              x-transition:enter-end="opacity-100"
              x-transition:leave="transition ease-in duration-200"
              x-transition:leave-start="opacity-100"
              x-transition:leave-end="opacity-0"
-             class="fixed inset-0 z-40 bg-black bg-opacity-50 flex items-center justify-center">
+             class="fixed inset-0 z-[9999] bg-black bg-opacity-70 flex items-center justify-center">
             <div class="bg-white rounded-2xl p-8 max-w-sm mx-4 text-center shadow-2xl">
                 <div class="mb-4">
-                    <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
-                        <div class="loading-spinner"></div>
+                    <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-primary rounded-full mb-4 animate-pulse">
+                        <i class="fas fa-magic text-white text-2xl animate-spin"></i>
                     </div>
                 </div>
-                <h3 class="text-lg font-semibold text-gray-900 mb-2" x-text="isCreatingPost ? 'Creating Your Post...' : 'Submitting for Approval...'"></h3>
-                <p class="text-gray-600 text-sm" x-text="isCreatingPost ? 'AI is generating amazing content for you!' : 'Processing your approval request...'"></p>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2" x-text="loadingMessage"></h3>
+                <p class="text-gray-600 text-sm" x-text="
+                    currentOperation === 'creating' ? 'AI is creating amazing content for you!' :
+                    currentOperation === 'updating' ? 'AI is regenerating content based on your changes!' :
+                    currentOperation === 'login' ? 'Authenticating your credentials...' :
+                    currentOperation === 'register' ? 'Creating your account...' :
+                    currentOperation === 'approval' ? 'Processing your approval request...' :
+                    'Please wait while we process your request...'
+                "></p>
                 <div class="mt-4">
                     <div class="flex items-center justify-center space-x-1">
-                        <div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style="animation-delay: 0ms;"></div>
-                        <div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style="animation-delay: 150ms;"></div>
-                        <div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style="animation-delay: 300ms;"></div>
+                        <div class="w-3 h-3 bg-gradient-primary rounded-full animate-bounce" style="animation-delay: 0ms;"></div>
+                        <div class="w-3 h-3 bg-gradient-primary rounded-full animate-bounce" style="animation-delay: 150ms;"></div>
+                        <div class="w-3 h-3 bg-gradient-primary rounded-full animate-bounce" style="animation-delay: 300ms;"></div>
                     </div>
                 </div>
             </div>
@@ -304,6 +311,25 @@
                                 <div class="absolute -top-4 -right-4 w-24 h-24 bg-white/10 rounded-full"></div>
                             </div>
 
+                            <div class="card card-glow bg-gradient-to-br from-teal-500 to-cyan-600 p-8 rounded-3xl text-white relative overflow-hidden">
+                                <div class="relative z-10">
+                                    <div class="flex items-center justify-between mb-4">
+                                        <div class="p-3 bg-white/20 rounded-2xl">
+                                            <i class="fas fa-thumbs-up text-2xl"></i>
+                                        </div>
+                                        <div class="text-right">
+                                            <p class="text-teal-100 text-sm font-medium">Approved</p>
+                                            <p class="stat-count text-4xl font-black" x-text="stats.approvedPosts || 0"></p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center text-teal-100">
+                                        <i class="fas fa-check text-green-300 mr-1"></i>
+                                        <span class="text-sm">Ready to publish</span>
+                                    </div>
+                                </div>
+                                <div class="absolute -top-4 -right-4 w-24 h-24 bg-white/10 rounded-full"></div>
+                            </div>
+
                             <div class="card card-glow bg-gradient-to-br from-green-500 to-emerald-600 p-8 rounded-3xl text-white relative overflow-hidden">
                                 <div class="relative z-10">
                                     <div class="flex items-center justify-between mb-4">
@@ -387,7 +413,7 @@
                                 <h3 class="text-lg font-medium text-gray-900">Recent Posts</h3>
                             </div>
                             <div class="p-6">
-                                <div class="space-y-4">
+                                <div class="space-y-4 max-h-64 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
                                     <template x-for="post in recentPosts" :key="post.id">
                                         <div class="card flex items-center justify-between p-4 border border-gray-200 rounded-lg">
                                             <div>
@@ -415,6 +441,9 @@
                             </div>
                             <button @click="showCreatePost = true" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
                                 Create New Post
+                            </button>
+                            <button @click="debugApprovalFields()" class="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600 ml-2">
+                                🔍 Debug Approval Data
                             </button>
                         </div>
 
@@ -444,7 +473,7 @@
                                 </div>
                             </div>
                             <div class="p-6">
-                                <div class="space-y-4">
+                                <div class="space-y-4 max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
                                     <template x-for="post in filteredPosts" :key="post.id">
                                         <div class="card border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                                             <div class="flex justify-between items-start">
@@ -457,17 +486,94 @@
                                                               x-text="post.currentStatus"></span>
                                                         <span class="text-sm text-gray-500" x-text="formatDate(post.createdAt)"></span>
                                                     </div>
+                                                    
+                                                    <!-- Approval Information (only for approved posts) -->
+                                                    <template x-if="post.currentStatus === 'APPROVED' && post.approvedBy">
+                                                        <div class="mt-2 p-2 bg-green-50 rounded-lg border border-green-200">
+                                                            <div class="flex items-center text-xs text-green-700">
+                                                                <i class="fas fa-check-circle mr-1"></i>
+                                                                <span>Approved by: <strong x-text="post.approvedByEmail || post.approvedBy"></strong></span>
+                                                            </div>
+                                                            <div class="text-xs text-green-600 mt-1" x-text="'Approved on: ' + formatDate(post.approvedAt)"></div>
+                                                            <template x-if="post.approvalFeedback">
+                                                                <div class="text-xs text-green-600 mt-1">
+                                                                    <span class="font-medium">Comment: </span>
+                                                                    <span x-text="post.approvalFeedback"></span>
+                                                                </div>
+                                                            </template>
+                                                        </div>
+                                                    </template>
+                                                    
+                                                    <!-- Rejection Information (only for rejected posts) -->
+                                                    <template x-if="post.currentStatus === 'REJECTED' && post.rejectedBy">
+                                                        <div class="mt-2 p-2 bg-red-50 rounded-lg border border-red-200">
+                                                            <div class="flex items-center text-xs text-red-700">
+                                                                <i class="fas fa-times-circle mr-1"></i>
+                                                                <span>Rejected by: <strong x-text="post.rejectedByEmail || post.rejectedBy"></strong></span>
+                                                            </div>
+                                                            <div class="text-xs text-red-600 mt-1" x-text="'Rejected on: ' + formatDate(post.rejectedAt)"></div>
+                                                            <template x-if="post.rejectionFeedback">
+                                                                <div class="text-xs text-red-600 mt-1">
+                                                                    <span class="font-medium">Feedback: </span>
+                                                                    <span x-text="post.rejectionFeedback"></span>
+                                                                </div>
+                                                            </template>
+                                                            <div class="text-xs text-blue-600 mt-2 flex items-center">
+                                                                <i class="fas fa-info-circle mr-1"></i>
+                                                                <span>You can edit this post and resubmit it for approval</span>
+                                                            </div>
+                                                        </div>
+                                                    </template>
+                                                    
+                                                    <!-- Pending Approval Information -->
+                                                    <template x-if="post.currentStatus === 'PENDING_APPROVAL'">
+                                                        <div class="mt-2 p-2 bg-orange-50 rounded-lg border border-orange-200">
+                                                            <div class="flex items-center text-xs text-orange-700">
+                                                                <i class="fas fa-clock mr-1"></i>
+                                                                <span>Submitted for approval</span>
+                                                            </div>
+                                                            <div class="text-xs text-orange-600 mt-1" x-text="'Submitted on: ' + formatDate(post.createdAt)"></div>
+                                                            <template x-if="post.assignedManager">
+                                                                <div class="text-xs text-orange-600 mt-1">
+                                                                    <span class="font-medium">Assigned to: </span>
+                                                                    <span x-text="post.assignedManager"></span>
+                                                                </div>
+                                                            </template>
+                                                        </div>
+                                                    </template>
                                                 </div>
                                                 <div class="flex space-x-2">
-                                                    <button @click="viewPost(post)" class="text-blue-600 hover:text-blue-800 dark:text-blue-400">
-                                                        <i class="fas fa-eye"></i>
+                                                    <!-- View Button -->
+                                                    <button @click="viewPost(post)" 
+                                                            class="text-blue-600 hover:text-blue-800 p-2 rounded-lg hover:bg-blue-50 transition-all duration-200 group" 
+                                                            title="View Post Details">
+                                                        <i class="fas fa-eye text-lg group-hover:scale-110 transition-transform duration-200"></i>
                                                     </button>
-                                                    <button @click="editPost(post)" class="text-green-600 hover:text-green-800 dark:text-green-400">
-                                                        <i class="fas fa-edit"></i>
-                                                    </button>
+                                                    
+                                                    <!-- Edit Button (only for non-approved posts) -->
+                                                    <template x-if="post.currentStatus !== 'APPROVED' && post.currentStatus !== 'PUBLISHED'">
+                                                        <button @click="editPost(post)" 
+                                                                class="text-green-600 hover:text-green-800 p-2 rounded-lg hover:bg-green-50 transition-all duration-200 group" 
+                                                                title="Edit Post">
+                                                            <i class="fas fa-edit text-lg group-hover:scale-110 transition-transform duration-200"></i>
+                                                        </button>
+                                                    </template>
+                                                    
+                                                    <!-- Submit for Approval Button (only for drafts) -->
                                                     <template x-if="post.currentStatus === 'DRAFT'">
-                                                        <button @click="submitForApproval(post.id)" class="text-yellow-600 hover:text-yellow-800 dark:text-yellow-400">
-                                                            <i class="fas fa-paper-plane"></i>
+                                                        <button @click="submitForApproval(post.id)" 
+                                                                class="text-orange-600 hover:text-orange-800 p-2 rounded-lg hover:bg-orange-50 transition-all duration-200 group" 
+                                                                title="Submit for Approval">
+                                                            <i class="fas fa-paper-plane text-lg group-hover:scale-110 transition-transform duration-200"></i>
+                                                        </button>
+                                                    </template>
+                                                    
+                                                    <!-- Edit & Resubmit Button (only for rejected posts) -->
+                                                    <template x-if="post.currentStatus === 'REJECTED'">
+                                                        <button @click="editAndResubmitPost(post)" 
+                                                                class="text-blue-600 hover:text-blue-800 p-2 rounded-lg hover:bg-blue-50 transition-all duration-200 group" 
+                                                                title="Edit & Resubmit for Approval">
+                                                            <i class="fas fa-redo text-lg group-hover:scale-110 transition-transform duration-200"></i>
                                                         </button>
                                                     </template>
                                                 </div>
@@ -488,28 +594,32 @@
 
                         <div class="bg-white rounded-lg shadow">
                             <div class="p-6">
-                                <div class="space-y-4">
+                                <div class="space-y-4 max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
                                     <template x-for="approval in pendingApprovals" :key="approval.id">
-                                        <div class="border border-gray-200 rounded-lg p-4">
+                                        <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                                             <div class="flex justify-between items-start">
                                                 <div class="flex-1">
-                                                    <h3 class="text-lg font-medium text-gray-900" x-text="approval.post.title"></h3>
-                                                    <p class="text-sm text-gray-500 mt-1" x-text="approval.post.sourceDiscussion"></p>
+                                                    <h3 class="text-lg font-medium text-gray-900" x-text="approval.post?.title || 'Untitled Post'"></h3>
+                                                    <p class="text-sm text-gray-500 mt-1" x-text="approval.post?.sourceDiscussion || 'No description'"></p>
                                                     <div class="flex items-center mt-2 space-x-4">
                                                         <span class="text-sm text-gray-500">Requested: <span x-text="formatDate(approval.createdAt)"></span></span>
+                                                        <span class="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded-full" x-text="approval.post?.targetPlatforms || 'linkedin'"></span>
                                                     </div>
                                                 </div>
                                                 <div class="flex space-x-2">
-                                                    <button @click="approvePost(approval.post.id)" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
-                                                        Approve
-                                                    </button>
-                                                    <button @click="showRejectModal(approval)" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
-                                                        Reject
+                                                    <button @click="viewApprovalContent(approval)" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors flex items-center">
+                                                        <i class="fas fa-eye mr-2"></i>
+                                                        View Content
                                                     </button>
                                                 </div>
                                             </div>
                                         </div>
                                     </template>
+                                    
+                                    <div x-show="pendingApprovals.length === 0" class="text-center py-8">
+                                        <i class="fas fa-check-circle text-gray-300 text-4xl mb-4"></i>
+                                        <p class="text-gray-500">No pending approval requests</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -571,6 +681,39 @@
                                                 <div class="flex-1">
                                                     <h3 class="text-lg font-medium text-gray-900" x-text="notification.type"></h3>
                                                     <p class="text-sm text-gray-500 mt-1" x-text="notification.message"></p>
+                                                    
+                                                    <!-- Enhanced information for rejection notifications -->
+                                                    <template x-if="notification.type === 'REJECTION' && (notification.rejectedBy || notification.rejectedByEmail)">
+                                                        <div class="mt-2 p-2 bg-red-50 rounded-lg border border-red-200">
+                                                            <div class="flex items-center text-xs text-red-700">
+                                                                <i class="fas fa-user-times mr-1"></i>
+                                                                <span>Rejected by: <strong x-text="notification.rejectedByEmail || notification.rejectedBy"></strong></span>
+                                                            </div>
+                                                            <template x-if="notification.rejectionFeedback">
+                                                                <div class="text-xs text-red-600 mt-1">
+                                                                    <span class="font-medium">Feedback: </span>
+                                                                    <span x-text="notification.rejectionFeedback"></span>
+                                                                </div>
+                                                            </template>
+                                                        </div>
+                                                    </template>
+                                                    
+                                                    <!-- Enhanced information for approval notifications -->
+                                                    <template x-if="notification.type === 'APPROVAL' && (notification.approvedBy || notification.approvedByEmail)">
+                                                        <div class="mt-2 p-2 bg-green-50 rounded-lg border border-green-200">
+                                                            <div class="flex items-center text-xs text-green-700">
+                                                                <i class="fas fa-user-check mr-1"></i>
+                                                                <span>Approved by: <strong x-text="notification.approvedByEmail || notification.approvedBy"></strong></span>
+                                                            </div>
+                                                            <template x-if="notification.approvalFeedback">
+                                                                <div class="text-xs text-green-600 mt-1">
+                                                                    <span class="font-medium">Comment: </span>
+                                                                    <span x-text="notification.approvalFeedback"></span>
+                                                                </div>
+                                                            </template>
+                                                        </div>
+                                                    </template>
+                                                    
                                                     <div class="flex items-center mt-2 space-x-4">
                                                         <span class="text-sm text-gray-500" x-text="formatDate(notification.createdAt)"></span>
                                                         <span x-if="!notification.readStatus" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
@@ -877,6 +1020,82 @@
                                 <div class="w-full px-4 py-3 border border-gray-200 bg-gray-50 text-gray-900 rounded-xl shadow-sm" x-text="formatDateTime(selectedPost.createdAt)"></div>
                             </div>
                             
+                            <!-- Approval/Rejection Information Section -->
+                            <template x-if="selectedPost.currentStatus === 'APPROVED' && selectedPost.approvedBy">
+                                <div class="p-4 bg-green-50 rounded-xl border border-green-200">
+                                    <label class="block text-sm font-semibold text-green-700 mb-3 flex items-center">
+                                        <i class="fas fa-check-circle text-green-600 mr-2"></i>
+                                        Approval Information
+                                    </label>
+                                    <div class="space-y-2">
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-sm text-green-700 font-medium">Approved by:</span>
+                                            <span class="text-sm text-green-800 font-semibold" x-text="selectedPost.approvedByEmail || selectedPost.approvedBy"></span>
+                                        </div>
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-sm text-green-700 font-medium">Approved on:</span>
+                                            <span class="text-sm text-green-800" x-text="formatDateTime(selectedPost.approvedAt)"></span>
+                                        </div>
+                                        <template x-if="selectedPost.approvalFeedback">
+                                            <div class="mt-3 p-3 bg-green-100 rounded-lg">
+                                                <span class="text-sm text-green-700 font-medium">Manager's Comment:</span>
+                                                <p class="text-sm text-green-800 mt-1" x-text="selectedPost.approvalFeedback"></p>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+                            </template>
+                            
+                            <template x-if="selectedPost.currentStatus === 'REJECTED' && selectedPost.rejectedBy">
+                                <div class="p-4 bg-red-50 rounded-xl border border-red-200">
+                                    <label class="block text-sm font-semibold text-red-700 mb-3 flex items-center">
+                                        <i class="fas fa-times-circle text-red-600 mr-2"></i>
+                                        Rejection Information
+                                    </label>
+                                    <div class="space-y-2">
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-sm text-red-700 font-medium">Rejected by:</span>
+                                            <span class="text-sm text-red-800 font-semibold" x-text="selectedPost.rejectedByEmail || selectedPost.rejectedBy"></span>
+                                        </div>
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-sm text-red-700 font-medium">Rejected on:</span>
+                                            <span class="text-sm text-red-800" x-text="formatDateTime(selectedPost.rejectedAt)"></span>
+                                        </div>
+                                        <template x-if="selectedPost.rejectionFeedback">
+                                            <div class="mt-3 p-3 bg-red-100 rounded-lg">
+                                                <span class="text-sm text-red-700 font-medium">Manager's Feedback:</span>
+                                                <p class="text-sm text-red-800 mt-1" x-text="selectedPost.rejectionFeedback"></p>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+                            </template>
+                            
+                            <template x-if="selectedPost.currentStatus === 'PENDING_APPROVAL'">
+                                <div class="p-4 bg-orange-50 rounded-xl border border-orange-200">
+                                    <label class="block text-sm font-semibold text-orange-700 mb-3 flex items-center">
+                                        <i class="fas fa-clock text-orange-600 mr-2"></i>
+                                        Approval Status
+                                    </label>
+                                    <div class="space-y-2">
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-sm text-orange-700 font-medium">Status:</span>
+                                            <span class="text-sm text-orange-800 font-semibold">Awaiting Manager Review</span>
+                                        </div>
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-sm text-orange-700 font-medium">Submitted on:</span>
+                                            <span class="text-sm text-orange-800" x-text="formatDateTime(selectedPost.createdAt)"></span>
+                                        </div>
+                                        <template x-if="selectedPost.assignedManager">
+                                            <div class="flex items-center justify-between">
+                                                <span class="text-sm text-orange-700 font-medium">Assigned to:</span>
+                                                <span class="text-sm text-orange-800 font-semibold" x-text="selectedPost.assignedManager"></span>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+                            </template>
+                            
                             <!-- AI Generated Content Section -->
                             <div x-show="selectedPostContent.length > 0">
                                 <label class="block text-sm font-semibold text-gray-700 mb-4 flex items-center">
@@ -942,11 +1161,21 @@
                             <i class="fas fa-times"></i>
                             <span>Close</span>
                         </button>
-                        <template x-if="selectedPost && selectedPost.currentStatus === 'DRAFT'">
+                        <!-- Edit button for drafts and pending posts -->
+                        <template x-if="selectedPost && (selectedPost.currentStatus === 'DRAFT' || selectedPost.currentStatus === 'PENDING_APPROVAL')">
                             <button @click="editPost(selectedPost); showViewPost = false" 
                                     class="btn-primary px-6 py-3 text-sm font-semibold text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center space-x-2">
                                 <i class="fas fa-edit"></i>
                                 <span>Edit Post</span>
+                            </button>
+                        </template>
+                        
+                        <!-- Edit & Resubmit button for rejected posts -->
+                        <template x-if="selectedPost && selectedPost.currentStatus === 'REJECTED'">
+                            <button @click="editAndResubmitPost(selectedPost); showViewPost = false" 
+                                    class="bg-gradient-to-r from-blue-500 to-purple-600 px-6 py-3 text-sm font-semibold text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center space-x-2 hover:from-blue-600 hover:to-purple-700">
+                                <i class="fas fa-redo"></i>
+                                <span>Edit & Resubmit</span>
                             </button>
                         </template>
                     </div>
@@ -1060,6 +1289,102 @@
                             </button>
                         </div>
                     </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Approval Content Modal -->
+        <div x-show="showApprovalModal" class="fixed inset-0 modal-backdrop overflow-y-auto h-full w-full z-50" style="display: none;">
+            <div class="relative top-10 mx-auto p-8 border border-white/20 max-w-2xl shadow-2xl rounded-3xl modal-content">
+                <div class="relative">
+                    <!-- Modal Header -->
+                    <div class="text-center mb-8">
+                        <div class="w-16 h-16 bg-gradient-warning rounded-2xl flex items-center justify-center mx-auto mb-4 animate-float">
+                            <i class="fas fa-clipboard-check text-white text-2xl"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gradient mb-2">Review Approval Request</h3>
+                        <p class="text-gray-600">Review the content and decide on approval</p>
+                    </div>
+                    
+                    <!-- Post Details -->
+                    <div class="space-y-6">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                <i class="fas fa-heading text-blue-500 mr-2"></i>
+                                Post Title
+                            </label>
+                            <div class="p-3 bg-gray-50 rounded-xl border border-gray-200">
+                                <p class="text-gray-900 font-medium" x-text="selectedApproval?.post?.title || 'No title'"></p>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                <i class="fas fa-comments text-green-500 mr-2"></i>
+                                Source Discussion
+                            </label>
+                            <div class="p-3 bg-gray-50 rounded-xl border border-gray-200">
+                                <p class="text-gray-700 whitespace-pre-wrap" x-text="selectedApproval?.post?.sourceDiscussion || 'No description'"></p>
+                            </div>
+                        </div>
+
+                        <!-- AI Generated Content -->
+                        <div x-show="selectedApprovalContent.length > 0" class="mt-6">
+                            <label class="block text-sm font-semibold text-gray-700 mb-4 flex items-center">
+                                <i class="fas fa-robot text-purple-500 mr-2"></i>
+                                AI Generated Content
+                            </label>
+                            <template x-for="content in selectedApprovalContent" :key="content.id">
+                                <div class="mb-4 p-4 border border-purple-200 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl shadow-sm">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                            <i class="fab fa-linkedin mr-1"></i>
+                                            <span x-text="content.platform || 'LinkedIn'"></span>
+                                        </span>
+                                        <span class="text-xs text-gray-500" x-text="formatDateTime(content.createdAt)"></span>
+                                    </div>
+                                    <div class="prose prose-sm max-w-none">
+                                        <div class="whitespace-pre-wrap text-gray-800 leading-relaxed" x-text="content.content"></div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+
+                        <!-- Comments Section -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                <i class="fas fa-comment-alt text-orange-500 mr-2"></i>
+                                Comments/Feedback (Optional)
+                            </label>
+                            <textarea x-model="approvalFeedback" rows="3" 
+                                      placeholder="Add any comments or feedback for the user..."
+                                      class="input-glow w-full px-4 py-3 border border-gray-200 bg-white/80 backdrop-blur-sm text-gray-900 rounded-xl shadow-sm focus:outline-none transition-all duration-300 resize-none"></textarea>
+                            <p class="text-xs text-gray-500 mt-1">This feedback will be sent to the user who created the post</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="flex justify-between space-x-4 mt-8 pt-6 border-t border-gray-100">
+                        <button type="button" @click="showApprovalModal = false; selectedApproval = null; approvalFeedback = ''" 
+                                class="px-6 py-3 text-sm font-semibold text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition-all duration-300 flex items-center space-x-2">
+                            <i class="fas fa-times"></i>
+                            <span>Cancel</span>
+                        </button>
+                        
+                        <div class="flex space-x-3">
+                            <button @click="rejectApproval(selectedApproval?.post?.id, approvalFeedback)" 
+                                    class="px-6 py-3 text-sm font-semibold text-white bg-red-500 rounded-xl hover:bg-red-600 transition-all duration-300 flex items-center space-x-2">
+                                <i class="fas fa-times-circle"></i>
+                                <span>Reject</span>
+                            </button>
+                            
+                            <button @click="approveApproval(selectedApproval?.post?.id)" 
+                                    class="px-6 py-3 text-sm font-semibold text-white bg-green-500 rounded-xl hover:bg-green-600 transition-all duration-300 flex items-center space-x-2">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Approve</span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1179,6 +1504,7 @@
                 showRejectModal: false,
                 showViewPost: false,
                 showEditPost: false,
+                showApprovalModal: false,
                 stats: {
                     totalPosts: 0,
                     pendingApprovals: 0,
@@ -1193,6 +1519,10 @@
                 // UI State Management
                 isCreatingPost: false,
                 isSubmittingApproval: false,
+                isResubmitting: false, // Flag to track if we're in resubmit workflow
+                isLoading: false, // Global loading state for all forms
+                currentOperation: 'creating', // 'creating', 'updating', 'login', 'register'
+                loadingMessage: 'Processing...', // Dynamic loading message
                 showNotification: false,
                 notificationMessage: '',
                 notificationType: 'success', // success, error, info
@@ -1222,16 +1552,25 @@
                 selectedPost: null,
                 selectedPostContent: [],
                 selectedApproval: null,
+                selectedApprovalContent: [],
+                approvalFeedback: '',
                 rejectFeedback: '',
 
                 init() {
                     document.documentElement.classList.remove('dark');
-                    if (this.token) {
+                    
+                    // Check for token in localStorage first
+                    const storedToken = localStorage.getItem('token');
+                    if (storedToken) {
+                        this.token = storedToken;
+                        console.log('Found stored token, validating...');
                         this.validateToken();
                     } else {
-                        // Show login modal if no token
+                        console.log('No stored token found, showing login');
+                        // Only show login modal if no token exists
                         this.showLogin = true;
                     }
+                    
                     this.animateIn();
                 },
 
@@ -1285,29 +1624,44 @@
 
                 async validateToken() {
                     try {
+                        console.log('Validating token...');
                         const response = await fetch('/api/auth/validate', {
                             headers: {
                                 'Authorization': 'Bearer ' + this.token
                             }
                         });
+                        
                         if (response.ok) {
                             const data = await response.json();
-                            console.log('Token validation response:', data);
-                            console.log('User from validation:', data.user);
+                            console.log('Token validation successful:', data);
                             
                             this.isAuthenticated = true;
                             this.user = data.user;
-                            this.loadData();
+                            this.showLogin = false; // Hide login modal
                             
-                            console.log('User after validation:', this.user);
+                            // Load all data after successful validation
+                            await this.loadData();
+                            
+                            console.log('User authenticated:', this.user?.email);
+                            this.showNotificationMessage(`Welcome back, ${this.user?.email}!`, 'success');
                         } else {
-                            console.error('Token validation failed');
-                            this.logout();
+                            console.error('Token validation failed - Status:', response.status);
+                            this.handleInvalidToken();
                         }
                     } catch (error) {
-                        console.error('Token validation failed:', error);
-                        this.logout();
+                        console.error('Token validation error:', error);
+                        this.handleInvalidToken();
                     }
+                },
+
+                handleInvalidToken() {
+                    console.log('Handling invalid token - clearing auth state');
+                    this.isAuthenticated = false;
+                    this.user = null;
+                    this.token = null;
+                    localStorage.removeItem('token');
+                    this.showLogin = true;
+                    this.showNotificationMessage('Session expired. Please login again.', 'info');
                 },
 
                 async loadUserData() {
@@ -1345,15 +1699,40 @@
                             }
                         }
                         
+                        console.log('Making request to:', url);
                         const response = await fetch(url, {
                             headers: {
                                 'Authorization': 'Bearer ' + this.token
                             }
                         });
+                        
+                        console.log('Response status:', response.status);
+                        console.log('Response ok:', response.ok);
+                        
                         if (response.ok) {
                             this.posts = await response.json();
-                            this.filterPosts(); // Apply current filter
                             console.log(`Posts loaded for ${this.user?.role || 'unknown'} user:`, this.posts.length);
+                            console.log('All posts with details:', this.posts.map(p => ({ 
+                                id: p.id, 
+                                title: p.title, 
+                                status: p.currentStatus,
+                                createdBy: p.createdBy,
+                                createdAt: p.createdAt,
+                                // Debug approval fields
+                                approvedBy: p.approvedBy,
+                                approvedByEmail: p.approvedByEmail,
+                                approvedAt: p.approvedAt,
+                                rejectedBy: p.rejectedBy,
+                                rejectedByEmail: p.rejectedByEmail,
+                                rejectedAt: p.rejectedAt
+                            })));
+                            this.filterPosts(); // Apply current filter
+                            console.log(`Filtered posts (${this.postFilter}):`, this.filteredPosts.length);
+                            console.log('Filtered posts details:', this.filteredPosts.map(p => ({ 
+                                id: p.id, 
+                                title: p.title, 
+                                status: p.currentStatus 
+                            })));
                         } else {
                             console.error('Failed to load posts');
                         }
@@ -1395,9 +1774,18 @@
                         
                         // Only managers and admins can see approval requests
                         if (this.user && (this.user.role === 'MANAGER' || this.user.role === 'ADMIN')) {
-                            console.log('Making request to: /api/approvals/manager/' + this.user.id + '/pending');
+                            let url;
+                            if (this.user.role === 'ADMIN') {
+                                // Admins see all approval requests
+                                url = '/api/approvals';
+                                console.log('Making request to: ' + url + ' (Admin - all approvals)');
+                            } else {
+                                // Managers see only their team's approval requests
+                                url = '/api/approvals/manager/' + this.user.id + '/pending';
+                                console.log('Making request to: ' + url + ' (Manager - team approvals)');
+                            }
                             
-                            const response = await fetch('/api/approvals/manager/' + this.user.id + '/pending', {
+                            const response = await fetch(url, {
                                 headers: {
                                     'Authorization': 'Bearer ' + this.token
                                 }
@@ -1474,6 +1862,7 @@
                         if (postsRes.ok) {
                             const posts = await postsRes.json();
                             this.stats.totalPosts = posts.length;
+                            this.stats.approvedPosts = posts.filter(p => p.currentStatus === 'APPROVED').length;
                             this.stats.publishedPosts = posts.filter(p => p.currentStatus === 'PUBLISHED').length;
                         }
 
@@ -1487,6 +1876,11 @@
 
                 async login() {
                     try {
+                        // Show global loading
+                        this.currentOperation = 'login';
+                        this.loadingMessage = 'Logging in...';
+                        this.isLoading = true;
+                        
                         const response = await fetch('/api/auth/login', {
                             method: 'POST',
                             headers: {
@@ -1497,31 +1891,47 @@
 
                         if (response.ok) {
                             const data = await response.json();
-                            console.log('Login response data:', data);
-                            console.log('User data:', data.user);
+                            console.log('Login successful:', data);
                             
+                            // Set authentication state
                             this.token = data.token;
                             this.user = data.user;
                             this.isAuthenticated = true;
+                            
+                            // Store token in localStorage for persistence
                             localStorage.setItem('token', this.token);
+                            
+                            // Hide login modal and reset form
                             this.showLogin = false;
                             this.loginForm = { email: '', password: '' };
-                            this.loadData();
                             
-                            console.log('User after login:', this.user);
+                            // Load all data
+                            await this.loadData();
+                            
+                            // Show success notification
+                            this.showNotificationMessage(`Welcome, ${this.user?.email}!`, 'success');
+                            console.log('Login complete for user:', this.user?.email);
                         } else {
                             const errorText = await response.text();
                             console.error('Login failed:', errorText);
-                            alert('Login failed: ' + errorText);
+                            this.showNotificationMessage('Invalid user', 'error');
                         }
                     } catch (error) {
                         console.error('Login error:', error);
-                        alert('Login failed');
+                        this.showNotificationMessage('Login failed', 'error');
+                    } finally {
+                        // Hide global loading
+                        this.isLoading = false;
                     }
                 },
 
                 async register() {
                     try {
+                        // Show global loading
+                        this.currentOperation = 'register';
+                        this.loadingMessage = 'Creating Account...';
+                        this.isLoading = true;
+                        
                         const response = await fetch('/api/auth/register', {
                             method: 'POST',
                             headers: {
@@ -1542,6 +1952,9 @@
                     } catch (error) {
                         console.error('Registration error:', error);
                         this.showNotificationMessage('Registration failed', 'error');
+                    } finally {
+                        // Hide global loading
+                        this.isLoading = false;
                     }
                 },
 
@@ -1549,22 +1962,20 @@
                     try {
                         // Validation
                         if (!this.token) {
-                            this.showNotificationMessage('Please log in to create a post', 'error');
+                            this.showNotificationMessage('Please login first', 'error');
                             return;
                         }
-
-                        if (!this.user || !this.user.id) {
-                            this.showNotificationMessage('User data not loaded. Please refresh and try again.', 'error');
-                            return;
-                        }
-
+                        
                         if (!this.postForm.title || !this.postForm.sourceDiscussion) {
                             this.showNotificationMessage('Please fill in all required fields', 'error');
                             return;
                         }
-
-                        // Show loading state
+                        
+                        // Show loading state and notification
+                        this.currentOperation = 'creating';
+                        this.loadingMessage = 'Generating Post...';
                         this.isCreatingPost = true;
+                        this.showNotificationMessage('Generating Post...', 'info');
 
                         const response = await fetch('/api/posts', {
                             method: 'POST',
@@ -1616,6 +2027,8 @@
                         console.log('User Manager ID:', this.user?.managerId);
                         
                         // Show loading state
+                        this.currentOperation = 'approval';
+                        this.loadingMessage = 'Submitting for Approval...';
                         this.isSubmittingApproval = true;
                         
                         const response = await fetch(`/api/posts/${postId}/submit-approval`, {
@@ -1745,15 +2158,135 @@
                     }
                 },
 
+                // Approval Functions
+                async viewApprovalContent(approval) {
+                    try {
+                        this.selectedApproval = approval;
+                        this.approvalFeedback = '';
+                        
+                        // Load the AI-generated content for this post
+                        if (approval.post?.id) {
+                            await this.loadApprovalContent(approval.post.id);
+                        }
+                        
+                        this.showApprovalModal = true;
+                    } catch (error) {
+                        console.error('Error viewing approval content:', error);
+                        this.showNotificationMessage('Failed to load approval content', 'error');
+                    }
+                },
+
+                async loadApprovalContent(postId) {
+                    try {
+                        const response = await fetch(`/api/posts/${postId}/content`, {
+                            headers: {
+                                'Authorization': 'Bearer ' + this.token
+                            }
+                        });
+                        
+                        if (response.ok) {
+                            this.selectedApprovalContent = await response.json();
+                        } else {
+                            console.error('Failed to load approval content');
+                            this.selectedApprovalContent = [];
+                        }
+                    } catch (error) {
+                        console.error('Error loading approval content:', error);
+                        this.selectedApprovalContent = [];
+                    }
+                },
+
+                async approveApproval(postId) {
+                    try {
+                        this.currentOperation = 'approval';
+                        this.loadingMessage = 'Approving Post...';
+                        this.isSubmittingApproval = true;
+                        
+                        const response = await fetch(`/api/posts/${postId}/approve`, {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': 'Bearer ' + this.token
+                            }
+                        });
+
+                        if (response.ok) {
+                            this.showApprovalModal = false;
+                            this.selectedApproval = null;
+                            this.approvalFeedback = '';
+                            await this.loadApprovals();
+                            await this.loadPosts();
+                            this.showNotificationMessage('✅ Post approved successfully!', 'success');
+                        } else {
+                            const errorText = await response.text();
+                            this.showNotificationMessage(`Failed to approve post: ${errorText}`, 'error');
+                        }
+                    } catch (error) {
+                        console.error('Approve post error:', error);
+                        this.showNotificationMessage(`Failed to approve post: ${error.message}`, 'error');
+                    } finally {
+                        this.isSubmittingApproval = false;
+                    }
+                },
+
+                async rejectApproval(postId, feedback) {
+                    try {
+                        this.currentOperation = 'approval';
+                        this.loadingMessage = 'Rejecting Post...';
+                        this.isSubmittingApproval = true;
+                        
+                        const response = await fetch(`/api/posts/${postId}/reject?feedback=${encodeURIComponent(feedback || 'No feedback provided')}`, {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': 'Bearer ' + this.token
+                            }
+                        });
+
+                        if (response.ok) {
+                            this.showApprovalModal = false;
+                            this.selectedApproval = null;
+                            this.approvalFeedback = '';
+                            await this.loadApprovals();
+                            await this.loadPosts();
+                            this.showNotificationMessage('❌ Post rejected successfully!', 'info');
+                        } else {
+                            const errorText = await response.text();
+                            this.showNotificationMessage(`Failed to reject post: ${errorText}`, 'error');
+                        }
+                    } catch (error) {
+                        console.error('Reject post error:', error);
+                        this.showNotificationMessage(`Failed to reject post: ${error.message}`, 'error');
+                    } finally {
+                        this.isSubmittingApproval = false;
+                    }
+                },
+
                 logout() {
+                    console.log('Logging out user:', this.user?.email);
+                    
+                    // Clear authentication state
                     this.isAuthenticated = false;
                     this.user = null;
                     this.token = null;
+                    
+                    // Clear localStorage
                     localStorage.removeItem('token');
+                    
+                    // Clear all data arrays
                     this.posts = [];
                     this.notifications = [];
                     this.pendingApprovals = [];
                     this.scheduledPosts = [];
+                    this.filteredPosts = [];
+                    
+                    // Reset forms
+                    this.loginForm = { email: '', password: '' };
+                    this.registerForm = { email: '', password: '', department: '', role: 'USER', managerId: null };
+                    
+                    // Show login modal
+                    this.showLogin = true;
+                    
+                    // Show logout notification
+                    this.showNotificationMessage('You have been logged out successfully', 'info');
                 },
 
                 getStatusColor(status) {
@@ -1779,11 +2312,17 @@
                 },
 
                 formatDate(dateString) {
-                    return new Date(dateString).toLocaleDateString();
+                    // Now includes both date and time for better user experience
+                    return new Date(dateString).toLocaleString();
                 },
 
                 formatDateTime(dateString) {
                     return new Date(dateString).toLocaleString();
+                },
+
+                formatDateOnly(dateString) {
+                    // Use this for date-only display if needed
+                    return new Date(dateString).toLocaleDateString();
                 },
 
                 async viewPost(post) {
@@ -1842,8 +2381,29 @@
                     this.showEditPost = true;
                 },
 
+                async editAndResubmitPost(post) {
+                    // Set flag to indicate this is a resubmit workflow
+                    this.isResubmitting = true;
+                    this.editForm = {
+                        id: post.id,
+                        title: post.title,
+                        sourceDiscussion: post.sourceDiscussion,
+                        targetPlatforms: post.targetPlatforms || 'linkedin'
+                    };
+                    await this.loadPostContent(post.id);
+                    this.showEditPost = true;
+                },
+
                 async updatePost() {
                     try {
+                        // Show loading state and notification
+                        this.currentOperation = 'updating';
+                        this.loadingMessage = 'Updating Post...';
+                        this.isCreatingPost = true; // Reuse the loading state
+                        this.showNotificationMessage('Post updating in progress...', 'info');
+                        
+                        console.log('Updating post:', this.editForm.id);
+                        
                         const response = await fetch(`/api/posts/${this.editForm.id}`, {
                             method: 'PUT',
                             headers: {
@@ -1858,23 +2418,138 @@
                         });
 
                         if (response.ok) {
+                            const updatedPost = await response.json();
+                            console.log('Post updated successfully:', updatedPost);
+                            console.log('Updated post status:', updatedPost.currentStatus);
+                            console.log('Current filter:', this.postFilter);
+                            
+                            // Close modal and reset form
                             this.showEditPost = false;
                             this.editForm = { id: null, title: '', sourceDiscussion: '', targetPlatforms: 'linkedin' };
+                            
+                            // Add delay to ensure database transaction is committed
+                            console.log('Waiting for database transaction to commit...');
+                            await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
+                            
+                            // Reload posts and stats multiple times to ensure we get updated data
+                            console.log('Reloading posts (attempt 1)...');
                             await this.loadPosts();
-                            alert('Post updated successfully!');
+                            
+                            // Check if we got the updated post
+                            const foundPost = this.posts.find(p => p.id === updatedPost.id);
+                            if (!foundPost || foundPost.title !== updatedPost.title) {
+                                console.log('Updated post not found in first load, trying again...');
+                                await new Promise(resolve => setTimeout(resolve, 500));
+                                console.log('Reloading posts (attempt 2)...');
+                                await this.loadPosts();
+                            }
+                            
+                            await this.loadStats();
+                            
+                            // Check if the updated post will be visible with current filter
+                            const updatedStatus = updatedPost.currentStatus.toLowerCase();
+                            let postWillBeVisible = false;
+                            
+                            if (this.postFilter === 'all') {
+                                postWillBeVisible = true;
+                            } else if (this.postFilter === 'draft' && updatedStatus === 'draft') {
+                                postWillBeVisible = true;
+                            } else if (this.postFilter === 'pending_approval' && updatedStatus === 'pending_approval') {
+                                postWillBeVisible = true;
+                            } else if (this.postFilter === 'approved' && updatedStatus === 'approved') {
+                                postWillBeVisible = true;
+                            }
+                            
+                            console.log('Post will be visible with current filter:', postWillBeVisible);
+                            
+                            // If post won't be visible, switch to 'all' filter to show it
+                            if (!postWillBeVisible) {
+                                console.log('Switching to "all" filter to show updated post');
+                                this.postFilter = 'all';
+                                this.filterPosts();
+                            }
+                            
+                            // Final verification - check if post is now visible
+                            console.log('=== FINAL VERIFICATION ===');
+                            console.log('Updated post from server:', updatedPost);
+                            console.log('Updated post ID:', updatedPost.id);
+                            console.log('Updated post title:', updatedPost.title);
+                            console.log('Updated post status:', updatedPost.currentStatus);
+                            console.log('All posts in array:', this.posts);
+                            console.log('Total posts loaded:', this.posts.length);
+                            
+                            const finalCheck = this.posts.find(p => p.id === updatedPost.id);
+                            if (finalCheck) {
+                                console.log('✅ Updated post found in posts array:', finalCheck);
+                                console.log('✅ Post title matches:', finalCheck.title === updatedPost.title);
+                                console.log('✅ Post status:', finalCheck.currentStatus);
+                            } else {
+                                console.error('❌ Updated post NOT found in posts array after reload!');
+                                console.log('Available post IDs:', this.posts.map(p => p.id));
+                                console.log('Looking for post ID:', updatedPost.id);
+                                console.log('Current user ID:', this.user?.id);
+                                console.log('Updated post created by:', updatedPost.createdBy);
+                                
+                                // Check if it's a user role issue
+                                if (updatedPost.createdBy !== this.user?.id) {
+                                    console.warn('⚠️ POTENTIAL ISSUE: Updated post createdBy does not match current user ID!');
+                                    console.log('This might be why the post is not visible in user-specific endpoint');
+                                }
+                            }
+                            
+                            // Check if this is a resubmit workflow
+                            if (this.isResubmitting) {
+                                console.log('=== RESUBMIT WORKFLOW ===');
+                                console.log('Automatically submitting updated post for approval...');
+                                
+                                // Automatically submit for approval
+                                try {
+                                    this.currentOperation = 'approval';
+                                    this.loadingMessage = 'Resubmitting for Approval...';
+                                    
+                                    const approvalResponse = await fetch(`/api/posts/${updatedPost.id}/submit-approval`, {
+                                        method: 'POST',
+                                        headers: {
+                                            'Authorization': 'Bearer ' + this.token
+                                        }
+                                    });
+                                    
+                                    if (approvalResponse.ok) {
+                                        console.log('✅ Post resubmitted for approval successfully');
+                                        this.showNotificationMessage('🎉 Post updated and resubmitted for approval!', 'success');
+                                        
+                                        // Reload data to show updated status
+                                        await this.loadPosts();
+                                        await this.loadStats();
+                                    } else {
+                                        console.error('Failed to resubmit for approval:', approvalResponse.status);
+                                        this.showNotificationMessage('Post updated but failed to resubmit for approval. Please submit manually.', 'warning');
+                                    }
+                                } catch (resubmitError) {
+                                    console.error('Resubmit error:', resubmitError);
+                                    this.showNotificationMessage('Post updated but failed to resubmit for approval. Please submit manually.', 'warning');
+                                }
+                                
+                                // Reset resubmit flag
+                                this.isResubmitting = false;
+                            } else {
+                                // Show regular success notification
+                                this.showNotificationMessage('🎉 Post updated successfully! AI content has been regenerated.', 'success');
+                            }
                         } else {
                             const errorText = await response.text();
-                            alert(`Failed to update post: ${errorText}`);
+                            console.error('Update post failed:', response.status, errorText);
+                            this.showNotificationMessage(`Failed to update post: ${errorText}`, 'error');
                         }
                     } catch (error) {
                         console.error('Update post error:', error);
-                        alert('Failed to update post');
+                        this.showNotificationMessage(`Failed to update post: ${error.message}`, 'error');
+                    } finally {
+                        // Hide loading state
+                        this.isCreatingPost = false;
+                        // Reset resubmit flag in case of errors
+                        this.isResubmitting = false;
                     }
-                },
-
-                showRejectModal(approval) {
-                    this.selectedApproval = approval;
-                    this.showRejectModal = true;
                 },
 
                 async debugPostContent() {
@@ -1951,6 +2626,48 @@
                         console.error('Test approval error:', error);
                         alert('Test approval error: ' + error.message);
                     }
+                },
+
+                async debugApprovalFields() {
+                    console.log('=== DEBUG APPROVAL FIELDS ===');
+                    console.log('Total posts:', this.posts.length);
+                    
+                    this.posts.forEach((post, index) => {
+                        console.log(`\n--- Post ${index + 1} (ID: ${post.id}) ---`);
+                        console.log('Title:', post.title);
+                        console.log('Status:', post.currentStatus);
+                        console.log('Created By:', post.createdBy);
+                        console.log('Approved By:', post.approvedBy || 'NOT SET');
+                        console.log('Approved By Email:', post.approvedByEmail || 'NOT SET');
+                        console.log('Approved At:', post.approvedAt || 'NOT SET');
+                        console.log('Rejected By:', post.rejectedBy || 'NOT SET');
+                        console.log('Rejected By Email:', post.rejectedByEmail || 'NOT SET');
+                        console.log('Rejected At:', post.rejectedAt || 'NOT SET');
+                        console.log('Approval Feedback:', post.approvalFeedback || 'NOT SET');
+                        console.log('Rejection Feedback:', post.rejectionFeedback || 'NOT SET');
+                        
+                        // Show all available fields
+                        console.log('All available fields:', Object.keys(post));
+                    });
+                    
+                    // Also check notifications
+                    console.log('\n=== DEBUG NOTIFICATION FIELDS ===');
+                    console.log('Total notifications:', this.notifications.length);
+                    
+                    this.notifications.forEach((notification, index) => {
+                        console.log(`\n--- Notification ${index + 1} (ID: ${notification.id}) ---`);
+                        console.log('Type:', notification.type);
+                        console.log('Message:', notification.message);
+                        console.log('Approved By:', notification.approvedBy || 'NOT SET');
+                        console.log('Approved By Email:', notification.approvedByEmail || 'NOT SET');
+                        console.log('Rejected By:', notification.rejectedBy || 'NOT SET');
+                        console.log('Rejected By Email:', notification.rejectedByEmail || 'NOT SET');
+                        console.log('Approval Feedback:', notification.approvalFeedback || 'NOT SET');
+                        console.log('Rejection Feedback:', notification.rejectionFeedback || 'NOT SET');
+                        
+                        // Show all available fields
+                        console.log('All available fields:', Object.keys(notification));
+                    });
                 },
 
                 async fixPostCreator() {
