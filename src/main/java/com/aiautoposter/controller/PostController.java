@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -166,9 +167,25 @@ public class PostController {
     }
     
     @PostMapping("/{id}/approve")
-    public ResponseEntity<Post> approvePost(@PathVariable Long id) {
+    public ResponseEntity<Post> approvePost(@PathVariable Long id, HttpServletRequest request) {
         try {
-            Post post = postService.approvePost(id);
+            // Get current user from JWT token
+            String authHeader = request.getHeader("Authorization");
+            String username = null;
+            Long currentUserId = null;
+            
+            if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                String token = authHeader.substring(7);
+                username = jwtTokenUtil.getUsernameFromToken(token);
+                if (username != null) {
+                    User currentUser = userService.findByEmail(username).orElse(null);
+                    if (currentUser != null) {
+                        currentUserId = currentUser.getId();
+                    }
+                }
+            }
+            
+            Post post = postService.approvePost(id, currentUserId);
             return new ResponseEntity<>(post, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
@@ -176,9 +193,25 @@ public class PostController {
     }
     
     @PostMapping("/{id}/reject")
-    public ResponseEntity<Post> rejectPost(@PathVariable Long id, @RequestParam String feedback) {
+    public ResponseEntity<Post> rejectPost(@PathVariable Long id, @RequestParam String feedback, HttpServletRequest request) {
         try {
-            Post post = postService.rejectPost(id, feedback);
+            // Get current user from JWT token
+            String authHeader = request.getHeader("Authorization");
+            String username = null;
+            Long currentUserId = null;
+            
+            if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                String token = authHeader.substring(7);
+                username = jwtTokenUtil.getUsernameFromToken(token);
+                if (username != null) {
+                    User currentUser = userService.findByEmail(username).orElse(null);
+                    if (currentUser != null) {
+                        currentUserId = currentUser.getId();
+                    }
+                }
+            }
+            
+            Post post = postService.rejectPost(id, feedback, currentUserId);
             return new ResponseEntity<>(post, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);

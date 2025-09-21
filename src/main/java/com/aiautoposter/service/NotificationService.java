@@ -27,11 +27,63 @@ public class NotificationService {
     private UserService userService;
     
     public Notification createNotification(Long postId, Long userId, Notification.NotificationType type, String message) {
+        return createNotification(postId, userId, type, message, null, null, null, null);
+    }
+    
+    public Notification createNotification(Long postId, Long userId, Notification.NotificationType type, String message, 
+                                         Long approvedBy, Long rejectedBy, String approvalFeedback, String rejectionFeedback) {
         try {
             System.out.println("NotificationService - Creating notification for user ID: " + userId);
             System.out.println("NotificationService - Post ID: " + postId + ", Type: " + type + ", Message: " + message);
             
             Notification notification = new Notification(postId, userId, type, message);
+            
+            // Set approval/rejection details
+            if (approvedBy != null) {
+                notification.setApprovedBy(approvedBy);
+                // Fetch approver email and role
+                try {
+                    User approver = userService.findById(approvedBy).orElse(null);
+                    if (approver != null) {
+                        if (approver.getEmail() != null) {
+                            notification.setApprovedByEmail(approver.getEmail());
+                            System.out.println("NotificationService - Set approved by email: " + approver.getEmail());
+                        }
+                        if (approver.getRole() != null) {
+                            notification.setApprovedByRole(approver.getRole().toString());
+                            System.out.println("NotificationService - Set approved by role: " + approver.getRole());
+                        }
+                    }
+                } catch (Exception e) {
+                    System.err.println("NotificationService - Error fetching approver details: " + e.getMessage());
+                }
+            }
+            if (rejectedBy != null) {
+                notification.setRejectedBy(rejectedBy);
+                // Fetch rejector email and role
+                try {
+                    User rejector = userService.findById(rejectedBy).orElse(null);
+                    if (rejector != null) {
+                        if (rejector.getEmail() != null) {
+                            notification.setRejectedByEmail(rejector.getEmail());
+                            System.out.println("NotificationService - Set rejected by email: " + rejector.getEmail());
+                        }
+                        if (rejector.getRole() != null) {
+                            notification.setRejectedByRole(rejector.getRole().toString());
+                            System.out.println("NotificationService - Set rejected by role: " + rejector.getRole());
+                        }
+                    }
+                } catch (Exception e) {
+                    System.err.println("NotificationService - Error fetching rejector details: " + e.getMessage());
+                }
+            }
+            if (approvalFeedback != null) {
+                notification.setApprovalFeedback(approvalFeedback);
+            }
+            if (rejectionFeedback != null) {
+                notification.setRejectionFeedback(rejectionFeedback);
+            }
+            
             Notification savedNotification = notificationRepository.save(notification);
             System.out.println("NotificationService - Saved notification with ID: " + savedNotification.getId());
             

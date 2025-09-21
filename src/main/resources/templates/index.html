@@ -162,6 +162,7 @@
             <div class="shape w-40 h-40 bg-gradient-danger rounded-full"></div>
         </div>
 
+
         <!-- Main Content -->
         <div class="max-w-7xl mx-auto py-6 px-4 relative z-10">
             <template x-if="!isAuthenticated">
@@ -178,7 +179,7 @@
                             🚀 Revolutionary AI-powered content generation and LinkedIn posting with intelligent approval workflows
                         </p>
                         <div class="space-x-4 mb-12">
-                            <button @click="showLogin = true" class="hero-cta btn-primary text-white px-8 py-4 rounded-2xl text-lg font-semibold shadow-2xl">
+                            <button @click="showLogin = true; localStorage.removeItem('token'); isAuthenticated = false; user = null; token = null;" class="hero-cta btn-primary text-white px-8 py-4 rounded-2xl text-lg font-semibold shadow-2xl">
                                 <i class="fas fa-rocket mr-2"></i>
                                 Get Started
                             </button>
@@ -442,9 +443,6 @@
                             <button @click="showCreatePost = true" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
                                 Create New Post
                             </button>
-                            <button @click="debugApprovalFields()" class="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600 ml-2">
-                                🔍 Debug Approval Data
-                            </button>
                         </div>
 
                         <div class="bg-white rounded-lg shadow">
@@ -683,11 +681,11 @@
                                                     <p class="text-sm text-gray-500 mt-1" x-text="notification.message"></p>
                                                     
                                                     <!-- Enhanced information for rejection notifications -->
-                                                    <template x-if="notification.type === 'REJECTION' && (notification.rejectedBy || notification.rejectedByEmail)">
+                                                    <template x-if="notification.type === 'REJECTED' && (notification.rejectedByEmail || notification.rejectedBy)">
                                                         <div class="mt-2 p-2 bg-red-50 rounded-lg border border-red-200">
                                                             <div class="flex items-center text-xs text-red-700">
                                                                 <i class="fas fa-user-times mr-1"></i>
-                                                                <span>Rejected by: <strong x-text="notification.rejectedByEmail || notification.rejectedBy"></strong></span>
+                                                                <span>Rejected by: <strong x-text="(notification.rejectedByEmail ? notification.rejectedByEmail + (notification.rejectedByRole ? ' (' + notification.rejectedByRole + ')' : '') : ('User ID #' + notification.rejectedBy))"></strong></span>
                                                             </div>
                                                             <template x-if="notification.rejectionFeedback">
                                                                 <div class="text-xs text-red-600 mt-1">
@@ -699,11 +697,11 @@
                                                     </template>
                                                     
                                                     <!-- Enhanced information for approval notifications -->
-                                                    <template x-if="notification.type === 'APPROVAL' && (notification.approvedBy || notification.approvedByEmail)">
+                                                    <template x-if="notification.type === 'APPROVED' && (notification.approvedByEmail || notification.approvedBy)">
                                                         <div class="mt-2 p-2 bg-green-50 rounded-lg border border-green-200">
                                                             <div class="flex items-center text-xs text-green-700">
                                                                 <i class="fas fa-user-check mr-1"></i>
-                                                                <span>Approved by: <strong x-text="notification.approvedByEmail || notification.approvedBy"></strong></span>
+                                                                <span>Approved by: <strong x-text="(notification.approvedByEmail ? notification.approvedByEmail + (notification.approvedByRole ? ' (' + notification.approvedByRole + ')' : '') : ('User ID #' + notification.approvedBy))"></strong></span>
                                                             </div>
                                                             <template x-if="notification.approvalFeedback">
                                                                 <div class="text-xs text-green-600 mt-1">
@@ -1132,24 +1130,6 @@
                                 </div>
                                 <p class="text-gray-500 text-sm">No AI-generated content available yet</p>
                                 <p class="text-gray-400 text-xs mt-1">Content will be generated when the post is created</p>
-                                <div class="mt-4 p-3 bg-blue-50 rounded-lg">
-                                    <p class="text-xs text-blue-600">Debug Info:</p>
-                                    <p class="text-xs text-blue-500" x-text="'Post ID: ' + (selectedPost ? selectedPost.id : 'N/A')"></p>
-                                    <p class="text-xs text-blue-500" x-text="'Content Array Length: ' + selectedPostContent.length"></p>
-                                    <p class="text-xs text-blue-500" x-text="'Token: ' + (token ? 'Available' : 'Missing')"></p>
-                                    <button @click="debugPostContent()" class="mt-2 px-3 py-1 bg-blue-500 text-white text-xs rounded mr-2">
-                                        Debug Database
-                                    </button>
-                                    <button @click="testPostContent()" class="mt-2 px-3 py-1 bg-green-500 text-white text-xs rounded mr-2">
-                                        Test API
-                                    </button>
-                                    <button @click="testApproval()" class="mt-2 px-3 py-1 bg-orange-500 text-white text-xs rounded mr-2">
-                                        Test Approval
-                                    </button>
-                                    <button @click="fixPostCreator()" class="mt-2 px-3 py-1 bg-red-500 text-white text-xs rounded">
-                                        Fix Creator
-                                    </button>
-                                </div>
                             </div>
                         </div>
                     </template>
@@ -1557,21 +1537,82 @@
                 rejectFeedback: '',
 
                 init() {
-                    document.documentElement.classList.remove('dark');
-                    
-                    // Check for token in localStorage first
-                    const storedToken = localStorage.getItem('token');
-                    if (storedToken) {
-                        this.token = storedToken;
-                        console.log('Found stored token, validating...');
-                        this.validateToken();
-                    } else {
-                        console.log('No stored token found, showing login');
-                        // Only show login modal if no token exists
-                        this.showLogin = true;
+            document.documentElement.classList.remove('dark');
+            
+            // Check for token in localStorage first
+            const storedToken = localStorage.getItem('token');
+            if (storedToken && storedToken.trim() !== '') {
+                this.token = storedToken;
+                console.log('Found stored token, validating...');
+                // Don't show login while validating
+                this.showLogin = false;
+                this.validateToken();
+            } else {
+                console.log('No stored token found, showing login');
+                // Clear any invalid token and show login
+                this.token = null;
+                localStorage.removeItem('token');
+                this.showLogin = true;
+                this.isAuthenticated = false;
+                this.user = null;
+            }
+            
+            this.animateIn();
+        },
+
+                async validateToken() {
+                    try {
+                        console.log('Validating token...');
+                        
+                        // Check if token exists and is valid
+                        if (!this.token || this.token.trim() === '') {
+                            console.log('No token to validate');
+                            this.handleInvalidToken();
+                            return;
+                        }
+                        
+                        const response = await fetch('/api/auth/validate', {
+                            headers: {
+                                'Authorization': 'Bearer ' + this.token
+                            }
+                        });
+                        
+                        if (response.ok) {
+                            const data = await response.json();
+                            console.log('Token validation successful:', data);
+                            
+                            // Set authentication state
+                            this.isAuthenticated = true;
+                            this.user = data.user;
+                            this.showLogin = false;
+                            
+                            // Ensure token is stored in localStorage
+                            localStorage.setItem('token', this.token);
+                            
+                            // Load all data after successful validation
+                            await this.loadData();
+                            
+                            console.log('User authenticated:', this.user?.email);
+                            this.showNotificationMessage(`Welcome back, ${this.user?.email}!`, 'success');
+                        } else {
+                            console.error('Token validation failed - Status:', response.status);
+                            this.handleInvalidToken();
+                        }
+                    } catch (error) {
+                        console.error('Token validation error:', error);
+                        this.handleInvalidToken();
                     }
-                    
-                    this.animateIn();
+                },
+
+                handleInvalidToken() {
+                    console.log('Handling invalid token - clearing auth state');
+                    this.isAuthenticated = false;
+                    this.user = null;
+                    this.token = null;
+                    localStorage.removeItem('token');
+                    this.showLogin = true;
+                    console.log('Login modal should now be visible. showLogin =', this.showLogin);
+                    this.showNotificationMessage('Session expired. Please login again.', 'info');
                 },
 
                 toggleDarkMode() {},
@@ -1619,44 +1660,12 @@
                             };
                             this.$watch('activeTab', function(tab) { animateTab(tab); });
                         }
-                    } catch(e) {}
-                },
-
-                async validateToken() {
-                    try {
-                        console.log('Validating token...');
-                        const response = await fetch('/api/auth/validate', {
-                            headers: {
-                                'Authorization': 'Bearer ' + this.token
-                            }
-                        });
-                        
-                        if (response.ok) {
-                            const data = await response.json();
-                            console.log('Token validation successful:', data);
-                            
-                            this.isAuthenticated = true;
-                            this.user = data.user;
-                            this.showLogin = false; // Hide login modal
-                            
-                            // Load all data after successful validation
-                            await this.loadData();
-                            
-                            console.log('User authenticated:', this.user?.email);
-                            this.showNotificationMessage(`Welcome back, ${this.user?.email}!`, 'success');
-                        } else {
-                            console.error('Token validation failed - Status:', response.status);
-                            this.handleInvalidToken();
-                        }
                     } catch (error) {
-                        console.error('Token validation error:', error);
-                        this.handleInvalidToken();
+                        console.error('Animation error:', error);
                     }
                 },
 
-                handleInvalidToken() {
-                    console.log('Handling invalid token - clearing auth state');
-                    this.isAuthenticated = false;
+                handleSessionExpired() {
                     this.user = null;
                     this.token = null;
                     localStorage.removeItem('token');
@@ -1718,7 +1727,6 @@
                                 status: p.currentStatus,
                                 createdBy: p.createdBy,
                                 createdAt: p.createdAt,
-                                // Debug approval fields
                                 approvedBy: p.approvedBy,
                                 approvedByEmail: p.approvedByEmail,
                                 approvedAt: p.approvedAt,
@@ -1743,8 +1751,6 @@
 
                 async loadAvailableManagers() {
                     try {
-                        console.log('=== LOADING MANAGERS DEBUG ===');
-                        console.log('Making request to: /api/users/managers');
                         
                         const response = await fetch('/api/users/managers');
                         console.log('Response status:', response.status);
@@ -1767,10 +1773,6 @@
 
                 async loadApprovals() {
                     try {
-                        console.log('=== LOADING APPROVALS DEBUG ===');
-                        console.log('Current user:', this.user);
-                        console.log('User role:', this.user?.role);
-                        console.log('User ID:', this.user?.id);
                         
                         // Only managers and admins can see approval requests
                         if (this.user && (this.user.role === 'MANAGER' || this.user.role === 'ADMIN')) {
@@ -1838,6 +1840,23 @@
                         });
                         if (response.ok) {
                             this.notifications = await response.json();
+                            
+                            // Debug notification data
+                            console.log('=== NOTIFICATION DEBUG ===');
+                            console.log('Total notifications:', this.notifications.length);
+                            this.notifications.forEach((notification, index) => {
+                                console.log(`\n--- Notification ${index + 1} (ID: ${notification.id}) ---`);
+                                console.log('Type:', notification.type);
+                                console.log('Message:', notification.message);
+                                console.log('Approved By:', notification.approvedBy || 'NOT SET');
+                                console.log('Approved By Email:', notification.approvedByEmail || 'NOT SET');
+                                console.log('Approved By Role:', notification.approvedByRole || 'NOT SET');
+                                console.log('Rejected By:', notification.rejectedBy || 'NOT SET');
+                                console.log('Rejected By Email:', notification.rejectedByEmail || 'NOT SET');
+                                console.log('Rejected By Role:', notification.rejectedByRole || 'NOT SET');
+                                console.log('Approval Feedback:', notification.approvalFeedback || 'NOT SET');
+                                console.log('Rejection Feedback:', notification.rejectionFeedback || 'NOT SET');
+                            });
                         }
                     } catch (error) {
                         console.error('Failed to load notifications:', error);
@@ -2018,10 +2037,6 @@
 
                 async submitForApproval(postId) {
                     try {
-                        console.log('=== SUBMIT FOR APPROVAL DEBUG ===');
-                        console.log('Post ID:', postId);
-                        console.log('Token available:', this.token ? 'Yes' : 'No');
-                        console.log('User:', this.user);
                         console.log('User ID:', this.user?.id);
                         console.log('User Role:', this.user?.role);
                         console.log('User Manager ID:', this.user?.managerId);
@@ -2549,156 +2564,6 @@
                         this.isCreatingPost = false;
                         // Reset resubmit flag in case of errors
                         this.isResubmitting = false;
-                    }
-                },
-
-                async debugPostContent() {
-                    if (!this.selectedPost) {
-                        alert('No post selected');
-                        return;
-                    }
-                    
-                    try {
-                        const response = await fetch(`/api/posts/debug/${this.selectedPost.id}/content`);
-                        const debugInfo = await response.text();
-                        console.log('Debug info:', debugInfo);
-                        alert('Debug info logged to console:\n\n' + debugInfo);
-                    } catch (error) {
-                        console.error('Debug failed:', error);
-                        alert('Debug failed: ' + error.message);
-                    }
-                },
-
-                async testPostContent() {
-                    if (!this.selectedPost) {
-                        alert('No post selected');
-                        return;
-                    }
-                    
-                    try {
-                        console.log('Testing API endpoint without authentication...');
-                        const response = await fetch(`/api/posts/test/${this.selectedPost.id}/content`);
-                        console.log('Test API response status:', response.status);
-                        
-                        if (response.ok) {
-                            const content = await response.json();
-                            console.log('Test API content:', content);
-                            console.log('Test API content length:', content.length);
-                            
-                            // Temporarily populate the view with this data
-                            this.selectedPostContent = content;
-                            alert(`Test API Success! Found ${content.length} content items. Check console for details.`);
-                        } else {
-                            const errorText = await response.text();
-                            console.error('Test API failed:', response.status, errorText);
-                            alert('Test API failed: ' + response.status);
-                        }
-                    } catch (error) {
-                        console.error('Test API error:', error);
-                        alert('Test API error: ' + error.message);
-                    }
-                },
-
-                async testApproval() {
-                    if (!this.selectedPost) {
-                        alert('No post selected');
-                        return;
-                    }
-                    
-                    try {
-                        console.log('Testing approval endpoint without authentication...');
-                        const response = await fetch(`/api/posts/${this.selectedPost.id}/test-approval`, {
-                            method: 'POST'
-                        });
-                        console.log('Test approval response status:', response.status);
-                        
-                        if (response.ok) {
-                            const result = await response.json();
-                            console.log('Test approval result:', result);
-                            alert(`Test Approval Success! Post status changed to: ${result.currentStatus}`);
-                            await this.loadPosts(); // Refresh the posts list
-                        } else {
-                            const errorText = await response.text();
-                            console.error('Test approval failed:', response.status, errorText);
-                            alert('Test approval failed: ' + response.status + '\n' + errorText);
-                        }
-                    } catch (error) {
-                        console.error('Test approval error:', error);
-                        alert('Test approval error: ' + error.message);
-                    }
-                },
-
-                async debugApprovalFields() {
-                    console.log('=== DEBUG APPROVAL FIELDS ===');
-                    console.log('Total posts:', this.posts.length);
-                    
-                    this.posts.forEach((post, index) => {
-                        console.log(`\n--- Post ${index + 1} (ID: ${post.id}) ---`);
-                        console.log('Title:', post.title);
-                        console.log('Status:', post.currentStatus);
-                        console.log('Created By:', post.createdBy);
-                        console.log('Approved By:', post.approvedBy || 'NOT SET');
-                        console.log('Approved By Email:', post.approvedByEmail || 'NOT SET');
-                        console.log('Approved At:', post.approvedAt || 'NOT SET');
-                        console.log('Rejected By:', post.rejectedBy || 'NOT SET');
-                        console.log('Rejected By Email:', post.rejectedByEmail || 'NOT SET');
-                        console.log('Rejected At:', post.rejectedAt || 'NOT SET');
-                        console.log('Approval Feedback:', post.approvalFeedback || 'NOT SET');
-                        console.log('Rejection Feedback:', post.rejectionFeedback || 'NOT SET');
-                        
-                        // Show all available fields
-                        console.log('All available fields:', Object.keys(post));
-                    });
-                    
-                    // Also check notifications
-                    console.log('\n=== DEBUG NOTIFICATION FIELDS ===');
-                    console.log('Total notifications:', this.notifications.length);
-                    
-                    this.notifications.forEach((notification, index) => {
-                        console.log(`\n--- Notification ${index + 1} (ID: ${notification.id}) ---`);
-                        console.log('Type:', notification.type);
-                        console.log('Message:', notification.message);
-                        console.log('Approved By:', notification.approvedBy || 'NOT SET');
-                        console.log('Approved By Email:', notification.approvedByEmail || 'NOT SET');
-                        console.log('Rejected By:', notification.rejectedBy || 'NOT SET');
-                        console.log('Rejected By Email:', notification.rejectedByEmail || 'NOT SET');
-                        console.log('Approval Feedback:', notification.approvalFeedback || 'NOT SET');
-                        console.log('Rejection Feedback:', notification.rejectionFeedback || 'NOT SET');
-                        
-                        // Show all available fields
-                        console.log('All available fields:', Object.keys(notification));
-                    });
-                },
-
-                async fixPostCreator() {
-                    if (!this.selectedPost) {
-                        alert('No post selected');
-                        return;
-                    }
-                    
-                    try {
-                        console.log('Fixing post creator...');
-                        const response = await fetch(`/api/posts/${this.selectedPost.id}/fix-creator`, {
-                            method: 'POST',
-                            headers: {
-                                'Authorization': 'Bearer ' + this.token
-                            }
-                        });
-                        console.log('Fix creator response status:', response.status);
-                        
-                        if (response.ok) {
-                            const result = await response.json();
-                            console.log('Fix creator result:', result);
-                            alert(`Post creator fixed! Now assigned to user ID: ${result.createdBy}`);
-                            await this.loadPosts(); // Refresh the posts list
-                        } else {
-                            const errorText = await response.text();
-                            console.error('Fix creator failed:', response.status, errorText);
-                            alert('Fix creator failed: ' + response.status + '\n' + errorText);
-                        }
-                    } catch (error) {
-                        console.error('Fix creator error:', error);
-                        alert('Fix creator error: ' + error.message);
                     }
                 },
 

@@ -54,6 +54,16 @@ public class NotificationController {
                 safeNotification.put("createdAt", notification.getCreatedAt());
                 safeNotification.put("updatedAt", notification.getUpdatedAt());
                 
+                // Add approval/rejection details
+                safeNotification.put("approvedBy", notification.getApprovedBy());
+                safeNotification.put("rejectedBy", notification.getRejectedBy());
+                safeNotification.put("approvedByEmail", notification.getApprovedByEmail());
+                safeNotification.put("rejectedByEmail", notification.getRejectedByEmail());
+                safeNotification.put("approvedByRole", notification.getApprovedByRole());
+                safeNotification.put("rejectedByRole", notification.getRejectedByRole());
+                safeNotification.put("approvalFeedback", notification.getApprovalFeedback());
+                safeNotification.put("rejectionFeedback", notification.getRejectionFeedback());
+                
                 safeNotifications.add(safeNotification);
             }
             

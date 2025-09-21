@@ -34,6 +34,31 @@ public class Notification {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
     
+    // Approval/Rejection related fields
+    @Column(name = "approved_by")
+    private Long approvedBy;
+    
+    @Column(name = "rejected_by")
+    private Long rejectedBy;
+    
+    @Column(name = "approved_by_email")
+    private String approvedByEmail;
+    
+    @Column(name = "rejected_by_email")
+    private String rejectedByEmail;
+    
+    @Column(name = "approved_by_role")
+    private String approvedByRole;
+    
+    @Column(name = "rejected_by_role")
+    private String rejectedByRole;
+    
+    @Column(name = "approval_feedback", columnDefinition = "TEXT")
+    private String approvalFeedback;
+    
+    @Column(name = "rejection_feedback", columnDefinition = "TEXT")
+    private String rejectionFeedback;
+    
     // Relationships
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "post_id", insertable = false, updatable = false)
@@ -136,6 +161,70 @@ public class Notification {
     
     public void setUser(User user) {
         this.user = user;
+    }
+    
+    public Long getApprovedBy() {
+        return approvedBy;
+    }
+    
+    public void setApprovedBy(Long approvedBy) {
+        this.approvedBy = approvedBy;
+    }
+    
+    public Long getRejectedBy() {
+        return rejectedBy;
+    }
+    
+    public void setRejectedBy(Long rejectedBy) {
+        this.rejectedBy = rejectedBy;
+    }
+    
+    public String getApprovedByEmail() {
+        return approvedByEmail;
+    }
+    
+    public void setApprovedByEmail(String approvedByEmail) {
+        this.approvedByEmail = approvedByEmail;
+    }
+    
+    public String getRejectedByEmail() {
+        return rejectedByEmail;
+    }
+    
+    public void setRejectedByEmail(String rejectedByEmail) {
+        this.rejectedByEmail = rejectedByEmail;
+    }
+    
+    public String getApprovedByRole() {
+        return approvedByRole;
+    }
+    
+    public void setApprovedByRole(String approvedByRole) {
+        this.approvedByRole = approvedByRole;
+    }
+    
+    public String getRejectedByRole() {
+        return rejectedByRole;
+    }
+    
+    public void setRejectedByRole(String rejectedByRole) {
+        this.rejectedByRole = rejectedByRole;
+    }
+    
+    public String getApprovalFeedback() {
+        return approvalFeedback;
+    }
+    
+    public void setApprovalFeedback(String approvalFeedback) {
+        this.approvalFeedback = approvalFeedback;
+    }
+    
+    public String getRejectionFeedback() {
+        return rejectionFeedback;
+    }
+    
+    public void setRejectionFeedback(String rejectionFeedback) {
+        this.rejectionFeedback = rejectionFeedback;
     }
     
     @PreUpdate

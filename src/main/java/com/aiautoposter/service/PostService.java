@@ -349,6 +349,10 @@ public class PostService {
     }
     
     public Post approvePost(Long postId) {
+        return approvePost(postId, null);
+    }
+    
+    public Post approvePost(Long postId, Long approverId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
         
@@ -358,18 +362,26 @@ public class PostService {
         // Update approval request
         approvalService.approvePost(postId);
         
-        // Send notification
+        // Send notification with approver information
         notificationService.createNotification(
             updatedPost.getId(),
             updatedPost.getCreatedBy(),
             com.aiautoposter.entity.Notification.NotificationType.APPROVED,
-            "Your post has been approved"
+            "Your post has been approved",
+            approverId, // approvedBy
+            null,       // rejectedBy
+            "Post approved", // approvalFeedback
+            null        // rejectionFeedback
         );
         
         return updatedPost;
     }
     
     public Post rejectPost(Long postId, String feedback) {
+        return rejectPost(postId, feedback, null);
+    }
+    
+    public Post rejectPost(Long postId, String feedback, Long rejecterId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
         
@@ -379,12 +391,16 @@ public class PostService {
         // Update approval request
         approvalService.rejectPost(postId, feedback);
         
-        // Send notification
+        // Send notification with rejector information
         notificationService.createNotification(
             updatedPost.getId(),
             updatedPost.getCreatedBy(),
             com.aiautoposter.entity.Notification.NotificationType.REJECTED,
-            "Your post has been rejected: " + feedback
+            "Your post has been rejected: " + feedback,
+            null,       // approvedBy
+            rejecterId, // rejectedBy
+            null,       // approvalFeedback
+            feedback    // rejectionFeedback
         );
         
         return updatedPost;
