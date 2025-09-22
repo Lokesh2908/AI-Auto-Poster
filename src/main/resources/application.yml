@@ -1,4 +1,9 @@
 spring:
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+      enabled: true
   application:
     name: ai-auto-poster
   
@@ -55,6 +60,9 @@ ai:
   azure:
     apiKey: 21ca2ad4962e432191b93a12ccf14adb
     url: https://devaianakage.openai.azure.com/openai/deployments/Gpt-internal/chat/completions?api-version=2025-01-01-preview
+    endpoint: https://devaianakage.openai.azure.com
+    dalleDeploymentName: dall-e-3
+    apiVersion: 2024-04-01-preview
 
 linkedin:
   client:
@@ -66,3 +74,9 @@ logging:
   level:
     com.aiautoposter: DEBUG
     org.springframework.security: DEBUG
+
+app:
+  upload:
+    dir: uploads
+  base:
+    url: http://localhost:8080
