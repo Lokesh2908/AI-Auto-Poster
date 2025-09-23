@@ -7,6 +7,8 @@ import com.aiautoposter.entity.User;
 import com.aiautoposter.repository.ScheduleRepository;
 import com.aiautoposter.repository.PostRepository;
 import com.aiautoposter.repository.LinkedInUserRepository;
+import com.aiautoposter.repository.ScheduleRepository;
+import com.aiautoposter.repository.PostRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -37,7 +39,6 @@ public class ScheduleService {
 
     @Autowired
     private UserService userService;
-    
     public Schedule createSchedule(Long postId, LocalDateTime scheduledFor) {
         Schedule schedule = new Schedule(postId, scheduledFor);
         return scheduleRepository.save(schedule);
@@ -190,7 +191,6 @@ public class ScheduleService {
             if (!published) {
                 throw new RuntimeException("LinkedIn publish returned false");
             }
-
             schedule.setStatus(Schedule.ScheduleStatus.PUBLISHED);
             schedule.setPublishedAt(LocalDateTime.now());
             scheduleRepository.save(schedule);

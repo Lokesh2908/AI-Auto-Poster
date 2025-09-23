@@ -13,6 +13,9 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -100,7 +103,6 @@ public class LinkedInService {
             }
 
             PostContent linkedinContent = postContents.get(0);
-
             // Try to create the LinkedIn post
             String postId = null;
             try {
@@ -150,7 +152,6 @@ public class LinkedInService {
 
         // Build post content
         String fullContent = buildPostContent(content);
-
         // Log the URN being used for debugging
         System.out.println("Creating LinkedIn post with author URN: " + personUrn);
 
@@ -274,7 +275,6 @@ public class LinkedInService {
     // New method to get user profile and person URN
     public Map<String, Object> getUserProfile(String accessToken) {
         try {
-            // First get basic profile info
             String profileUrl = "https://api.linkedin.com/v2/userinfo";
 
             HttpHeaders headers = new HttpHeaders();
@@ -287,7 +287,6 @@ public class LinkedInService {
 
             if (response.getStatusCode() == HttpStatus.OK) {
                 Map<String, Object> profile = response.getBody();
-                
                 // Also get the person info to get the correct URN
                 try {
                     String personUrl = "https://api.linkedin.com/v2/people/~";
@@ -309,7 +308,6 @@ public class LinkedInService {
                         profile.put("personUrn", "urn:li:person:" + profile.get("sub"));
                     }
                 }
-                
                 return profile;
             }
 
@@ -364,6 +362,167 @@ public class LinkedInService {
         } catch (Exception e) {
             System.err.println("Error refreshing token: " + e.getMessage());
             return null;
+        }
+    }
+
+    //Image post
+
+
+    private String createPostWithImages(String accessToken, String personUrn, PostContent content, List<String> imageUrls) {
+        try {
+            // Step 1: Upload all images and get their asset URNs
+            List<String> assetUrns = new ArrayList<>();
+            for (String imageUrl : imageUrls) {
+                String assetUrn = uploadImageToLinkedIn(accessToken, personUrn, imageUrl);
+                if (assetUrn != null) {
+                    assetUrns.add(assetUrn);
+                }
+            }
+
+            if (assetUrns.isEmpty()) {
+                throw new RuntimeException("Failed to upload any images to LinkedIn");
+            }
+
+            // Step 2: Create post with uploaded images
+            return createUGCPostWithMedia(accessToken, personUrn, content, assetUrns);
+
+        } catch (Exception e) {
+            System.err.println("Error creating LinkedIn post with images: " + e.getMessage());
+            throw e;
+        }
+    }
+
+    private String uploadImageToLinkedIn(String accessToken, String personUrn, String imageUrl) {
+        try {
+            // Step 1: Register upload
+            String registerUrl = "https://api.linkedin.com/v2/assets?action=registerUpload";
+
+            HttpHeaders registerHeaders = new HttpHeaders();
+            registerHeaders.setContentType(MediaType.APPLICATION_JSON);
+            registerHeaders.setBearerAuth(accessToken);
+            registerHeaders.set("X-Restli-Protocol-Version", "2.0.0");
+
+            Map<String, Object> registerPayload = new HashMap<>();
+            Map<String, Object> registerUploadRequest = new HashMap<>();
+
+            List<String> recipes = new ArrayList<>();
+            recipes.add("urn:li:digitalmediaRecipe:feedshare-image");
+            registerUploadRequest.put("recipes", recipes);
+            registerUploadRequest.put("owner", "urn:li:person:" + personUrn);
+
+            List<Map<String, Object>> serviceRelationships = new ArrayList<>();
+            Map<String, Object> relationship = new HashMap<>();
+            relationship.put("relationshipType", "OWNER");
+            relationship.put("identifier", "urn:li:userGeneratedContent");
+            serviceRelationships.add(relationship);
+            registerUploadRequest.put("serviceRelationships", serviceRelationships);
+
+            registerPayload.put("registerUploadRequest", registerUploadRequest);
+
+            HttpEntity<Map<String, Object>> registerEntity = new HttpEntity<>(registerPayload, registerHeaders);
+            ResponseEntity<Map> registerResponse = restTemplate.postForEntity(registerUrl, registerEntity, Map.class);
+
+            if (registerResponse.getStatusCode() != HttpStatus.OK) {
+                throw new RuntimeException("Failed to register image upload");
+            }
+
+            Map<String, Object> responseBody = registerResponse.getBody();
+            Map<String, Object> value = (Map<String, Object>) responseBody.get("value");
+            String assetUrn = (String) value.get("asset");
+
+            Map<String, Object> uploadMechanism = (Map<String, Object>) value.get("uploadMechanism");
+            Map<String, Object> mediaUploadRequest = (Map<String, Object>)
+                    uploadMechanism.get("com.linkedin.digitalmedia.uploading.MediaUploadHttpRequest");
+            String uploadUrl = (String) mediaUploadRequest.get("uploadUrl");
+
+            // Step 2: Upload image binary data
+            byte[] imageData = downloadImageData(imageUrl);
+
+            HttpHeaders uploadHeaders = new HttpHeaders();
+            uploadHeaders.setBearerAuth(accessToken);
+            uploadHeaders.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+
+            HttpEntity<byte[]> uploadEntity = new HttpEntity<>(imageData, uploadHeaders);
+            ResponseEntity<String> uploadResponse = restTemplate.exchange(
+                    uploadUrl, HttpMethod.PUT, uploadEntity, String.class);
+
+            if (uploadResponse.getStatusCode() == HttpStatus.CREATED) {
+                return assetUrn;
+            } else {
+                throw new RuntimeException("Failed to upload image data");
+            }
+
+        } catch (Exception e) {
+            System.err.println("Error uploading image to LinkedIn: " + e.getMessage());
+            return null;
+        }
+    }
+
+    private String createUGCPostWithMedia(String accessToken, String personUrn, PostContent content, List<String> assetUrns) {
+        String postUrl = "https://api.linkedin.com/v2/ugcPosts";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(accessToken);
+        headers.set("X-Restli-Protocol-Version", "2.0.0");
+
+        String fullContent = buildPostContent(content);
+
+        // Build media array
+        List<Map<String, Object>> mediaList = new ArrayList<>();
+        for (String assetUrn : assetUrns) {
+            Map<String, Object> mediaItem = new HashMap<>();
+            mediaItem.put("status", "READY");
+            mediaItem.put("media", assetUrn);
+            mediaList.add(mediaItem);
+        }
+
+        // Build payload
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("author", "urn:li:person:" + personUrn);
+        payload.put("lifecycleState", "PUBLISHED");
+
+        Map<String, Object> shareCommentary = new HashMap<>();
+        shareCommentary.put("text", fullContent);
+
+        Map<String, Object> shareContent = new HashMap<>();
+        shareContent.put("shareCommentary", shareCommentary);
+        shareContent.put("shareMediaCategory", "IMAGE");
+        shareContent.put("media", mediaList);
+
+        Map<String, Object> specificContent = new HashMap<>();
+        specificContent.put("com.linkedin.ugc.ShareContent", shareContent);
+
+        Map<String, Object> visibility = new HashMap<>();
+        visibility.put("com.linkedin.ugc.MemberNetworkVisibility", "PUBLIC");
+
+        payload.put("specificContent", specificContent);
+        payload.put("visibility", visibility);
+
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(payload, headers);
+
+        try {
+            ResponseEntity<String> response = restTemplate.postForEntity(postUrl, entity, String.class);
+
+            if (response.getStatusCode() == HttpStatus.CREATED) {
+                return response.getHeaders().getFirst("X-RestLi-Id");
+            }
+            return null;
+
+        } catch (Exception e) {
+            System.err.println("Error creating LinkedIn UGC post: " + e.getMessage());
+            throw e;
+        }
+    }
+
+    private byte[] downloadImageData(String imageUrl) throws IOException {
+        try {
+            URL url = new URL(imageUrl);
+            try (InputStream inputStream = url.openStream()) {
+                return inputStream.readAllBytes();
+            }
+        } catch (Exception e) {
+            throw new IOException("Failed to download image from: " + imageUrl, e);
         }
     }
 }

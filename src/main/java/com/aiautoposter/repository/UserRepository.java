@@ -16,7 +16,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     
     @Query("SELECT u FROM User u WHERE u.email = :email AND u.isActive = true ORDER BY u.id ASC")
     Optional<User> findActiveByEmail(@Param("email") String email);
-    
     List<User> findByManagerId(Long managerId);
     
     List<User> findByDepartment(String department);
@@ -32,6 +31,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findActiveUsersByDepartment(@Param("department") String department);
     
     boolean existsByEmail(String email);
-    
     List<User> findByRoleInAndIsActiveTrue(List<User.Role> roles);
 }

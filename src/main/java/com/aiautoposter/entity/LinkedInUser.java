@@ -132,7 +132,6 @@ public class LinkedInUser {
     public void setUser(User user) {
         this.user = user;
     }
-    
     // Utility methods
     public boolean isAccessTokenExpired() {
         return accessTokenExpiresAt != null && accessTokenExpiresAt.isBefore(LocalDateTime.now());

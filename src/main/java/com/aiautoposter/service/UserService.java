@@ -115,7 +115,6 @@ public class UserService implements UserDetailsService {
             java.util.Arrays.asList(User.Role.MANAGER, User.Role.ADMIN)
         );
     }
-    
     private java.util.Collection<? extends org.springframework.security.core.GrantedAuthority> getAuthorities(User.Role role) {
         java.util.List<org.springframework.security.core.GrantedAuthority> authorities = new java.util.ArrayList<>();
         authorities.add(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_" + role.name()));

@@ -35,7 +35,6 @@ public class PostContent {
     // Temporarily commented out to fix 500 error - will add back after database is updated
     // @Column(name = "hashtags", columnDefinition = "TEXT", nullable = true)
     // private String hashtags;
-    
     @Column(name = "created_at")
     private LocalDateTime createdAt;
     

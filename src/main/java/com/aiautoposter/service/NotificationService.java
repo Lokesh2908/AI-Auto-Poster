@@ -184,7 +184,6 @@ public class NotificationService {
             System.out.println("Email notifications are disabled. Skipping email for userId: " + userId);
             return;
         }
-        
         try {
             // Fetch the user's actual email from database
             User user = userService.findById(userId).orElse(null);

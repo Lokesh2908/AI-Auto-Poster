@@ -204,7 +204,6 @@ public class LinkedInController {
         linkedInUser.setEmail((String) profile.get("email"));
         linkedInUser.setAccessToken(accessToken);
         linkedInUser.setRefreshToken(refreshToken);
-        
         log.info("Setting access token: {}", accessToken != null ? "***PRESENT***" : "NULL");
         log.info("Setting refresh token: {}", refreshToken != null ? "***PRESENT***" : "NULL");
 
@@ -217,7 +216,6 @@ public class LinkedInController {
         if (linkedInUser.getCreatedAt() == null) {
             linkedInUser.setCreatedAt(now);
         }
-
         LinkedInUser savedUser = linkedInUserRepository.save(linkedInUser);
         log.info("Saved LinkedIn user with ID: {}, refresh token saved: {}", 
                 savedUser.getId(), savedUser.getRefreshToken() != null ? "YES" : "NO");

@@ -35,6 +35,20 @@ A comprehensive, enterprise-grade web application for AI-powered LinkedIn conten
 - **Loading Animations**: Context-aware loading spinners with dynamic messages
 - **Notification System**: Toast notifications for all user actions
 - **Scrollable Content**: Prevents page overflow with elegant scrolling containers
+=======
+# AI Auto Poster
+
+A comprehensive web application for AI-powered content generation and LinkedIn posting with approval workflows.
+
+## Features
+
+- **AI Content Generation**: Automatically generates LinkedIn posts using AI APIs
+- **Approval Workflow**: Manager approval system for all posts
+- **Scheduling**: Schedule posts for future publication
+- **Notifications**: Real-time notifications for approval requests and status updates
+- **User Management**: Role-based access control (Admin, Manager, User)
+- **Dashboard**: Comprehensive dashboard with statistics and recent activity
+>>>>>>> remotes/origin/akash_dev
 
 ## Technology Stack
 
@@ -48,6 +62,7 @@ A comprehensive, enterprise-grade web application for AI-powered LinkedIn conten
 
 ### Frontend
 - HTML5
+<<<<<<< HEAD
 - Tailwind CSS 3.x
 - Alpine.js 3.x
 - Font Awesome Icons
@@ -201,6 +216,11 @@ Admin (Global Access)
 - **Authentication Persistence**: Fixed login state restoration
 - **Form Validation**: Enhanced client-side validation
 - **Error Messaging**: User-friendly error messages throughout
+=======
+- Tailwind CSS
+- Alpine.js
+- Font Awesome Icons
+>>>>>>> remotes/origin/akash_dev
 
 ## Database Schema
 
@@ -288,6 +308,7 @@ mvn spring-boot:run
 
 4. Access the application at: `http://localhost:8080`
 
+<<<<<<< HEAD
 ## 🔌 API Endpoints Documentation
 
 ### 🔐 Authentication Endpoints
@@ -538,6 +559,63 @@ graph TD
 | View Approvals | ❌ | ✅ Team Requests | ✅ All Requests |
 | Manage Users | ❌ | ❌ | ✅ All |
 | System Settings | ❌ | ❌ | ✅ All |
+=======
+## API Endpoints
+
+### Authentication
+- `POST /api/auth/login` - User login
+- `POST /api/auth/register` - User registration
+- `POST /api/auth/validate` - Token validation
+
+### Users
+- `GET /api/users` - Get all users
+- `POST /api/users` - Create user
+- `GET /api/users/{id}` - Get user by ID
+- `PUT /api/users/{id}` - Update user
+- `DELETE /api/users/{id}` - Delete user
+
+### Posts
+- `GET /api/posts` - Get all posts
+- `POST /api/posts` - Create post
+- `GET /api/posts/{id}` - Get post by ID
+- `PUT /api/posts/{id}` - Update post
+- `POST /api/posts/{id}/submit-approval` - Submit for approval
+- `POST /api/posts/{id}/approve` - Approve post
+- `POST /api/posts/{id}/reject` - Reject post
+
+### Approvals
+- `GET /api/approvals` - Get all approval requests
+- `GET /api/approvals/manager/{managerId}/pending` - Get pending approvals for manager
+- `POST /api/approvals/{id}/approve` - Approve request
+- `POST /api/approvals/{id}/reject` - Reject request
+
+### Notifications
+- `GET /api/notifications/user/{userId}` - Get user notifications
+- `PUT /api/notifications/{id}/read` - Mark notification as read
+- `PUT /api/notifications/user/{userId}/read-all` - Mark all notifications as read
+
+### Schedules
+- `GET /api/schedules` - Get all schedules
+- `POST /api/schedules` - Create schedule
+- `POST /api/schedules/post/{postId}` - Schedule post
+- `PUT /api/schedules/{id}/cancel` - Cancel schedule
+
+## Workflow
+
+1. **Post Creation**: User creates a post with title and source discussion
+2. **AI Generation**: System automatically generates LinkedIn content using AI
+3. **Approval Request**: Post is submitted for manager approval
+4. **Manager Review**: Manager can approve or reject with feedback
+5. **Scheduling**: Approved posts can be scheduled for publication
+6. **Publication**: Scheduled posts are automatically published to LinkedIn
+7. **Notifications**: All stakeholders receive notifications throughout the process
+
+## User Roles
+
+- **ADMIN**: Full system access
+- **MANAGER**: Can approve posts from their team members
+- **USER**: Can create posts and submit for approval
+>>>>>>> remotes/origin/akash_dev
 
 ## Configuration
 
@@ -599,6 +677,7 @@ src/
 4. Create REST endpoints in the `controller` package
 5. Update the frontend templates as needed
 
+<<<<<<< HEAD
 ## 🛠️ Troubleshooting Guide
 
 ### 🚨 Common Issues & Solutions

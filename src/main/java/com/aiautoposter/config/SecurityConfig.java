@@ -19,6 +19,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.util.Arrays;
 
@@ -55,6 +57,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         http.cors().and().csrf().disable()
             .authorizeRequests()
+                .antMatchers
+                        ("/uploads/**").permitAll()
                 .antMatchers("/api/linkedin/callback").permitAll()
                 .antMatchers("/api/linkedin/callback/**").permitAll()
                 .antMatchers("/", "/index", "/dashboard").permitAll()
@@ -88,5 +92,16 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
+    }
+
+    @Configuration
+    public class WebConfig implements WebMvcConfigurer {
+
+        @Override
+        public void addResourceHandlers(ResourceHandlerRegistry registry) {
+            registry.addResourceHandler("/uploads/**")
+                    .addResourceLocations("file:uploads/")
+                    .setCachePeriod(0); // Disable caching for immediate updates
+        }
     }
 }

@@ -45,7 +45,6 @@ public class PostService {
     
     @Autowired
     private UserRepository userRepository;
-    
     public Post createPost(Post post) {
         Post savedPost = postRepository.save(post);
         
@@ -222,7 +221,6 @@ public class PostService {
             String linkedinContent = aiContentGenerationService.generateLinkedInContent(
                 post.getSourceDiscussion(), post.getTitle()
             );
-            
             // Extract hashtags from the content
             String hashtags = extractHashtags(linkedinContent);
             
@@ -362,7 +360,6 @@ public class PostService {
         // Update approval request
         approvalService.approvePost(postId);
         
-        // Send notification with approver information
         notificationService.createNotification(
             updatedPost.getId(),
             updatedPost.getCreatedBy(),
@@ -390,8 +387,6 @@ public class PostService {
         
         // Update approval request
         approvalService.rejectPost(postId, feedback);
-        
-        // Send notification with rejector information
         notificationService.createNotification(
             updatedPost.getId(),
             updatedPost.getCreatedBy(),

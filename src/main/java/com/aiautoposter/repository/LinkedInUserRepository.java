@@ -17,7 +17,6 @@ public interface LinkedInUserRepository extends JpaRepository<LinkedInUser,Long>
     Optional<LinkedInUser> findByUser(User user);
     Optional<LinkedInUser> findByLinkedinUserId(String linkedinUserId);
     Optional<LinkedInUser> findByPersonUrn(String personUrn);
-    
     // Add methods to handle potential duplicates by getting the first result
     @Query("SELECT lu FROM LinkedInUser lu WHERE lu.user = :user ORDER BY lu.id ASC")
     Optional<LinkedInUser> findFirstByUser(@Param("user") User user);

@@ -15,8 +15,10 @@ INSERT INTO posts (created_by, title, source_discussion, current_status, target_
 VALUES (3, 'AI in Marketing', 'We discussed how AI is revolutionizing marketing strategies and customer engagement. The team shared insights about personalization, automation, and data-driven decision making.', 'DRAFT', 'linkedin', NOW(), NOW());
 
 -- Insert sample post content
+
 INSERT INTO post_content (post_id, platform, title, content, ai_confidence_score, hashtags, created_at, updated_at) 
 VALUES (1, 'linkedin', 'AI in Marketing', '🚀 The Future of Marketing is Here: AI-Driven Strategies\n\nIn our recent team discussion, we explored how artificial intelligence is transforming the marketing landscape. From personalized customer experiences to automated campaign optimization, AI is enabling marketers to:\n\n• Deliver hyper-personalized content at scale\n• Predict customer behavior with unprecedented accuracy\n• Automate repetitive tasks and focus on strategy\n• Make data-driven decisions in real-time\n\nAs we continue to embrace these technologies, the question remains: How is your organization leveraging AI in marketing?\n\n#AIMarketing #DigitalTransformation #MarketingTech #Innovation #CustomerExperience', 0.85, '#AIMarketing #DigitalTransformation #MarketingTech #Innovation #CustomerExperience', NOW(), NOW());
+
 
 -- Insert sample notification
 INSERT INTO notifications (post_id, user_id, type, read_status, message, created_at, updated_at) 

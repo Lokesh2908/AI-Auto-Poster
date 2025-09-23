@@ -7,6 +7,8 @@ import com.aiautoposter.service.PostService;
 import com.aiautoposter.service.UserService;
 import com.aiautoposter.security.JwtTokenUtil;
 import com.aiautoposter.entity.Image;
+import com.aiautoposter.entity.Image;
+import com.aiautoposter.service.PostService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -85,7 +87,6 @@ public class PostController {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-    
     @GetMapping("/status/{status}")
     public ResponseEntity<List<Post>> getPostsByStatus(@PathVariable Post.PostStatus status) {
         List<Post> posts = postService.findByCurrentStatus(status);
