@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Auto Poster - Revolutionary Content Management</title>
-    <script src="/static/js/media.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.2/lib/anime.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.ckeditor.com/ckeditor5/39.0.1/classic/ckeditor.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <script>
@@ -680,7 +680,7 @@
                             
                             <div class="bg-white rounded-lg shadow">
                                 <div class="p-6">
-                                    <div class="space-y-4">
+                                    <div class="space-y-4 max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
                                         <template x-for="schedule in scheduledPosts.filter(s => s.status === 'PENDING' || s.status === 'SCHEDULED')" :key="schedule.id">
                                             <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                                                 <div class="flex justify-between items-start">
@@ -744,7 +744,7 @@
                             
                             <div class="bg-white rounded-lg shadow">
                                 <div class="p-6">
-                                    <div class="space-y-4">
+                                    <div class="space-y-4 max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
                                         <template x-for="schedule in scheduledPosts.filter(s => s.status === 'PUBLISHED')" :key="schedule.id">
                                             <div class="border border-green-200 rounded-lg p-4 bg-green-50 hover:shadow-md transition-shadow">
                                                 <div class="flex justify-between items-start">
@@ -810,7 +810,7 @@
 
                         <div class="bg-white rounded-lg shadow">
                             <div class="p-6">
-                                <div class="space-y-4">
+                                <div class="space-y-4 max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
                                     <template x-for="notification in notifications" :key="notification.id">
                                         <div class="border border-gray-200 rounded-lg p-4" 
                                              :class="notification.readStatus ? 'bg-gray-50' : 'bg-white'">
@@ -1140,17 +1140,43 @@
                             
                             <div>
                                 <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
-                                    <i class="fab fa-linkedin text-blue-600 mr-2"></i>
+                                    <i class="fas fa-share-alt text-purple-600 mr-2"></i>
                                     Target Platforms
                                 </label>
-                                <div class="relative">
-                                    <input type="text" x-model="postForm.targetPlatforms" value="linkedin" readonly
-                                           class="w-full px-4 py-3 border border-gray-200 bg-gray-50 text-gray-700 rounded-xl shadow-sm cursor-not-allowed">
-                                    <div class="absolute right-3 top-3">
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                            <i class="fab fa-linkedin mr-1"></i>
-                                            LinkedIn
-                                        </span>
+                                <div class="space-y-3">
+                                    <!-- LinkedIn Platform -->
+                                    <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                        <input type="checkbox" x-model="postForm.selectedPlatforms" value="linkedin" 
+                                               class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                        <div class="ml-3 flex items-center">
+                                            <i class="fab fa-linkedin text-blue-600 mr-2"></i>
+                                            <span class="text-sm font-medium text-gray-700">LinkedIn</span>
+                                            <span class="ml-2 text-xs text-gray-500">(Plain text editor)</span>
+                                        </div>
+                                    </label>
+                                    
+                                    <!-- WordPress Platform -->
+                                    <label class="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                        <input type="checkbox" x-model="postForm.selectedPlatforms" value="wordpress" 
+                                               class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                        <div class="ml-3 flex items-center">
+                                            <i class="fab fa-wordpress text-blue-500 mr-2"></i>
+                                            <span class="text-sm font-medium text-gray-700">WordPress</span>
+                                            <span class="ml-2 text-xs text-gray-500">(Rich text editor)</span>
+                                        </div>
+                                    </label>
+                                </div>
+                                
+                                <!-- Selected platforms display -->
+                                <div x-show="postForm.selectedPlatforms && postForm.selectedPlatforms.length > 0" class="mt-3 p-2 bg-blue-50 rounded-lg">
+                                    <div class="flex flex-wrap gap-2">
+                                        <template x-for="platform in postForm.selectedPlatforms" :key="platform">
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                                                  :class="platform === 'linkedin' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'">
+                                                <i :class="platform === 'linkedin' ? 'fab fa-linkedin' : 'fab fa-wordpress'" class="mr-1"></i>
+                                                <span x-text="platform.charAt(0).toUpperCase() + platform.slice(1)"></span>
+                                            </span>
+                                        </template>
                                     </div>
                                 </div>
                             </div>
@@ -1321,14 +1347,65 @@
                                 <template x-for="content in selectedPostContent" :key="content.id">
                                     <div class="mb-4 p-4 border border-purple-200 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl shadow-sm">
                                         <div class="flex items-center justify-between mb-3">
-                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                                                <i class="fab fa-linkedin mr-1"></i>
-                                                <span x-text="content.platform || 'LinkedIn'"></span>
+                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium"
+                                                  :class="content.platform === 'wordpress' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'">
+                                                <i :class="content.platform === 'wordpress' ? 'fab fa-wordpress' : 'fab fa-linkedin'" class="mr-1"></i>
+                                                <span x-text="content.platform ? content.platform.charAt(0).toUpperCase() + content.platform.slice(1) : 'LinkedIn'"></span>
                                             </span>
                                             <span class="text-xs text-gray-500" x-text="formatDateTime(content.createdAt)"></span>
                                         </div>
                                         <div class="prose prose-sm max-w-none">
-                                            <div class="whitespace-pre-wrap text-gray-800 leading-relaxed" x-text="content.content"></div>
+                                            <!-- LinkedIn Content Display (Read-only) -->
+                                            <template x-if="content.platform === 'linkedin'">
+                                                <div class="linkedin-content">
+                                                    <label class="block text-xs font-medium text-gray-700 mb-2 flex items-center">
+                                                        <i class="fab fa-linkedin text-blue-600 mr-1"></i>
+                                                        LinkedIn Content (Plain Text)
+                                                    </label>
+                                                    <div class="w-full px-4 py-3 border border-gray-200 bg-gray-50 rounded-lg text-sm leading-relaxed font-sans whitespace-pre-wrap"
+                                                         style="min-height: 120px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;"
+                                                         x-text="content.content">
+                                                    </div>
+                                                    <div class="mt-2 flex items-center justify-between text-xs text-gray-500">
+                                                        <span>✓ Plain text - LinkedIn ready</span>
+                                                        <span x-text="(content.content || '').length + ' characters'"></span>
+                                                    </div>
+                                                </div>
+                                            </template>
+                                            
+                                            <!-- WordPress Content Display (Read-only) -->
+                                            <template x-if="content.platform === 'wordpress'">
+                                                <div class="wordpress-content">
+                                                    <label class="block text-xs font-medium text-gray-700 mb-2 flex items-center">
+                                                        <i class="fab fa-wordpress text-blue-500 mr-1"></i>
+                                                        WordPress Content (Rich Text)
+                                                    </label>
+                                                    <div class="w-full px-4 py-3 border border-gray-200 bg-gray-50 rounded-lg text-sm leading-relaxed"
+                                                         style="min-height: 120px;"
+                                                         x-html="content.content">
+                                                    </div>
+                                                    <div class="mt-2 text-xs text-gray-500">
+                                                        <span>✓ Rich text formatting - WordPress ready</span>
+                                                    </div>
+                                                </div>
+                                            </template>
+                                            
+                                            <!-- Default Content Display (Read-only) -->
+                                            <template x-if="!content.platform || (content.platform !== 'linkedin' && content.platform !== 'wordpress')">
+                                                <div class="default-content">
+                                                    <label class="block text-xs font-medium text-gray-700 mb-2 flex items-center">
+                                                        <i class="fas fa-file-text text-gray-500 mr-1"></i>
+                                                        Content (Legacy)
+                                                    </label>
+                                                    <div class="w-full px-4 py-3 border border-gray-200 bg-gray-50 rounded-lg text-sm leading-relaxed whitespace-pre-wrap"
+                                                         style="min-height: 120px;"
+                                                         x-text="content.content">
+                                                    </div>
+                                                    <div class="mt-2 text-xs text-orange-600">
+                                                        <span>⚠️ Legacy content - consider regenerating for platform-specific formatting</span>
+                                                    </div>
+                                                </div>
+                                            </template>
                                         </div>
                                         <div x-show="content.hashtags" class="mt-3 pt-3 border-t border-purple-200">
                                             <div class="flex flex-wrap gap-1">
@@ -1359,21 +1436,21 @@
                             <i class="fas fa-times"></i>
                             <span>Close</span>
                         </button>
-                        <!-- Edit button for drafts and pending posts -->
-                        <template x-if="selectedPost && (selectedPost.currentStatus === 'DRAFT' || selectedPost.currentStatus === 'PENDING_APPROVAL')">
-                            <button @click="editPost(selectedPost); showViewPost = false" 
+                        <!-- Edit button for drafts, pending, and rejected posts -->
+                        <template x-if="selectedPost && (selectedPost.currentStatus === 'DRAFT' || selectedPost.currentStatus === 'PENDING_APPROVAL' || selectedPost.currentStatus === 'REJECTED')">
+                            <button @click="editPostContent(selectedPost); showViewPost = false" 
                                     class="btn-primary px-6 py-3 text-sm font-semibold text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center space-x-2">
                                 <i class="fas fa-edit"></i>
-                                <span>Edit Post</span>
+                                <span>Edit Content</span>
                             </button>
                         </template>
                         
-                        <!-- Edit & Resubmit button for rejected posts -->
-                        <template x-if="selectedPost && selectedPost.currentStatus === 'REJECTED'">
-                            <button @click="editAndResubmitPost(selectedPost); showViewPost = false" 
-                                    class="bg-gradient-to-r from-blue-500 to-purple-600 px-6 py-3 text-sm font-semibold text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center space-x-2 hover:from-blue-600 hover:to-purple-700">
-                                <i class="fas fa-redo"></i>
-                                <span>Edit & Resubmit</span>
+                        <!-- Regenerate button for drafts, pending, and rejected posts -->
+                        <template x-if="selectedPost && (selectedPost.currentStatus === 'DRAFT' || selectedPost.currentStatus === 'PENDING_APPROVAL' || selectedPost.currentStatus === 'REJECTED')">
+                            <button @click="regeneratePost(selectedPost); showViewPost = false" 
+                                    class="bg-gradient-to-r from-purple-500 to-pink-600 px-6 py-3 text-sm font-semibold text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center space-x-2 hover:from-purple-600 hover:to-pink-700">
+                                <i class="fas fa-magic"></i>
+                                <span>Regenerate</span>
                             </button>
                         </template>
                     </div>
@@ -1444,14 +1521,96 @@
                             <template x-for="content in selectedPostContent" :key="content.id">
                                 <div class="mb-4 p-4 border border-purple-200 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl shadow-sm">
                                     <div class="flex items-center justify-between mb-3">
-                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                                            <i class="fab fa-linkedin mr-1"></i>
-                                            <span x-text="content.platform || 'LinkedIn'"></span>
+                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium"
+                                              :class="content.platform === 'wordpress' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'">
+                                            <i :class="content.platform === 'wordpress' ? 'fab fa-wordpress' : 'fab fa-linkedin'" class="mr-1"></i>
+                                            <span x-text="content.platform ? content.platform.charAt(0).toUpperCase() + content.platform.slice(1) : 'LinkedIn'"></span>
                                         </span>
                                         <span class="text-xs text-gray-500" x-text="formatDateTime(content.createdAt)"></span>
                                     </div>
                                     <div class="prose prose-sm max-w-none">
-                                        <div class="whitespace-pre-wrap text-gray-800 leading-relaxed" x-text="content.content"></div>
+                                        <!-- LinkedIn Plain Text Editor -->
+                                        <template x-if="content.platform === 'linkedin'">
+                                            <div class="linkedin-editor">
+                                                <label class="block text-xs font-medium text-gray-700 mb-2 flex items-center">
+                                                    <i class="fab fa-linkedin text-blue-600 mr-1"></i>
+                                                    LinkedIn Content (Plain Text)
+                                                </label>
+                                                <textarea 
+                                                    :id="'edit-linkedin-editor-' + content.id"
+                                                    x-model="content.content"
+                                                    @input="content.content = $event.target.value"
+                                                    rows="8"
+                                                    placeholder="Write your LinkedIn post content here... 
+
+Use simple formatting:
+• Bullet points with •
+• **Bold text** (if supported)
+• Line breaks for paragraphs
+
+#hashtags #linkedin #professional"
+                                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none font-sans text-sm leading-relaxed"
+                                                    style="min-height: 200px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+                                                </textarea>
+                                                <div class="mt-2 flex items-center justify-between text-xs text-gray-500">
+                                                    <span>✓ Plain text - LinkedIn compatible</span>
+                                                    <span x-text="(content.content || '').length + ' characters'"></span>
+                                                </div>
+                                            </div>
+                                        </template>
+                                        
+                                        <!-- WordPress Rich Text Editor (CKEditor) -->
+                                        <template x-if="content.platform === 'wordpress'">
+                                            <div class="wordpress-editor">
+                                                <label class="block text-xs font-medium text-gray-700 mb-2 flex items-center">
+                                                    <i class="fab fa-wordpress text-blue-500 mr-1"></i>
+                                                    WordPress Content (Rich Text)
+                                                </label>
+                                                <div :id="'edit-wordpress-editor-' + content.id" class="ckeditor-container" x-init="
+                                                    $nextTick(() => {
+                                                        ClassicEditor
+                                                            .create(document.getElementById('edit-wordpress-editor-' + content.id), {
+                                                                toolbar: ['heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', '|', 'outdent', 'indent', '|', 'blockQuote', 'insertTable', '|', 'undo', 'redo'],
+                                                                height: '200px'
+                                                            })
+                                                            .then(editor => {
+                                                                editor.setData(content.content);
+                                                                editor.model.document.on('change:data', () => {
+                                                                    content.content = editor.getData();
+                                                                });
+                                                            })
+                                                            .catch(error => {
+                                                                console.error('CKEditor initialization error:', error);
+                                                            });
+                                                    })
+                                                " x-text="content.content" style="min-height: 200px; border: 1px solid #d1d5db; border-radius: 8px; padding: 12px;"></div>
+                                                <div class="mt-2 text-xs text-gray-500">
+                                                    <span>✓ Rich text formatting - WordPress compatible</span>
+                                                </div>
+                                            </div>
+                                        </template>
+                                        
+                                        <!-- Default Editor (for backward compatibility) -->
+                                        <template x-if="!content.platform || (content.platform !== 'linkedin' && content.platform !== 'wordpress')">
+                                            <div class="default-editor">
+                                                <label class="block text-xs font-medium text-gray-700 mb-2 flex items-center">
+                                                    <i class="fas fa-edit text-gray-500 mr-1"></i>
+                                                    Content Editor (Legacy)
+                                                </label>
+                                                <textarea 
+                                                    :id="'edit-default-editor-' + content.id"
+                                                    x-model="content.content"
+                                                    @input="content.content = $event.target.value"
+                                                    rows="8"
+                                                    placeholder="Enter your content here..."
+                                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none font-sans text-sm leading-relaxed"
+                                                    style="min-height: 200px;">
+                                                </textarea>
+                                                <div class="mt-2 text-xs text-orange-600">
+                                                    <span>⚠️ Legacy content - consider regenerating for platform-specific formatting</span>
+                                                </div>
+                                            </div>
+                                        </template>
                                     </div>
                                     <div x-show="content.hashtags" class="mt-3 pt-3 border-t border-purple-200">
                                         <div class="flex flex-wrap gap-1">
@@ -1487,6 +1646,90 @@
                             </button>
                         </div>
                     </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Regenerate Post Modal -->
+        <div x-show="showRegeneratePost" class="fixed inset-0 modal-backdrop overflow-y-auto h-full w-full z-50" style="display: none;">
+            <div class="relative top-10 mx-auto p-8 border border-white/20 max-w-2xl shadow-2xl rounded-3xl modal-content">
+                <div class="relative">
+                    <!-- Modal Header -->
+                    <div class="text-center mb-8">
+                        <div class="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-600 rounded-2xl flex items-center justify-center mx-auto mb-4 animate-float">
+                            <i class="fas fa-magic text-white text-2xl"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gradient mb-2">Regenerate Post Content</h3>
+                        <p class="text-gray-600">Let AI create fresh content for the original platforms based on your discussion</p>
+                    </div>
+                    
+                    <template x-if="selectedPost">
+                        <form @submit.prevent="regeneratePostContent()">
+                            <div class="space-y-6">
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                        <i class="fas fa-heading text-blue-500 mr-2"></i>
+                                        Post Title
+                                    </label>
+                                    <input type="text" x-model="selectedPost.title" required
+                                           placeholder="Enter a compelling title for your post..."
+                                           class="input-glow w-full px-4 py-3 border border-gray-200 bg-white/80 backdrop-blur-sm text-gray-900 rounded-xl shadow-sm focus:outline-none transition-all duration-300">
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                        <i class="fas fa-comments text-green-500 mr-2"></i>
+                                        Source Discussion
+                                    </label>
+                                    <textarea x-model="selectedPost.sourceDiscussion" rows="5" required
+                                              placeholder="Share the key points, insights, or discussion topics that should be transformed into a LinkedIn post..."
+                                              class="input-glow w-full px-4 py-3 border border-gray-200 bg-white/80 backdrop-blur-sm text-gray-900 rounded-xl shadow-sm focus:outline-none transition-all duration-300 resize-none"></textarea>
+                                    <p class="text-xs text-gray-500 mt-2">💡 Tip: Modify the discussion to get different AI-generated content</p>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                        <i class="fas fa-share-alt text-purple-600 mr-2"></i>
+                                        Target Platforms
+                                    </label>
+                                    <div class="p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                                        <div class="flex items-center mb-2">
+                                            <i class="fas fa-info-circle text-blue-500 mr-2"></i>
+                                            <span class="text-sm text-gray-600">Content will be regenerated for the original platforms:</span>
+                                        </div>
+                                        <div class="flex flex-wrap gap-2">
+                                            <template x-for="platform in selectedPost.selectedPlatforms" :key="platform">
+                                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
+                                                      :class="platform === 'linkedin' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'">
+                                                    <i :class="platform === 'linkedin' ? 'fab fa-linkedin' : 'fab fa-wordpress'" class="mr-1"></i>
+                                                    <span x-text="platform.charAt(0).toUpperCase() + platform.slice(1)"></span>
+                                                    <span class="ml-1 text-xs opacity-75" 
+                                                          x-text="platform === 'linkedin' ? '(Plain text)' : '(Rich text)'"></span>
+                                                </span>
+                                            </template>
+                                        </div>
+                                        <p class="text-xs text-gray-500 mt-2">
+                                            💡 Tip: To change platforms, create a new post with your desired platform selection
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Action Buttons -->
+                            <div class="flex justify-end space-x-4 mt-8 pt-6 border-t border-gray-100">
+                                <button type="button" @click="showRegeneratePost = false" 
+                                        class="px-6 py-3 text-sm font-semibold text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition-all duration-300 flex items-center space-x-2">
+                                    <i class="fas fa-times"></i>
+                                    <span>Cancel</span>
+                                </button>
+                                <button type="submit" 
+                                        class="bg-gradient-to-r from-purple-500 to-pink-600 px-8 py-3 text-sm font-semibold text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center space-x-2 hover:from-purple-600 hover:to-pink-700">
+                                    <i class="fas fa-magic"></i>
+                                    <span>Regenerate Content</span>
+                                </button>
+                            </div>
+                        </form>
+                    </template>
                 </div>
             </div>
         </div>
@@ -1892,6 +2135,7 @@
                 showRejectModal: false,
                 showViewPost: false,
                 showEditPost: false,
+                showRegeneratePost: false,
                 showApprovalModal: false,
                 stats: {
                     totalPosts: 0,
@@ -1929,7 +2173,8 @@
                 postForm: {
                     title: '',
                     sourceDiscussion: '',
-                    targetPlatforms: 'linkedin'
+                    targetPlatforms: 'linkedin',
+                    selectedPlatforms: ['linkedin'] // Default to LinkedIn selected
                 },
                 editForm: {
                     id: null,
@@ -2604,6 +2849,11 @@
                             return;
                         }
                         
+                        if (!this.postForm.selectedPlatforms || this.postForm.selectedPlatforms.length === 0) {
+                            this.showNotificationMessage('Please select at least one platform', 'error');
+                            return;
+                        }
+                        
                         // Show loading state and notification
                         this.currentOperation = 'creating';
                         this.loadingMessage = 'Generating Post...';
@@ -2619,7 +2869,7 @@
                             body: JSON.stringify({
                                 title: this.postForm.title,
                                 sourceDiscussion: this.postForm.sourceDiscussion,
-                                targetPlatforms: this.postForm.targetPlatforms,
+                                targetPlatforms: this.postForm.selectedPlatforms.join(','), // Convert array to comma-separated string
                                 createdBy: this.user.id
                             })
                         });
@@ -2629,7 +2879,7 @@
                             console.log('Post created successfully:', createdPost);
                             
                             this.showCreatePost = false;
-                            this.postForm = { title: '', sourceDiscussion: '', targetPlatforms: 'linkedin' };
+                            this.postForm = { title: '', sourceDiscussion: '', targetPlatforms: 'linkedin', selectedPlatforms: ['linkedin'] };
                             await this.loadPosts();
                             await this.loadStats();
                             // Show success notification
@@ -2954,6 +3204,8 @@
                 async viewPost(post) {
                     console.log('Viewing post:', post);
                     this.selectedPost = post;
+                    // Always clear cache and reload content to ensure latest data
+                    this.selectedPostContent = [];
                     await this.loadPostContent(post.id);
                     this.showViewPost = true;
                 },
@@ -3020,6 +3272,91 @@
                     this.showEditPost = true;
                 },
 
+                // New function for editing content only (using CKEditor)
+                async editPostContent(post) {
+                    this.editForm = {
+                        id: post.id,
+                        title: post.title,
+                        sourceDiscussion: post.sourceDiscussion,
+                        targetPlatforms: post.targetPlatforms || 'linkedin'
+                    };
+                    await this.loadPostContent(post.id);
+                    this.showEditPost = true;
+                },
+
+                // New function for regenerating content
+                async regeneratePost(post) {
+                    this.selectedPost = { ...post };
+                    // Initialize selectedPlatforms based on existing targetPlatforms
+                    if (post.targetPlatforms) {
+                        this.selectedPost.selectedPlatforms = post.targetPlatforms.split(',').map(p => p.trim());
+                    } else {
+                        this.selectedPost.selectedPlatforms = ['linkedin']; // Default
+                    }
+                    this.showRegeneratePost = true;
+                },
+
+                // Function to regenerate post content with AI
+                async regeneratePostContent() {
+                    try {
+                        // Show loading state
+                        this.currentOperation = 'regenerating';
+                        this.loadingMessage = 'Regenerating content with AI...';
+                        this.isCreatingPost = true;
+                        this.showNotificationMessage('Regenerating post content...', 'info');
+                        
+                        console.log('Regenerating content for post:', this.selectedPost.id);
+                        console.log('Using original platforms:', this.selectedPost.selectedPlatforms);
+
+                        // First update the post details
+                        const updateResponse = await fetch(`/api/posts/${this.selectedPost.id}`, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': 'Bearer ' + this.token
+                            },
+                            body: JSON.stringify({
+                                title: this.selectedPost.title,
+                                sourceDiscussion: this.selectedPost.sourceDiscussion,
+                                targetPlatforms: this.selectedPost.selectedPlatforms.join(',') // Use selected platforms
+                            })
+                        });
+
+                        if (!updateResponse.ok) {
+                            throw new Error('Failed to update post details');
+                        }
+
+                        // Then regenerate AI content
+                        const regenerateResponse = await fetch(`/api/posts/${this.selectedPost.id}/regenerate-content`, {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': 'Bearer ' + this.token
+                            }
+                        });
+
+                        if (regenerateResponse.ok) {
+                            console.log('Content regenerated successfully');
+                            
+                            // Close modal and refresh data
+                            this.showRegeneratePost = false;
+                            this.selectedPost = null;
+                            
+                            // Refresh posts list
+                            await this.loadPosts();
+                            this.showNotificationMessage('Post content regenerated successfully!', 'success');
+                        } else {
+                            const error = await regenerateResponse.text();
+                            console.error('Failed to regenerate content:', error);
+                            this.showNotificationMessage('Failed to regenerate content: ' + error, 'error');
+                        }
+                    } catch (error) {
+                        console.error('Error regenerating content:', error);
+                        this.showNotificationMessage('Error: ' + error.message, 'error');
+                    } finally {
+                        this.isCreatingPost = false;
+                    }
+                },
+
                 async updatePost() {
                     try {
                         // Show loading state and notification
@@ -3030,6 +3367,7 @@
                         
                         console.log('Updating post:', this.editForm.id);
                         
+                        // First update the post details
                         const response = await fetch(`/api/posts/${this.editForm.id}`, {
                             method: 'PUT',
                             headers: {
@@ -3042,6 +3380,35 @@
                                 targetPlatforms: this.editForm.targetPlatforms
                             })
                         });
+
+                        // Then update the post content (CKEditor changes)
+                        if (this.selectedPostContent && this.selectedPostContent.length > 0) {
+                            console.log('Updating post content from CKEditor...');
+                            for (const content of this.selectedPostContent) {
+                                try {
+                                    const contentResponse = await fetch(`/api/posts/${this.editForm.id}/content/${content.id}`, {
+                                        method: 'PUT',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            'Authorization': 'Bearer ' + this.token
+                                        },
+                                        body: JSON.stringify({
+                                            content: content.content,
+                                            title: content.title,
+                                            hashtags: content.hashtags
+                                        })
+                                    });
+                                    
+                                    if (contentResponse.ok) {
+                                        console.log('Content updated successfully for content ID:', content.id);
+                                    } else {
+                                        console.error('Failed to update content ID:', content.id);
+                                    }
+                                } catch (error) {
+                                    console.error('Error updating content:', error);
+                                }
+                            }
+                        }
 
                         if (response.ok) {
                             const updatedPost = await response.json();
@@ -3060,6 +3427,10 @@
                             // Reload posts and stats multiple times to ensure we get updated data
                             console.log('Reloading posts (attempt 1)...');
                             await this.loadPosts();
+                            
+                            // Clear the selectedPostContent cache to force reload on next view
+                            console.log('Clearing selectedPostContent cache...');
+                            this.selectedPostContent = [];
                             
                             // Check if we got the updated post
                             const foundPost = this.posts.find(p => p.id === updatedPost.id);

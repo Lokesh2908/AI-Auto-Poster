@@ -19,6 +19,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -413,6 +414,110 @@ public class PostController {
             return new ResponseEntity<>(debug.toString(), HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>("Error: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+    
+    // Update post content endpoint
+    @PutMapping("/{postId}/content/{contentId}")
+    public ResponseEntity<?> updatePostContent(@PathVariable Long postId, 
+                                             @PathVariable Long contentId,
+                                             @RequestBody Map<String, Object> contentData,
+                                             HttpServletRequest request) {
+        try {
+            System.out.println("=== UPDATE POST CONTENT CONTROLLER ===");
+            System.out.println("Updating content ID: " + contentId + " for post ID: " + postId);
+            
+            // Get current user from JWT token
+            String authHeader = request.getHeader("Authorization");
+            String username = null;
+            Long currentUserId = null;
+            
+            if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                String token = authHeader.substring(7);
+                username = jwtTokenUtil.getUsernameFromToken(token);
+                if (username != null) {
+                    User currentUser = userService.findByEmail(username).orElse(null);
+                    if (currentUser != null) {
+                        currentUserId = currentUser.getId();
+                    }
+                }
+            }
+            
+            if (currentUserId == null) {
+                return new ResponseEntity<>("Unauthorized", HttpStatus.UNAUTHORIZED);
+            }
+            
+            // Update content using the post service
+            PostContent updatedContent = postService.updatePostContent(postId, contentId, contentData, currentUserId);
+            
+            System.out.println("Content updated successfully");
+            System.out.println("=== END UPDATE POST CONTENT CONTROLLER ===");
+            
+            return new ResponseEntity<>(updatedContent, HttpStatus.OK);
+        } catch (Exception e) {
+            System.err.println("UPDATE POST CONTENT ERROR: " + e.getMessage());
+            e.printStackTrace();
+            return new ResponseEntity<>("Error: " + e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    // Get LinkedIn-ready content (HTML stripped)
+    @GetMapping("/{postId}/content/{contentId}/linkedin-ready")
+    public ResponseEntity<String> getLinkedInReadyContent(@PathVariable Long postId, 
+                                                        @PathVariable Long contentId) {
+        try {
+            System.out.println("=== GET LINKEDIN-READY CONTENT ===");
+            System.out.println("Getting LinkedIn-ready content for content ID: " + contentId);
+            
+            String linkedInContent = postService.getLinkedInReadyContent(contentId);
+            
+            System.out.println("LinkedIn-ready content retrieved successfully");
+            return new ResponseEntity<>(linkedInContent, HttpStatus.OK);
+        } catch (Exception e) {
+            System.err.println("GET LINKEDIN-READY CONTENT ERROR: " + e.getMessage());
+            e.printStackTrace();
+            return new ResponseEntity<>("Error: " + e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    // Regenerate post content endpoint
+    @PostMapping("/{id}/regenerate-content")
+    public ResponseEntity<?> regeneratePostContent(@PathVariable Long id, HttpServletRequest request) {
+        try {
+            System.out.println("=== REGENERATE CONTENT CONTROLLER ===");
+            System.out.println("Regenerating content for post ID: " + id);
+            
+            // Get current user from JWT token
+            String authHeader = request.getHeader("Authorization");
+            String username = null;
+            Long currentUserId = null;
+            
+            if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                String token = authHeader.substring(7);
+                username = jwtTokenUtil.getUsernameFromToken(token);
+                if (username != null) {
+                    User currentUser = userService.findByEmail(username).orElse(null);
+                    if (currentUser != null) {
+                        currentUserId = currentUser.getId();
+                    }
+                }
+            }
+            
+            if (currentUserId == null) {
+                return new ResponseEntity<>("Unauthorized", HttpStatus.UNAUTHORIZED);
+            }
+            
+            // Regenerate content using the post service
+            Post post = postService.regeneratePostContent(id, currentUserId);
+            
+            System.out.println("Content regenerated successfully for post: " + post.getTitle());
+            System.out.println("=== END REGENERATE CONTENT CONTROLLER ===");
+            
+            return new ResponseEntity<>(post, HttpStatus.OK);
+        } catch (Exception e) {
+            System.err.println("REGENERATE CONTENT ERROR: " + e.getMessage());
+            e.printStackTrace();
+            return new ResponseEntity<>("Error: " + e.getMessage(), HttpStatus.BAD_REQUEST);
         }
     }
 }
