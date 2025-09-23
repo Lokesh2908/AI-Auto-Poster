@@ -271,15 +271,35 @@ public class AIContentGenerationService {
 
     public String tryAzureOpenAIImageGeneration(String prompt, String title) {
         try {
+            System.out.println("AIContentGenerationService - Starting Azure OpenAI image generation");
+            System.out.println("Azure Endpoint: " + azureEndpoint);
+            System.out.println("DALL-E Deployment: " + dalleDeploymentName);
+            System.out.println("API Version: " + apiVersion);
+            
+            // Validate configuration
+            if (azureEndpoint == null || azureEndpoint.trim().isEmpty()) {
+                throw new RuntimeException("Azure endpoint not configured");
+            }
+            if (azureApiKey == null || azureApiKey.trim().isEmpty()) {
+                throw new RuntimeException("Azure API key not configured");
+            }
+            if (dalleDeploymentName == null || dalleDeploymentName.trim().isEmpty()) {
+                throw new RuntimeException("DALL-E deployment name not configured");
+            }
+            
             // Create the image generation URL
             String imageApiUrl = String.format("%s/openai/deployments/%s/images/generations?api-version=%s",
                     azureEndpoint, dalleDeploymentName, apiVersion);
+            
+            System.out.println("Image API URL: " + imageApiUrl);
 
             // Enhanced prompt for professional content
             String enhancedPrompt = String.format(
                     "Create a professional, high-quality image for: %s. Description: %s. " +
                             "Style: clean, modern, business-appropriate, visually engaging",
                     title, prompt);
+            
+            System.out.println("Enhanced prompt: " + enhancedPrompt);
 
             // Create request body for DALL-E API
             Map<String, Object> requestBody = new HashMap<>();
@@ -295,7 +315,11 @@ public class AIContentGenerationService {
 
             HttpEntity<Map<String, Object>> request = new HttpEntity<>(requestBody, headers);
 
+            System.out.println("Sending request to Azure OpenAI...");
             ResponseEntity<Map> response = restTemplate.postForEntity(imageApiUrl, request, Map.class);
+
+            System.out.println("Response status: " + response.getStatusCode());
+            System.out.println("Response body: " + response.getBody());
 
             if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
                 Map<String, Object> responseBody = response.getBody();
@@ -303,15 +327,24 @@ public class AIContentGenerationService {
                     List<Map<String, Object>> data = (List<Map<String, Object>>) responseBody.get("data");
                     if (!data.isEmpty()) {
                         Map<String, Object> imageData = data.get(0);
-                        return (String) imageData.get("url"); // Returns the image URL
+                        String imageUrl = (String) imageData.get("url");
+                        System.out.println("Image URL received: " + imageUrl);
+                        return imageUrl;
+                    } else {
+                        System.err.println("No image data in response");
                     }
+                } else {
+                    System.err.println("No 'data' field in response");
                 }
+            } else {
+                System.err.println("Non-OK response or null body");
             }
 
             return null;
 
         } catch (Exception e) {
             System.err.println("Error calling Azure OpenAI Image Generation API: " + e.getMessage());
+            e.printStackTrace();
             return null;
         }
     }

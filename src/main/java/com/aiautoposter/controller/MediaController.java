@@ -26,9 +26,22 @@ public class MediaController {
             @RequestParam String prompt,
             @RequestParam(required = false, defaultValue = "Generated Image") String title) {
         try {
+            System.out.println("Generating image with prompt: " + prompt);
+            System.out.println("Title: " + title);
+            
+            if (prompt == null || prompt.trim().isEmpty()) {
+                return new ResponseEntity<>("Prompt cannot be empty", HttpStatus.BAD_REQUEST);
+            }
+            
             String imageUrl = mediaService.generateImage(prompt, title);
-            return new ResponseEntity<>(imageUrl, HttpStatus.CREATED);
+            if (imageUrl != null && !imageUrl.isEmpty()) {
+                return new ResponseEntity<>(imageUrl, HttpStatus.CREATED);
+            } else {
+                return new ResponseEntity<>("Failed to generate image. Please try again.", HttpStatus.INTERNAL_SERVER_ERROR);
+            }
         } catch (Exception e) {
+            System.err.println("Error in generateImage controller: " + e.getMessage());
+            e.printStackTrace();
             return new ResponseEntity<>("Error: " + e.getMessage(), HttpStatus.BAD_REQUEST);
         }
     }
@@ -39,9 +52,25 @@ public class MediaController {
             @RequestParam(value = "title", required = false) String title,
             @RequestParam(value = "description", required = false) String description) {
         try {
+            System.out.println("Uploading file: " + file.getOriginalFilename());
+            System.out.println("File size: " + file.getSize() + " bytes");
+            System.out.println("Content type: " + file.getContentType());
+            
+            if (file.isEmpty()) {
+                return new ResponseEntity<>("File cannot be empty", HttpStatus.BAD_REQUEST);
+            }
+            
+            // Check if it's an image file
+            String contentType = file.getContentType();
+            if (contentType == null || !contentType.startsWith("image/")) {
+                return new ResponseEntity<>("Only image files are allowed", HttpStatus.BAD_REQUEST);
+            }
+            
             String fileUrl = mediaService.saveFileToStatic(file, title, description);
             return new ResponseEntity<>(fileUrl, HttpStatus.CREATED);
         } catch (Exception e) {
+            System.err.println("Error in uploadMedia controller: " + e.getMessage());
+            e.printStackTrace();
             return new ResponseEntity<>("Upload failed: " + e.getMessage(), HttpStatus.BAD_REQUEST);
         }
     }
@@ -63,6 +92,15 @@ public class MediaController {
             return new ResponseEntity<>("Media deleted successfully", HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>("Delete failed: " + e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @GetMapping("/test")
+    public ResponseEntity<String> testMediaEndpoint() {
+        try {
+            return new ResponseEntity<>("Media endpoint is working!", HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Test failed: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 

@@ -46,32 +46,73 @@ public class MediaService {
     private static final String STANDARD_EXTENSION = ".png";
     private static final String STANDARD_CONTENT_TYPE = "image/png";
 
-    public String generateImage(String prompt, String title)
-    {
-        String url  = aiContentGenerationService.tryAzureOpenAIImageGeneration(prompt,title);
-        return saveAiImageToStatic(url,title,title);
+    public String generateImage(String prompt, String title) {
+        try {
+            System.out.println("MediaService - Starting image generation");
+            System.out.println("Prompt: " + prompt);
+            System.out.println("Title: " + title);
+            
+            if (prompt == null || prompt.trim().isEmpty()) {
+                throw new RuntimeException("Prompt cannot be empty");
+            }
+            
+            String url = aiContentGenerationService.tryAzureOpenAIImageGeneration(prompt, title);
+            System.out.println("AI service returned URL: " + url);
+            
+            if (url == null || url.trim().isEmpty()) {
+                throw new RuntimeException("AI service failed to generate image URL");
+            }
+            
+            String savedUrl = saveAiImageToStatic(url, title, title);
+            System.out.println("Image saved with URL: " + savedUrl);
+            
+            return savedUrl;
+        } catch (Exception e) {
+            System.err.println("Error in generateImage: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Failed to generate image: " + e.getMessage(), e);
+        }
     }
 
     public String saveFileToStatic(MultipartFile file, String title, String description) {
         try {
-            // Create static uploads directory
-            Path staticPath = Paths.get(STATIC_DIR);
+            System.out.println("MediaService - Starting file upload");
+            System.out.println("Original filename: " + file.getOriginalFilename());
+            System.out.println("File size: " + file.getSize() + " bytes");
+            
+            if (file.isEmpty()) {
+                throw new RuntimeException("File cannot be empty");
+            }
+            
+            // Create static uploads directory with absolute path
+            Path staticPath = Paths.get(STATIC_DIR).toAbsolutePath();
+            System.out.println("Upload directory: " + staticPath.toString());
+            
             if (!Files.exists(staticPath)) {
                 Files.createDirectories(staticPath);
+                System.out.println("Created upload directory: " + staticPath.toString());
             }
 
             // Read original image
             BufferedImage originalImage = ImageIO.read(file.getInputStream());
             if (originalImage == null) {
-                throw new RuntimeException("Invalid image file");
+                throw new RuntimeException("Invalid image file - cannot read image data");
             }
+            
+            System.out.println("Image dimensions: " + originalImage.getWidth() + "x" + originalImage.getHeight());
 
             // Generate unique filename with standard extension
             String storedFilename = generateUniqueFilename(file.getOriginalFilename());
             Path filePath = staticPath.resolve(storedFilename);
+            System.out.println("Saving to: " + filePath.toString());
 
             // Convert and save as PNG
-            ImageIO.write(originalImage, STANDARD_FORMAT, filePath.toFile());
+            boolean saved = ImageIO.write(originalImage, STANDARD_FORMAT, filePath.toFile());
+            if (!saved) {
+                throw new RuntimeException("Failed to save image file");
+            }
+            
+            System.out.println("File saved successfully, size: " + Files.size(filePath) + " bytes");
 
             // File URL (directly accessible)
             String fileUrl = baseUrl + "/uploads/" + storedFilename;
@@ -84,17 +125,24 @@ public class MediaService {
             media.setContentType(STANDARD_CONTENT_TYPE); // Always PNG
             media.setFileSize(Files.size(filePath)); // Actual file size after conversion
             media.setMediaType("PNG");
-            media.setTitle(title != null ? title : file.getOriginalFilename());
+            media.setTitle(title != null && !title.trim().isEmpty() ? title : file.getOriginalFilename());
             media.setAltText(description);
             media.setCreatedAt(LocalDateTime.now());
             media.setUpdatedAt(LocalDateTime.now());
 
-            mediaRepository.save(media);
+            Media savedMedia = mediaRepository.save(media);
+            System.out.println("Media saved to database with ID: " + savedMedia.getId());
 
             return fileUrl;
 
         } catch (IOException e) {
-            throw new RuntimeException("Failed to save and convert image: " + e.getMessage());
+            System.err.println("IOException in saveFileToStatic: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Failed to save and convert image: " + e.getMessage(), e);
+        } catch (Exception e) {
+            System.err.println("Exception in saveFileToStatic: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Failed to process image: " + e.getMessage(), e);
         }
     }
 
