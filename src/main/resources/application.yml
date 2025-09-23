@@ -10,7 +10,7 @@ spring:
   datasource:
     url: jdbc:mysql://localhost:3306/testdb?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
     username: root
-    password: nikhil
+    password: Test#123
     driver-class-name: com.mysql.cj.jdbc.Driver
     
   jpa:
@@ -74,8 +74,8 @@ ai:
 
 linkedin:
   client:
-    id: ${LINKEDIN_CLIENT_ID:your-linkedin-client-id}
-    secret: ${LINKEDIN_CLIENT_SECRET:your-linkedin-client-secret}
+    id: ${LINKEDIN_CLIENT_ID:linkedin_client_id}
+    secret: ${LINKEDIN_CLIENT_SECRET:linkedin_client_secret}
     redirect-uri: ${LINKEDIN_REDIRECT_URI:http://localhost:8080/api/linkedin/callback}
 
 logging:
@@ -88,3 +88,10 @@ app:
     dir: uploads
   base:
     url: http://localhost:8080
+
+wordpress:
+  name: "My Blog"
+  url: "https://inventorytoothbrush.s3-tastewp.com/"
+  username: "admin"
+  app-password: "${WP_PASSWORD:KGDN j2Ct B5qw b74s YZb7 oltO}"
+  enabled: true

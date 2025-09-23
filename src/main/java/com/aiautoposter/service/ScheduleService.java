@@ -1,12 +1,7 @@
 package com.aiautoposter.service;
 
-import com.aiautoposter.entity.Schedule;
-import com.aiautoposter.entity.Post;
-import com.aiautoposter.entity.LinkedInUser;
-import com.aiautoposter.entity.User;
-import com.aiautoposter.repository.ScheduleRepository;
-import com.aiautoposter.repository.PostRepository;
-import com.aiautoposter.repository.LinkedInUserRepository;
+import com.aiautoposter.entity.*;
+import com.aiautoposter.repository.*;
 import com.aiautoposter.repository.ScheduleRepository;
 import com.aiautoposter.repository.PostRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -124,7 +119,6 @@ public class ScheduleService {
     @Scheduled(cron = "${scheduler.cron:0 * * * * *}") // Default: every minute
     public void processScheduledPosts() {
         List<Schedule> schedulesToPublish = getSchedulesToPublish();
-        
         for (Schedule schedule : schedulesToPublish) {
             try {
                 publishPost(schedule);
