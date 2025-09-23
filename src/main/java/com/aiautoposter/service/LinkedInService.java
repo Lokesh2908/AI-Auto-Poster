@@ -3,7 +3,10 @@ package com.aiautoposter.service;
 import com.aiautoposter.entity.Post;
 import com.aiautoposter.entity.PostContent;
 import com.aiautoposter.entity.User;
+import com.aiautoposter.entity.PostMedia;
+import com.aiautoposter.entity.Media;
 import com.aiautoposter.repository.PostContentRepository;
+import com.aiautoposter.repository.PostMediaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
@@ -37,6 +40,9 @@ public class LinkedInService {
 
     @Autowired
     private PostContentRepository postContentRepository;
+
+    @Autowired
+    private PostMediaRepository postMediaRepository;
 
     @Autowired
     private UserService userService;
@@ -91,7 +97,7 @@ public class LinkedInService {
         }
     }
 
-    // Updated to actually publish to LinkedIn
+    // Updated to actually publish to LinkedIn with media support
     public boolean publishPost(Post post, String accessToken, String personUrn) {
         try {
             // Get LinkedIn content for the post
@@ -103,10 +109,28 @@ public class LinkedInService {
             }
 
             PostContent linkedinContent = postContents.get(0);
+            
+            // Get media files associated with the post
+            List<PostMedia> postMediaList = postMediaRepository.findByPostIdWithMediaOrderByDisplayOrder(post.getId());
+            List<String> mediaUrls = new ArrayList<>();
+            
+            for (PostMedia postMedia : postMediaList) {
+                Media media = postMedia.getMedia();
+                if (media != null && "IMAGE".equalsIgnoreCase(media.getMediaType()) || "PNG".equalsIgnoreCase(media.getMediaType())) {
+                    mediaUrls.add(media.getFileUrl());
+                }
+            }
+            
             // Try to create the LinkedIn post
             String postId = null;
             try {
-                postId = createLinkedInPost(accessToken, personUrn, linkedinContent);
+                if (!mediaUrls.isEmpty()) {
+                    // Create post with images
+                    postId = createPostWithImages(accessToken, personUrn, linkedinContent, mediaUrls);
+                } else {
+                    // Create text-only post
+                    postId = createLinkedInPost(accessToken, personUrn, linkedinContent);
+                }
             } catch (Exception e) {
                 System.err.println("First attempt failed, trying alternative URN format: " + e.getMessage());
                 
@@ -124,7 +148,11 @@ public class LinkedInService {
                 
                 if (alternativeUrn != null) {
                     System.out.println("Trying alternative URN format: " + alternativeUrn);
-                    postId = createLinkedInPost(accessToken, alternativeUrn, linkedinContent);
+                    if (!mediaUrls.isEmpty()) {
+                        postId = createPostWithImages(accessToken, alternativeUrn, linkedinContent, mediaUrls);
+                    } else {
+                        postId = createLinkedInPost(accessToken, alternativeUrn, linkedinContent);
+                    }
                 }
             }
 
@@ -408,7 +436,7 @@ public class LinkedInService {
             List<String> recipes = new ArrayList<>();
             recipes.add("urn:li:digitalmediaRecipe:feedshare-image");
             registerUploadRequest.put("recipes", recipes);
-            registerUploadRequest.put("owner", "urn:li:person:" + personUrn);
+            registerUploadRequest.put("owner", personUrn);
 
             List<Map<String, Object>> serviceRelationships = new ArrayList<>();
             Map<String, Object> relationship = new HashMap<>();
@@ -479,7 +507,7 @@ public class LinkedInService {
 
         // Build payload
         Map<String, Object> payload = new HashMap<>();
-        payload.put("author", "urn:li:person:" + personUrn);
+        payload.put("author", personUrn);
         payload.put("lifecycleState", "PUBLISHED");
 
         Map<String, Object> shareCommentary = new HashMap<>();

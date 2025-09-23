@@ -40,6 +40,7 @@ public class Post {
     @ManyToOne
     @JoinColumn(name = "created_by", insertable = false, updatable = false)
     private User creator;
+    
 
     
     // Constructors

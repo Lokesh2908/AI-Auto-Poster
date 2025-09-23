@@ -5,11 +5,14 @@ import com.aiautoposter.entity.PostContent;
 import com.aiautoposter.entity.Image;
 import com.aiautoposter.entity.AIWorkflowStep;
 import com.aiautoposter.entity.User;
+import com.aiautoposter.entity.PostMedia;
+import com.aiautoposter.entity.Media;
 import com.aiautoposter.repository.PostRepository;
 import com.aiautoposter.repository.PostContentRepository;
 import com.aiautoposter.repository.ImageRepository;
 import com.aiautoposter.repository.AIWorkflowStepRepository;
 import com.aiautoposter.repository.UserRepository;
+import com.aiautoposter.repository.PostMediaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -47,6 +50,9 @@ public class PostService {
     
     @Autowired
     private UserRepository userRepository;
+    
+    @Autowired
+    private PostMediaRepository postMediaRepository;
     public Post createPost(Post post) {
         Post savedPost = postRepository.save(post);
         
@@ -204,6 +210,20 @@ public class PostService {
     
     public List<Image> getImages(Long postId) {
         return imageRepository.findByPostId(postId);
+    }
+    
+    // Media attachment methods
+    public PostMedia attachMediaToPost(Long postId, Long mediaId, Integer displayOrder) {
+        PostMedia postMedia = new PostMedia(postId, mediaId, displayOrder);
+        return postMediaRepository.save(postMedia);
+    }
+    
+    public void detachMediaFromPost(Long postId, Long mediaId) {
+        postMediaRepository.deleteByPostIdAndMediaId(postId, mediaId);
+    }
+    
+    public List<PostMedia> getPostMedia(Long postId) {
+        return postMediaRepository.findByPostIdWithMediaOrderByDisplayOrder(postId);
     }
     
     public AIWorkflowStep addAIWorkflowStep(AIWorkflowStep workflowStep) {

@@ -2,6 +2,10 @@ package com.aiautoposter.service;
 
 import com.aiautoposter.entity.PostContent;
 import com.aiautoposter.entity.WordPressPostResponse;
+import com.aiautoposter.entity.Post;
+import com.aiautoposter.entity.PostMedia;
+import com.aiautoposter.entity.Media;
+import com.aiautoposter.repository.PostMediaRepository;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -18,6 +22,7 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -42,6 +47,9 @@ public class WordpressService {
     @Value("${wordpress.enabled}")
     private boolean enabled;
 
+    @Autowired
+    private PostMediaRepository postMediaRepository;
+
     public WordPressPostResponse publishPost(PostContent content) {
         if (!enabled) {
             throw new RuntimeException("WordPress publishing is disabled");
@@ -56,6 +64,52 @@ public class WordpressService {
 
             // Replace local image URLs with WordPress URLs
             String wpContent = replaceImageUrls(content.getContent(), urlToWpMediaId);
+
+            // Create WordPress post
+            return createPost(content.getTitle(), wpContent, urlToWpMediaId);
+
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to publish to WordPress: " + e.getMessage(), e);
+        }
+    }
+
+    // New method to publish post with media from database
+    public WordPressPostResponse publishPost(Post post, PostContent content) {
+        if (!enabled) {
+            throw new RuntimeException("WordPress publishing is disabled");
+        }
+
+        try {
+            // Get media files associated with the post
+            List<PostMedia> postMediaList = postMediaRepository.findByPostIdWithMediaOrderByDisplayOrder(post.getId());
+            
+            // Extract existing images from HTML content
+            List<String> htmlImageUrls = extractImageUrls(content.getContent());
+            
+            // Collect all media URLs (from database + HTML)
+            List<String> allImageUrls = new ArrayList<>();
+            
+            // Add media from database
+            for (PostMedia postMedia : postMediaList) {
+                Media media = postMedia.getMedia();
+                if (media != null && ("IMAGE".equalsIgnoreCase(media.getMediaType()) || "PNG".equalsIgnoreCase(media.getMediaType()))) {
+                    allImageUrls.add(media.getFileUrl());
+                }
+            }
+            
+            // Add images from HTML content
+            allImageUrls.addAll(htmlImageUrls);
+
+            // Upload all images to WordPress
+            Map<String, Integer> urlToWpMediaId = uploadImages(allImageUrls);
+
+            // Replace local image URLs with WordPress URLs in content
+            String wpContent = replaceImageUrls(content.getContent(), urlToWpMediaId);
+            
+            // If no images in HTML content but we have media from database, add them to content
+            if (htmlImageUrls.isEmpty() && !postMediaList.isEmpty()) {
+                wpContent = addMediaToContent(wpContent, postMediaList, urlToWpMediaId);
+            }
 
             // Create WordPress post
             return createPost(content.getTitle(), wpContent, urlToWpMediaId);
@@ -241,6 +295,35 @@ public class WordpressService {
             case "webp": return "image/webp";
             default: return "image/jpeg";
         }
+    }
+
+    // Helper method to add media to content when no images exist in HTML
+    private String addMediaToContent(String content, List<PostMedia> postMediaList, Map<String, Integer> urlToWpMediaId) {
+        StringBuilder contentBuilder = new StringBuilder(content);
+        
+        for (PostMedia postMedia : postMediaList) {
+            Media media = postMedia.getMedia();
+            if (media != null && ("IMAGE".equalsIgnoreCase(media.getMediaType()) || "PNG".equalsIgnoreCase(media.getMediaType()))) {
+                Integer wpMediaId = urlToWpMediaId.get(media.getFileUrl());
+                if (wpMediaId != null) {
+                    String wpMediaUrl = getMediaUrl(wpMediaId);
+                    if (wpMediaUrl != null) {
+                        // Add image to content with proper WordPress image block format
+                        String imageBlock = String.format(
+                            "\n\n<!-- wp:image {\"id\":%d} -->\n" +
+                            "<figure class=\"wp-block-image\"><img src=\"%s\" alt=\"%s\" class=\"wp-image-%d\"/></figure>\n" +
+                            "<!-- /wp:image -->\n",
+                            wpMediaId, wpMediaUrl, 
+                            media.getAltText() != null ? media.getAltText() : media.getTitle(),
+                            wpMediaId
+                        );
+                        contentBuilder.append(imageBlock);
+                    }
+                }
+            }
+        }
+        
+        return contentBuilder.toString();
     }
 
 }

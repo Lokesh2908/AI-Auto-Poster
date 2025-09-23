@@ -34,6 +34,12 @@ public class ScheduleService {
 
     @Autowired
     private UserService userService;
+    
+    @Autowired
+    private WordpressService wordpressService;
+    
+    @Autowired
+    private PostService postService;
     public Schedule createSchedule(Long postId, LocalDateTime scheduledFor) {
         Schedule schedule = new Schedule(postId, scheduledFor);
         return scheduleRepository.save(schedule);
@@ -144,15 +150,93 @@ public class ScheduleService {
     private void publishPost(Schedule schedule) {
         Post post = postRepository.findById(schedule.getPostId())
                 .orElseThrow(() -> new RuntimeException("Post not found"));
+        
         try {
             if (post.getCreatedBy() == null) {
-                throw new RuntimeException("Post creator not set; cannot determine LinkedIn account");
+                throw new RuntimeException("Post creator not set; cannot determine publishing accounts");
             }
 
-            // Load creator and their LinkedIn connection
+            // Load creator
             User creator = userService.findById(post.getCreatedBy())
                     .orElseThrow(() -> new RuntimeException("Creator user not found"));
 
+            // Get target platforms from post
+            String[] platforms = post.getTargetPlatforms().split(",");
+            boolean anyPublished = false;
+            StringBuilder publishResults = new StringBuilder();
+            
+            for (String platform : platforms) {
+                platform = platform.trim().toLowerCase();
+                
+                try {
+                    if ("linkedin".equals(platform)) {
+                        boolean linkedInPublished = publishToLinkedIn(post, creator);
+                        if (linkedInPublished) {
+                            anyPublished = true;
+                            publishResults.append("LinkedIn: Success. ");
+                        } else {
+                            publishResults.append("LinkedIn: Failed. ");
+                        }
+                    } else if ("wordpress".equals(platform)) {
+                        boolean wordPressPublished = publishToWordPress(post, creator);
+                        if (wordPressPublished) {
+                            anyPublished = true;
+                            publishResults.append("WordPress: Success. ");
+                        } else {
+                            publishResults.append("WordPress: Failed. ");
+                        }
+                    }
+                } catch (Exception e) {
+                    publishResults.append(platform).append(": Error - ").append(e.getMessage()).append(". ");
+                }
+            }
+
+            if (anyPublished) {
+                schedule.setStatus(Schedule.ScheduleStatus.PUBLISHED);
+                schedule.setPublishedAt(LocalDateTime.now());
+                scheduleRepository.save(schedule);
+                
+                // Update post status
+                post.setCurrentStatus(Post.PostStatus.PUBLISHED);
+                postRepository.save(post);
+                
+                // Send success notification
+                notificationService.createNotification(
+                    schedule.getPostId(),
+                    post.getCreatedBy(),
+                    com.aiautoposter.entity.Notification.NotificationType.PUBLISHED,
+                    String.format("Your post '%s' has been published. Results: %s", post.getTitle(), publishResults.toString())
+                );
+            } else {
+                // All platforms failed
+                schedule.setStatus(Schedule.ScheduleStatus.FAILED);
+                scheduleRepository.save(schedule);
+                
+                notificationService.createNotification(
+                    schedule.getPostId(),
+                    post.getCreatedBy(),
+                    com.aiautoposter.entity.Notification.NotificationType.FAILED,
+                    String.format("Failed to publish '%s' to any platform. Results: %s", post.getTitle(), publishResults.toString())
+                );
+            }
+            
+        } catch (Exception ex) {
+            schedule.setStatus(Schedule.ScheduleStatus.FAILED);
+            scheduleRepository.save(schedule);
+            
+            notificationService.createNotification(
+                schedule.getPostId(),
+                post.getCreatedBy(),
+                com.aiautoposter.entity.Notification.NotificationType.FAILED,
+                String.format("Failed to publish '%s': %s", post.getTitle(), ex.getMessage())
+            );
+            
+            throw new RuntimeException("Failed to publish scheduled post: " + ex.getMessage(), ex);
+        }
+    }
+    
+    private boolean publishToLinkedIn(Post post, User creator) {
+        try {
             java.util.Optional<LinkedInUser> liUserOpt = linkedInUserRepository.findByUser(creator);
             if (!liUserOpt.isPresent()) {
                 throw new RuntimeException("LinkedIn account not connected for the post creator");
@@ -165,43 +249,39 @@ public class ScheduleService {
                 throw new RuntimeException("Missing LinkedIn credentials for user");
             }
 
-            // Expiry pre-check: if token is expired, fail gracefully and notify
+            // Expiry pre-check: if token is expired, fail gracefully
             java.time.LocalDateTime expiresAt = liUser.getAccessTokenExpiresAt();
             if (expiresAt != null && expiresAt.isBefore(java.time.LocalDateTime.now())) {
-                schedule.setStatus(Schedule.ScheduleStatus.FAILED);
-                scheduleRepository.save(schedule);
-
-                notificationService.createNotification(
-                    schedule.getPostId(),
-                    post.getCreatedBy(),
-                    com.aiautoposter.entity.Notification.NotificationType.FAILED,
-                    String.format("Cannot publish '%s': LinkedIn token expired. Please reconnect LinkedIn.", post.getTitle())
-                );
-                return; // skip publish attempt with expired token
+                throw new RuntimeException("LinkedIn token expired. Please reconnect LinkedIn.");
             }
 
-            boolean published = linkedInService.publishPost(post, accessToken, personUrn);
-
-            if (!published) {
-                throw new RuntimeException("LinkedIn publish returned false");
+            // Publish with media attachments support
+            return linkedInService.publishPost(post, accessToken, personUrn);
+            
+        } catch (Exception e) {
+            throw new RuntimeException("LinkedIn publishing failed: " + e.getMessage(), e);
+        }
+    }
+    
+    private boolean publishToWordPress(Post post, User creator) {
+        try {
+            // Get post content for WordPress
+            List<PostContent> contentList = postService.getPostContents(post.getId());
+            PostContent wordpressContent = contentList.stream()
+                    .filter(content -> "wordpress".equals(content.getPlatform()))
+                    .findFirst()
+                    .orElse(null);
+            
+            if (wordpressContent == null) {
+                throw new RuntimeException("No WordPress content found for post");
             }
-            schedule.setStatus(Schedule.ScheduleStatus.PUBLISHED);
-            schedule.setPublishedAt(LocalDateTime.now());
-            scheduleRepository.save(schedule);
             
-            // Update post status
-            post.setCurrentStatus(Post.PostStatus.PUBLISHED);
-            postRepository.save(post);
+            // Publish with media attachments support
+            var response = wordpressService.publishPost(post, wordpressContent);
+            return response != null && response.getStatus() != null;
             
-            // Send success notification
-            notificationService.createNotification(
-                schedule.getPostId(),
-                post.getCreatedBy(),
-                com.aiautoposter.entity.Notification.NotificationType.PUBLISHED,
-                String.format("Your post '%s' has been successfully published", post.getTitle())
-            );
-        } catch (Exception ex) {
-            throw new RuntimeException("Failed to publish post to LinkedIn: " + ex.getMessage(), ex);
+        } catch (Exception e) {
+            throw new RuntimeException("WordPress publishing failed: " + e.getMessage(), e);
         }
     }
     

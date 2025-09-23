@@ -1180,6 +1180,84 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <!-- Media Selection Section -->
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                    <i class="fas fa-images text-pink-500 mr-2"></i>
+                                    Attach Media (Optional)
+                                </label>
+                                <div class="border border-gray-200 rounded-xl p-4 bg-gray-50">
+                                    <!-- Media Selection Toggle -->
+                                    <div class="flex items-center justify-between mb-4">
+                                        <span class="text-sm text-gray-600">Add images to enhance your post</span>
+                                        <button type="button" @click="showMediaSelector = !showMediaSelector"
+                                                class="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center">
+                                            <i class="fas fa-plus mr-1"></i>
+                                            <span x-text="showMediaSelector ? 'Hide Media' : 'Select Media'"></span>
+                                        </button>
+                                    </div>
+
+                                    <!-- Selected Media Preview -->
+                                    <div x-show="postForm.selectedMedia && postForm.selectedMedia.length > 0" class="mb-4">
+                                        <div class="flex flex-wrap gap-2">
+                                            <template x-for="media in postForm.selectedMedia" :key="media.id">
+                                                <div class="relative group">
+                                                    <img :src="media.fileUrl" :alt="media.title" 
+                                                         class="w-16 h-16 object-cover rounded-lg border-2 border-blue-200">
+                                                    <button type="button" @click="removeMediaFromPost(media.id)"
+                                                            class="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full text-xs hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <i class="fas fa-times"></i>
+                                                    </button>
+                                                    <div class="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs p-1 rounded-b-lg truncate">
+                                                        <span x-text="media.title"></span>
+                                                    </div>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </div>
+
+                                    <!-- Media Selector -->
+                                    <div x-show="showMediaSelector" class="space-y-3">
+                                        <div class="max-h-48 overflow-y-auto border border-gray-200 rounded-lg">
+                                            <template x-if="mediaList.length === 0">
+                                                <div class="p-4 text-center text-gray-500">
+                                                    <i class="fas fa-images text-2xl mb-2"></i>
+                                                    <p>No media files available</p>
+                                                    <button type="button" @click="activeTab = 'media'; showCreatePost = false"
+                                                            class="text-blue-600 hover:text-blue-800 text-sm font-medium mt-2">
+                                                        Go to Media Gallery to upload images
+                                                    </button>
+                                                </div>
+                                            </template>
+                                            <template x-if="mediaList.length > 0">
+                                                <div class="grid grid-cols-4 gap-2 p-2">
+                                                    <template x-for="media in mediaList" :key="media.id">
+                                                        <div class="relative group cursor-pointer" 
+                                                             @click="toggleMediaSelection(media)"
+                                                             :class="isMediaSelected(media.id) ? 'ring-2 ring-blue-500' : ''">
+                                                            <img :src="media.fileUrl" :alt="media.title" 
+                                                                 class="w-full h-16 object-cover rounded-lg border border-gray-200 hover:border-blue-300 transition-colors">
+                                                            <div x-show="isMediaSelected(media.id)" 
+                                                                 class="absolute top-1 right-1 w-5 h-5 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs">
+                                                                <i class="fas fa-check"></i>
+                                                            </div>
+                                                            <div class="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs p-1 rounded-b-lg truncate">
+                                                                <span x-text="media.title"></span>
+                                                            </div>
+                                                        </div>
+                                                    </template>
+                                                </div>
+                                            </template>
+                                        </div>
+                                        
+                                        <div class="text-xs text-gray-500 flex items-center">
+                                            <i class="fas fa-info-circle mr-1"></i>
+                                            Click images to select/deselect. Selected images will be attached to your post.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         
                         <!-- Action Buttons -->
@@ -1244,13 +1322,18 @@
                                 
                                 <div>
                                     <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
-                                        <i class="fab fa-linkedin text-blue-600 mr-2"></i>
-                                        Platform
+                                        <i class="fas fa-share-alt text-purple-500 mr-2"></i>
+                                        Target Platforms
                                     </label>
-                                    <span class="inline-flex items-center px-3 py-2 rounded-xl text-sm font-medium bg-blue-100 text-blue-800">
-                                        <i class="fab fa-linkedin mr-1"></i>
-                                        LinkedIn
-                                    </span>
+                                    <div class="flex flex-wrap gap-2">
+                                        <template x-for="platform in (selectedPost.targetPlatforms ? selectedPost.targetPlatforms.split(',').map(p => p.trim()) : ['linkedin'])" :key="platform">
+                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
+                                                  :class="platform === 'linkedin' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'">
+                                                <i :class="platform === 'linkedin' ? 'fab fa-linkedin' : 'fab fa-wordpress'" class="mr-1"></i>
+                                                <span x-text="platform.charAt(0).toUpperCase() + platform.slice(1)"></span>
+                                            </span>
+                                        </template>
+                                    </div>
                                 </div>
                             </div>
                             
@@ -1261,6 +1344,34 @@
                                 </label>
                                 <div class="w-full px-4 py-3 border border-gray-200 bg-gray-50 text-gray-900 rounded-xl shadow-sm" x-text="formatDateTime(selectedPost.createdAt)"></div>
                             </div>
+                            
+                            <!-- Media Attachments Section -->
+                            <template x-if="selectedPost.attachedMedia && selectedPost.attachedMedia.length > 0">
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                                        <i class="fas fa-paperclip text-indigo-500 mr-2"></i>
+                                        Media Attachments (<span x-text="selectedPost.attachedMedia.length"></span>)
+                                    </label>
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <template x-for="media in selectedPost.attachedMedia" :key="media.id">
+                                            <div class="relative group border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow duration-200">
+                                                <img :src="'/uploads/' + media.fileName" 
+                                                     :alt="media.originalName"
+                                                     class="w-full h-24 object-cover">
+                                                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200 flex items-center justify-center">
+                                                    <button @click="window.open('/uploads/' + media.fileName, '_blank')" 
+                                                            class="opacity-0 group-hover:opacity-100 text-white bg-black bg-opacity-50 rounded-full p-2 transition-opacity duration-200">
+                                                        <i class="fas fa-expand-alt"></i>
+                                                    </button>
+                                                </div>
+                                                <div class="p-2 bg-white">
+                                                    <p class="text-xs text-gray-600 truncate" x-text="media.originalName"></p>
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+                            </template>
                             
                             <!-- Approval/Rejection Information Section -->
                             <template x-if="selectedPost.currentStatus === 'APPROVED' && selectedPost.approvedBy">
@@ -1350,7 +1461,7 @@
                                             <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium"
                                                   :class="content.platform === 'wordpress' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'">
                                                 <i :class="content.platform === 'wordpress' ? 'fab fa-wordpress' : 'fab fa-linkedin'" class="mr-1"></i>
-                                                <span x-text="content.platform ? content.platform.charAt(0).toUpperCase() + content.platform.slice(1) : 'LinkedIn'"></span>
+                                                <span x-text="content.platform ? content.platform.charAt(0).toUpperCase() + content.platform.slice(1) : 'Unknown'"></span>
                                             </span>
                                             <span class="text-xs text-gray-500" x-text="formatDateTime(content.createdAt)"></span>
                                         </div>
@@ -1524,7 +1635,7 @@
                                         <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium"
                                               :class="content.platform === 'wordpress' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'">
                                             <i :class="content.platform === 'wordpress' ? 'fab fa-wordpress' : 'fab fa-linkedin'" class="mr-1"></i>
-                                            <span x-text="content.platform ? content.platform.charAt(0).toUpperCase() + content.platform.slice(1) : 'LinkedIn'"></span>
+                                            <span x-text="content.platform ? content.platform.charAt(0).toUpperCase() + content.platform.slice(1) : 'Unknown'"></span>
                                         </span>
                                         <span class="text-xs text-gray-500" x-text="formatDateTime(content.createdAt)"></span>
                                     </div>
@@ -1570,13 +1681,33 @@ Use simple formatting:
                                                     $nextTick(() => {
                                                         ClassicEditor
                                                             .create(document.getElementById('edit-wordpress-editor-' + content.id), {
-                                                                toolbar: ['heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', '|', 'outdent', 'indent', '|', 'blockQuote', 'insertTable', '|', 'undo', 'redo'],
+                                                                toolbar: ['heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', '|', 'outdent', 'indent', '|', 'blockQuote', 'insertTable', '|', 'insertImage', 'mediaEmbed', '|', 'undo', 'redo'],
                                                                 height: '200px'
                                                             })
                                                             .then(editor => {
+                                                                // Store editor reference for media insertion
+                                                                window.currentCKEditor = editor;
+                                                                
                                                                 editor.setData(content.content);
                                                                 editor.model.document.on('change:data', () => {
                                                                     content.content = editor.getData();
+                                                                });
+                                                                
+                                                                // Custom image insert command
+                                                                editor.ui.componentFactory.add('insertImage', locale => {
+                                                                    const view = new editor.ui.ButtonView(locale);
+                                                                    view.set({
+                                                                        label: 'Insert Image from Media Library',
+                                                                        icon: '<svg viewBox=\"0 0 20 20\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M6.972 16.615a.997.997 0 0 1-.744-.292l-4.596-4.596a1 1 0 0 1 1.414-1.414l3.926 3.926 9.937-9.937a1 1 0 0 1 1.414 1.414L7.717 16.323a.997.997 0 0 1-.745.292z\"/></svg>',
+                                                                        tooltip: true
+                                                                    });
+                                                                    
+                                                                    view.on('execute', () => {
+                                                                        // Open media browser modal
+                                                                        showCKEditorMediaBrowser();
+                                                                    });
+                                                                    
+                                                                    return view;
                                                                 });
                                                             })
                                                             .catch(error => {
@@ -1627,6 +1758,84 @@ Use simple formatting:
                                     <div>
                                         <p class="text-sm text-yellow-800 font-medium">Content Regeneration</p>
                                         <p class="text-xs text-yellow-700 mt-1">Updating the post will trigger AI to regenerate new content based on your changes.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Media Selection Section for Edit -->
+                        <div class="mt-6 pt-6 border-t border-gray-100">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                                <i class="fas fa-images text-pink-500 mr-2"></i>
+                                Manage Media Attachments
+                            </label>
+                            <div class="border border-gray-200 rounded-xl p-4 bg-gray-50">
+                                <!-- Media Selection Toggle -->
+                                <div class="flex items-center justify-between mb-4">
+                                    <span class="text-sm text-gray-600">Update images attached to this post</span>
+                                    <button type="button" @click="showEditMediaSelector = !showEditMediaSelector"
+                                            class="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center">
+                                        <i class="fas fa-plus mr-1"></i>
+                                        <span x-text="showEditMediaSelector ? 'Hide Media' : 'Select Media'"></span>
+                                    </button>
+                                </div>
+
+                                <!-- Current Media Attachments -->
+                                <div x-show="editForm.selectedMedia && editForm.selectedMedia.length > 0" class="mb-4">
+                                    <div class="flex flex-wrap gap-2">
+                                        <template x-for="media in editForm.selectedMedia" :key="media.id">
+                                            <div class="relative group">
+                                                <img :src="media.fileUrl" :alt="media.title" 
+                                                     class="w-16 h-16 object-cover rounded-lg border-2 border-blue-200">
+                                                <button type="button" @click="removeMediaFromEditPost(media.id)"
+                                                        class="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full text-xs hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                                <div class="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs p-1 rounded-b-lg truncate">
+                                                    <span x-text="media.title"></span>
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+
+                                <!-- Media Selector -->
+                                <div x-show="showEditMediaSelector" class="space-y-3">
+                                    <div class="max-h-48 overflow-y-auto border border-gray-200 rounded-lg">
+                                        <template x-if="mediaList.length === 0">
+                                            <div class="p-4 text-center text-gray-500">
+                                                <i class="fas fa-images text-2xl mb-2"></i>
+                                                <p>No media files available</p>
+                                                <button type="button" @click="activeTab = 'media'; showEditPost = false"
+                                                        class="text-blue-600 hover:text-blue-800 text-sm font-medium mt-2">
+                                                    Go to Media Gallery to upload images
+                                                </button>
+                                            </div>
+                                        </template>
+                                        <template x-if="mediaList.length > 0">
+                                            <div class="grid grid-cols-4 gap-2 p-2">
+                                                <template x-for="media in mediaList" :key="media.id">
+                                                    <div class="relative group cursor-pointer" 
+                                                         @click="toggleEditMediaSelection(media)"
+                                                         :class="isEditMediaSelected(media.id) ? 'ring-2 ring-blue-500' : ''">
+                                                        <img :src="media.fileUrl" :alt="media.title" 
+                                                             class="w-full h-16 object-cover rounded-lg border border-gray-200 hover:border-blue-300 transition-colors">
+                                                        <div x-show="isEditMediaSelected(media.id)" 
+                                                             class="absolute top-1 right-1 w-5 h-5 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs">
+                                                            <i class="fas fa-check"></i>
+                                                        </div>
+                                                        <div class="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs p-1 rounded-b-lg truncate">
+                                                            <span x-text="media.title"></span>
+                                                        </div>
+                                                    </div>
+                                                </template>
+                                            </div>
+                                        </template>
+                                    </div>
+                                    
+                                    <div class="text-xs text-gray-500 flex items-center">
+                                        <i class="fas fa-info-circle mr-1"></i>
+                                        Click images to select/deselect. Changes will be saved when you update the post.
                                     </div>
                                 </div>
                             </div>
@@ -2117,24 +2326,6 @@ Use simple formatting:
         }
 
         // Initialize on page load
-        document.addEventListener('DOMContentLoaded', checkLinkedInStatus);
-
-
-        function appData() {
-            return {
-                isDark: false,
-                isAuthenticated: false,
-                user: null,
-                token: localStorage.getItem('token'),
-                activeTab: 'dashboard',
-                postFilter: 'all',
-                showLogin: false,
-                showRegister: false,
-                showCreatePost: false,
-                showScheduleModal: false,
-                showRejectModal: false,
-                showViewPost: false,
-                showEditPost: false,
                 showRegeneratePost: false,
                 showApprovalModal: false,
                 stats: {
@@ -2174,14 +2365,18 @@ Use simple formatting:
                     title: '',
                     sourceDiscussion: '',
                     targetPlatforms: 'linkedin',
-                    selectedPlatforms: ['linkedin'] // Default to LinkedIn selected
+                    selectedPlatforms: ['linkedin'], // Default to LinkedIn selected
+                    selectedMedia: [] // Array to store selected media files
                 },
+                showMediaSelector: false,
                 editForm: {
                     id: null,
                     title: '',
                     sourceDiscussion: '',
-                    targetPlatforms: 'linkedin'
+                    targetPlatforms: 'linkedin',
+                    selectedMedia: [] // Array to store selected media files for editing
                 },
+                showEditMediaSelector: false,
                 selectedPost: null,
                 selectedPostContent: [],
                 selectedApproval: null,
@@ -2535,6 +2730,52 @@ Use simple formatting:
                     this.selectedFile = null;
                 },
 
+                // Media selection functions for post creation
+                toggleMediaSelection(media) {
+                    const index = this.postForm.selectedMedia.findIndex(m => m.id === media.id);
+                    if (index > -1) {
+                        // Remove if already selected
+                        this.postForm.selectedMedia.splice(index, 1);
+                    } else {
+                        // Add if not selected
+                        this.postForm.selectedMedia.push(media);
+                    }
+                },
+
+                isMediaSelected(mediaId) {
+                    return this.postForm.selectedMedia.some(m => m.id === mediaId);
+                },
+
+                removeMediaFromPost(mediaId) {
+                    const index = this.postForm.selectedMedia.findIndex(m => m.id === mediaId);
+                    if (index > -1) {
+                        this.postForm.selectedMedia.splice(index, 1);
+                    }
+                },
+
+                // Media selection functions for post editing
+                toggleEditMediaSelection(media) {
+                    const index = this.editForm.selectedMedia.findIndex(m => m.id === media.id);
+                    if (index > -1) {
+                        // Remove if already selected
+                        this.editForm.selectedMedia.splice(index, 1);
+                    } else {
+                        // Add if not selected
+                        this.editForm.selectedMedia.push(media);
+                    }
+                },
+
+                isEditMediaSelected(mediaId) {
+                    return this.editForm.selectedMedia.some(m => m.id === mediaId);
+                },
+
+                removeMediaFromEditPost(mediaId) {
+                    const index = this.editForm.selectedMedia.findIndex(m => m.id === mediaId);
+                    if (index > -1) {
+                        this.editForm.selectedMedia.splice(index, 1);
+                    }
+                },
+
                 copyImageUrl(url) {
                     navigator.clipboard.writeText(url).then(() => {
                         alert('Image URL copied to clipboard!');
@@ -2878,12 +3119,44 @@ Use simple formatting:
                             const createdPost = await response.json();
                             console.log('Post created successfully:', createdPost);
                             
+                            // Attach selected media to the post if any
+                            if (this.postForm.selectedMedia && this.postForm.selectedMedia.length > 0) {
+                                try {
+                                    for (let i = 0; i < this.postForm.selectedMedia.length; i++) {
+                                        const media = this.postForm.selectedMedia[i];
+                                        const attachResponse = await fetch(`/api/posts/${createdPost.id}/media/attach`, {
+                                            method: 'POST',
+                                            headers: {
+                                                'Content-Type': 'application/json',
+                                                'Authorization': 'Bearer ' + this.token
+                                            },
+                                            body: JSON.stringify({
+                                                mediaId: media.id,
+                                                displayOrder: i + 1
+                                            })
+                                        });
+                                        
+                                        if (!attachResponse.ok) {
+                                            console.error('Failed to attach media:', media.id);
+                                        }
+                                    }
+                                    console.log('Media attachments completed');
+                                } catch (error) {
+                                    console.error('Error attaching media:', error);
+                                }
+                            }
+                            
+                            // Store media count before resetting form
+                            const mediaCount = this.postForm.selectedMedia.length;
+                            const mediaText = mediaCount > 0 ? ` with ${mediaCount} media file${mediaCount > 1 ? 's' : ''}` : '';
+                            
                             this.showCreatePost = false;
-                            this.postForm = { title: '', sourceDiscussion: '', targetPlatforms: 'linkedin', selectedPlatforms: ['linkedin'] };
+                            this.postForm = { title: '', sourceDiscussion: '', targetPlatforms: 'linkedin', selectedPlatforms: ['linkedin'], selectedMedia: [] };
+                            this.showMediaSelector = false;
                             await this.loadPosts();
                             await this.loadStats();
                             // Show success notification
-                            this.showNotificationMessage('🎉 Post created successfully! AI content has been generated.', 'success');
+                            this.showNotificationMessage(`🎉 Post created successfully${mediaText}! AI content has been generated.`, 'success');
                         } else {
                             const errorText = await response.text();
                             console.error('Create post failed:', response.status, errorText);
@@ -3207,6 +3480,20 @@ Use simple formatting:
                     // Always clear cache and reload content to ensure latest data
                     this.selectedPostContent = [];
                     await this.loadPostContent(post.id);
+                    
+                    // Load media attachments for the post
+                    try {
+                        const mediaResponse = await fetch(`/api/posts/${post.id}/media`, {
+                            headers: { 'Authorization': 'Bearer ' + this.token }
+                        });
+                        if (mediaResponse.ok) {
+                            this.selectedPost.attachedMedia = await mediaResponse.json();
+                        }
+                    } catch (error) {
+                        console.error('Error loading media attachments:', error);
+                        this.selectedPost.attachedMedia = [];
+                    }
+                    
                     this.showViewPost = true;
                 },
 
@@ -3253,8 +3540,25 @@ Use simple formatting:
                         id: post.id,
                         title: post.title,
                         sourceDiscussion: post.sourceDiscussion,
-                        targetPlatforms: post.targetPlatforms || 'linkedin'
+                        targetPlatforms: post.targetPlatforms || 'linkedin',
+                        selectedMedia: []
                     };
+                    this.showEditMediaSelector = false;
+                    
+                    // Load existing media attachments
+                    try {
+                        const mediaResponse = await fetch(`/api/posts/${post.id}/media`, {
+                            headers: { 'Authorization': 'Bearer ' + this.token }
+                        });
+                        if (mediaResponse.ok) {
+                            const postMediaList = await mediaResponse.json();
+                            // Media data is now directly in the response
+                            this.editForm.selectedMedia = postMediaList;
+                        }
+                    } catch (error) {
+                        console.error('Error loading post media:', error);
+                    }
+                    
                     await this.loadPostContent(post.id);
                     this.showEditPost = true;
                 },
@@ -3416,9 +3720,60 @@ Use simple formatting:
                             console.log('Updated post status:', updatedPost.currentStatus);
                             console.log('Current filter:', this.postFilter);
                             
+                            // Update media attachments
+                            try {
+                                // First, get current media attachments
+                                const currentMediaResponse = await fetch(`/api/posts/${this.editForm.id}/media`, {
+                                    headers: { 'Authorization': 'Bearer ' + this.token }
+                                });
+                                
+                                let currentMediaIds = [];
+                                if (currentMediaResponse.ok) {
+                                    const currentMedia = await currentMediaResponse.json();
+                                    if (currentMedia.length > 0) {
+                                        currentMediaIds = currentMedia.map(media => media.id);
+                                    }
+                                }
+                                
+                                const selectedMediaIds = this.editForm.selectedMedia.map(m => m.id);
+                                
+                                // Remove media that are no longer selected
+                                for (const mediaId of currentMediaIds) {
+                                    if (!selectedMediaIds.includes(mediaId)) {
+                                        await fetch(`/api/posts/${this.editForm.id}/media/detach/${mediaId}`, {
+                                            method: 'DELETE',
+                                            headers: { 'Authorization': 'Bearer ' + this.token }
+                                        });
+                                    }
+                                }
+                                
+                                // Add new media attachments
+                                for (let i = 0; i < this.editForm.selectedMedia.length; i++) {
+                                    const media = this.editForm.selectedMedia[i];
+                                    if (!currentMediaIds.includes(media.id)) {
+                                        await fetch(`/api/posts/${this.editForm.id}/media/attach`, {
+                                            method: 'POST',
+                                            headers: {
+                                                'Content-Type': 'application/json',
+                                                'Authorization': 'Bearer ' + this.token
+                                            },
+                                            body: JSON.stringify({
+                                                mediaId: media.id,
+                                                displayOrder: i + 1
+                                            })
+                                        });
+                                    }
+                                }
+                                
+                                console.log('Media attachments updated successfully');
+                            } catch (error) {
+                                console.error('Error updating media attachments:', error);
+                            }
+                            
                             // Close modal and reset form
                             this.showEditPost = false;
-                            this.editForm = { id: null, title: '', sourceDiscussion: '', targetPlatforms: 'linkedin' };
+                            this.showEditMediaSelector = false;
+                            this.editForm = { id: null, title: '', sourceDiscussion: '', targetPlatforms: 'linkedin', selectedMedia: [] };
                             
                             // Add delay to ensure database transaction is committed
                             console.log('Waiting for database transaction to commit...');
@@ -3797,6 +4152,104 @@ Use simple formatting:
                 }
             }
         }
+
+        // Global functions for CKEditor media browser
+        let showCKEditorMediaBrowser;
+        let insertImageIntoCKEditor;
+
+        function initCKEditorMediaBrowser() {
+            showCKEditorMediaBrowser = function() {
+                // Get the Alpine.js app data
+                const app = Alpine.$data(document.getElementById('app'));
+                app.showCKEditorMediaBrowser = true;
+            };
+
+            insertImageIntoCKEditor = function(media) {
+                if (window.currentCKEditor && media) {
+                    const imageUrl = '/uploads/' + media.fileName;
+                    const altText = media.originalName || 'Image';
+                    
+                    // Insert image into CKEditor
+                    window.currentCKEditor.model.change(writer => {
+                        const imageElement = writer.createElement('imageBlock', {
+                            src: imageUrl,
+                            alt: altText
+                        });
+                        
+                        // Insert at current position
+                        window.currentCKEditor.model.insertContent(imageElement);
+                    });
+                    
+                    // Close the media browser
+                    const app = Alpine.$data(document.getElementById('app'));
+                    app.showCKEditorMediaBrowser = false;
+                }
+            };
+        }
+
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', initCKEditorMediaBrowser);
     </script>
+
+    <!-- CKEditor Media Browser Modal -->
+    <div x-data="{ showCKEditorMediaBrowser: false }" x-show="showCKEditorMediaBrowser" class="fixed inset-0 modal-backdrop overflow-y-auto h-full w-full z-50" style="display: none;">
+        <div class="relative top-10 mx-auto p-8 border border-white/20 max-w-4xl shadow-2xl rounded-3xl modal-content">
+            <div class="relative">
+                <!-- Modal Header -->
+                <div class="text-center mb-8">
+                    <div class="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 animate-float">
+                        <i class="fas fa-images text-white text-2xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gradient mb-2">Select Image from Media Library</h3>
+                    <p class="text-gray-600">Choose an image to insert into your WordPress content</p>
+                </div>
+                
+                <!-- Media Grid -->
+                <div class="max-h-96 overflow-y-auto border border-gray-200 rounded-xl p-4 bg-gray-50">
+                    <template x-if="mediaList.length === 0">
+                        <div class="text-center py-8">
+                            <i class="fas fa-images text-4xl text-gray-400 mb-4"></i>
+                            <p class="text-gray-500 mb-4">No media files available</p>
+                            <button @click="activeTab = 'media'; showCKEditorMediaBrowser = false"
+                                    class="btn-primary px-4 py-2 text-sm rounded-lg">
+                                Go to Media Gallery to Upload Images
+                            </button>
+                        </div>
+                    </template>
+                    
+                    <template x-if="mediaList.length > 0">
+                        <div class="grid grid-cols-4 gap-4">
+                            <template x-for="media in mediaList" :key="media.id">
+                                <div class="relative group cursor-pointer hover:shadow-lg transition-shadow duration-200" 
+                                     @click="insertImageIntoCKEditor(media)">
+                                    <img :src="'/uploads/' + media.storedFilename" 
+                                         :alt="media.originalFilename"
+                                         class="w-full h-32 object-cover rounded-lg border border-gray-200 hover:border-blue-300 transition-colors">
+                                    <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200 flex items-center justify-center rounded-lg">
+                                        <div class="opacity-0 group-hover:opacity-100 text-white text-center">
+                                            <i class="fas fa-plus text-2xl mb-2"></i>
+                                            <p class="text-sm">Insert Image</p>
+                                        </div>
+                                    </div>
+                                    <div class="absolute bottom-0 left-0 right-0 bg-black bg-opacity-75 text-white text-xs p-2 rounded-b-lg">
+                                        <p class="truncate" x-text="media.originalFilename"></p>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="flex justify-end space-x-4 mt-6">
+                    <button @click="showCKEditorMediaBrowser = false" 
+                            class="px-6 py-3 text-sm font-semibold text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition-all duration-300 flex items-center space-x-2">
+                        <i class="fas fa-times"></i>
+                        <span>Cancel</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
