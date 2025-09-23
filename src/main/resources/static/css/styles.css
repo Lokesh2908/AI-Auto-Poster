@@ -329,9 +329,63 @@
     }
 }
 
+/* Custom Scrollbar Styles */
+.scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: #d1d5db #f3f4f6;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+    background: #f3f4f6;
+    border-radius: 3px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 3px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
+}
+
+.scrollbar-thumb-gray-300::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+}
+
+.scrollbar-track-gray-100::-webkit-scrollbar-track {
+    background: #f3f4f6;
+}
+
+/* CKEditor Custom Styling */
+.ckeditor-container .ck-editor__editable {
+    min-height: 200px;
+    border-radius: 8px;
+}
+
+.ckeditor-container .ck-toolbar {
+    border-radius: 8px 8px 0 0;
+}
+
+.ckeditor-container .ck-editor__editable:focus {
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     .card:hover {
         transform: translateY(-4px);
+    }
+    
+    .scrollbar-thin {
+        scrollbar-width: auto;
+    }
+    
+    .scrollbar-thin::-webkit-scrollbar {
+        width: 8px;
     }
 }
