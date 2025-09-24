@@ -71,7 +71,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 // Auth endpoints are under /api/auth/**
                 .antMatchers("/h2-console/**").permitAll()
                 .antMatchers("/actuator/**").permitAll()
-                .antMatchers("/css/**", "/js/**", "/images/**").permitAll()
+                .antMatchers("/css/**", "/js/**", "/images/**", "/favicon.ico", "/static/**", "/webjars/**").permitAll()
                 .anyRequest().authenticated()
             .and()
             .exceptionHandling().authenticationEntryPoint(jwtAuthenticationEntryPoint)

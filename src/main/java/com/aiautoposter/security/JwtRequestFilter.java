@@ -31,6 +31,13 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, 
                                   FilterChain chain) throws ServletException, IOException {
         
+        // Skip JWT processing for static resources
+        String requestURI = request.getRequestURI();
+        if (isStaticResource(requestURI)) {
+            chain.doFilter(request, response);
+            return;
+        }
+        
         final String requestTokenHeader = request.getHeader("Authorization");
         
         System.out.println("JWT Filter - Request URI: " + request.getRequestURI());
@@ -100,5 +107,15 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     
     private java.util.Date getExpirationDateFromToken(String token) {
         return getClaimFromToken(token, Claims::getExpiration);
+    }
+    
+    private boolean isStaticResource(String requestURI) {
+        return requestURI.startsWith("/css/") ||
+               requestURI.startsWith("/js/") ||
+               requestURI.startsWith("/images/") ||
+               requestURI.startsWith("/static/") ||
+               requestURI.startsWith("/webjars/") ||
+               requestURI.equals("/favicon.ico") ||
+               requestURI.startsWith("/uploads/");
     }
 }

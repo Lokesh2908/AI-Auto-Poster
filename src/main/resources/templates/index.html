@@ -852,9 +852,11 @@
                                                     </template>
                                                     <div class="flex items-center mt-2 space-x-4">
                                                         <span class="text-sm text-gray-500" x-text="formatDate(notification.createdAt)"></span>
-                                                        <span x-if="!notification.readStatus" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                                            New
-                                                        </span>
+                                                        <template x-if="!notification.readStatus">
+                                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                                New
+                                                            </span>
+                                                        </template>
                                                     </div>
                                                 </div>
                                                 <div class="flex space-x-2">
@@ -1685,29 +1687,9 @@ Use simple formatting:
                                                                 height: '200px'
                                                             })
                                                             .then(editor => {
-                                                                // Store editor reference for media insertion
-                                                                window.currentCKEditor = editor;
-                                                                
                                                                 editor.setData(content.content);
                                                                 editor.model.document.on('change:data', () => {
                                                                     content.content = editor.getData();
-                                                                });
-                                                                
-                                                                // Custom image insert command
-                                                                editor.ui.componentFactory.add('insertImage', locale => {
-                                                                    const view = new editor.ui.ButtonView(locale);
-                                                                    view.set({
-                                                                        label: 'Insert Image from Media Library',
-                                                                        icon: '<svg viewBox=\"0 0 20 20\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M6.972 16.615a.997.997 0 0 1-.744-.292l-4.596-4.596a1 1 0 0 1 1.414-1.414l3.926 3.926 9.937-9.937a1 1 0 0 1 1.414 1.414L7.717 16.323a.997.997 0 0 1-.745.292z\"/></svg>',
-                                                                        tooltip: true
-                                                                    });
-                                                                    
-                                                                    view.on('execute', () => {
-                                                                        // Open media browser modal
-                                                                        showCKEditorMediaBrowser();
-                                                                    });
-                                                                    
-                                                                    return view;
                                                                 });
                                                             })
                                                             .catch(error => {
@@ -2281,12 +2263,14 @@ Use simple formatting:
             .then(response => response.json())
             .then(data => {
                 const button = document.getElementById('linkedin-connect-btn');
-                if (data.connected) {
-                    button.innerHTML = `✅ Connected as ${data.name}`;
-                    button.onclick = disconnectLinkedIn;
-                } else {
-                    button.innerHTML = '🔗 Connect LinkedIn';
-                    button.onclick = connectLinkedIn;
+                if (button) {
+                    if (data.connected) {
+                        button.innerHTML = `✅ Connected as ${data.name}`;
+                        button.onclick = disconnectLinkedIn;
+                    } else {
+                        button.innerHTML = '🔗 Connect LinkedIn';
+                        button.onclick = connectLinkedIn;
+                    }
                 }
             });
         }
@@ -2326,6 +2310,21 @@ Use simple formatting:
         }
 
         // Initialize on page load
+        checkLinkedInStatus();
+        
+        function appData() {
+            return {
+                // Authentication & User State
+                isAuthenticated: false,
+                user: null,
+                token: null,
+                showLogin: true,
+                showRegister: false,
+                // Modal States
+                showCreatePost: false,
+                showViewPost: false,
+                showEditPost: false,
+                showScheduleModal: false,
                 showRegeneratePost: false,
                 showApprovalModal: false,
                 stats: {
@@ -2340,6 +2339,8 @@ Use simple formatting:
                 scheduledPosts: [],
                 notifications: [],
                 // UI State Management
+                activeTab: 'dashboard', // Current active tab
+                postFilter: 'all', // Current post filter
                 isCreatingPost: false,
                 isSubmittingApproval: false,
                 isResubmitting: false, // Flag to track if we're in resubmit workflow
@@ -4142,114 +4143,9 @@ Use simple formatting:
 
                 hideNotification() {
                     this.showNotification = false;
-                },
-
-                init() {
-                    // Watch for postFilter changes
-                    this.$watch('postFilter', () => {
-                        this.filterPosts();
-                    });
                 }
             }
         }
-
-        // Global functions for CKEditor media browser
-        let showCKEditorMediaBrowser;
-        let insertImageIntoCKEditor;
-
-        function initCKEditorMediaBrowser() {
-            showCKEditorMediaBrowser = function() {
-                // Get the Alpine.js app data
-                const app = Alpine.$data(document.getElementById('app'));
-                app.showCKEditorMediaBrowser = true;
-            };
-
-            insertImageIntoCKEditor = function(media) {
-                if (window.currentCKEditor && media) {
-                    const imageUrl = '/uploads/' + media.fileName;
-                    const altText = media.originalName || 'Image';
-                    
-                    // Insert image into CKEditor
-                    window.currentCKEditor.model.change(writer => {
-                        const imageElement = writer.createElement('imageBlock', {
-                            src: imageUrl,
-                            alt: altText
-                        });
-                        
-                        // Insert at current position
-                        window.currentCKEditor.model.insertContent(imageElement);
-                    });
-                    
-                    // Close the media browser
-                    const app = Alpine.$data(document.getElementById('app'));
-                    app.showCKEditorMediaBrowser = false;
-                }
-            };
-        }
-
-        // Initialize when DOM is loaded
-        document.addEventListener('DOMContentLoaded', initCKEditorMediaBrowser);
     </script>
-
-    <!-- CKEditor Media Browser Modal -->
-    <div x-data="{ showCKEditorMediaBrowser: false }" x-show="showCKEditorMediaBrowser" class="fixed inset-0 modal-backdrop overflow-y-auto h-full w-full z-50" style="display: none;">
-        <div class="relative top-10 mx-auto p-8 border border-white/20 max-w-4xl shadow-2xl rounded-3xl modal-content">
-            <div class="relative">
-                <!-- Modal Header -->
-                <div class="text-center mb-8">
-                    <div class="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 animate-float">
-                        <i class="fas fa-images text-white text-2xl"></i>
-                    </div>
-                    <h3 class="text-2xl font-bold text-gradient mb-2">Select Image from Media Library</h3>
-                    <p class="text-gray-600">Choose an image to insert into your WordPress content</p>
-                </div>
-                
-                <!-- Media Grid -->
-                <div class="max-h-96 overflow-y-auto border border-gray-200 rounded-xl p-4 bg-gray-50">
-                    <template x-if="mediaList.length === 0">
-                        <div class="text-center py-8">
-                            <i class="fas fa-images text-4xl text-gray-400 mb-4"></i>
-                            <p class="text-gray-500 mb-4">No media files available</p>
-                            <button @click="activeTab = 'media'; showCKEditorMediaBrowser = false"
-                                    class="btn-primary px-4 py-2 text-sm rounded-lg">
-                                Go to Media Gallery to Upload Images
-                            </button>
-                        </div>
-                    </template>
-                    
-                    <template x-if="mediaList.length > 0">
-                        <div class="grid grid-cols-4 gap-4">
-                            <template x-for="media in mediaList" :key="media.id">
-                                <div class="relative group cursor-pointer hover:shadow-lg transition-shadow duration-200" 
-                                     @click="insertImageIntoCKEditor(media)">
-                                    <img :src="'/uploads/' + media.storedFilename" 
-                                         :alt="media.originalFilename"
-                                         class="w-full h-32 object-cover rounded-lg border border-gray-200 hover:border-blue-300 transition-colors">
-                                    <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200 flex items-center justify-center rounded-lg">
-                                        <div class="opacity-0 group-hover:opacity-100 text-white text-center">
-                                            <i class="fas fa-plus text-2xl mb-2"></i>
-                                            <p class="text-sm">Insert Image</p>
-                                        </div>
-                                    </div>
-                                    <div class="absolute bottom-0 left-0 right-0 bg-black bg-opacity-75 text-white text-xs p-2 rounded-b-lg">
-                                        <p class="truncate" x-text="media.originalFilename"></p>
-                                    </div>
-                                </div>
-                            </template>
-                        </div>
-                    </template>
-                </div>
-                
-                <!-- Action Buttons -->
-                <div class="flex justify-end space-x-4 mt-6">
-                    <button @click="showCKEditorMediaBrowser = false" 
-                            class="px-6 py-3 text-sm font-semibold text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition-all duration-300 flex items-center space-x-2">
-                        <i class="fas fa-times"></i>
-                        <span>Cancel</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
 </body>
 </html>
