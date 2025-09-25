@@ -2,13 +2,15 @@ package com.aiautoposter.controller;
 
 import com.aiautoposter.entity.Post;
 import com.aiautoposter.entity.PostContent;
+import com.aiautoposter.entity.PostVersion;
 import com.aiautoposter.entity.User;
 import com.aiautoposter.service.PostService;
+import com.aiautoposter.service.PostVersionService;
 import com.aiautoposter.service.UserService;
 import com.aiautoposter.security.JwtTokenUtil;
 import com.aiautoposter.entity.Image;
-import com.aiautoposter.entity.Image;
-import com.aiautoposter.service.PostService;
+import com.aiautoposter.dto.PostVersionRequest;
+import com.aiautoposter.dto.RestoreVersionRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -29,6 +31,9 @@ public class PostController {
     
     @Autowired
     private PostService postService;
+    
+    @Autowired
+    private PostVersionService postVersionService;
     
     @Autowired
     private UserService userService;
@@ -518,6 +523,163 @@ public class PostController {
             System.err.println("REGENERATE CONTENT ERROR: " + e.getMessage());
             e.printStackTrace();
             return new ResponseEntity<>("Error: " + e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    // ==================== VERSION MANAGEMENT ENDPOINTS ====================
+    
+    /**
+     * Save a new version of a post (for thread-based refinement system)
+     */
+    @PostMapping("/{postId}/versions")
+    public ResponseEntity<?> savePostVersion(@PathVariable Long postId, 
+                                           @Valid @RequestBody PostVersionRequest request,
+                                           HttpServletRequest httpRequest) {
+        try {
+            System.out.println("=== SAVE POST VERSION ===");
+            System.out.println("Saving version for post ID: " + postId);
+            System.out.println("Version type: " + request.getVersionType());
+            System.out.println("Change description: " + request.getChangeDescription());
+            
+            // Get current user from JWT token
+            String authHeader = httpRequest.getHeader("Authorization");
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                return new ResponseEntity<>("Unauthorized", HttpStatus.UNAUTHORIZED);
+            }
+            
+            String token = authHeader.substring(7);
+            String username = jwtTokenUtil.getUsernameFromToken(token);
+            if (username == null) {
+                return new ResponseEntity<>("Invalid token", HttpStatus.UNAUTHORIZED);
+            }
+            
+            PostVersion savedVersion = postVersionService.saveVersion(postId, request);
+            System.out.println("Version saved successfully with ID: " + savedVersion.getId());
+            
+            return new ResponseEntity<>(savedVersion, HttpStatus.CREATED);
+        } catch (Exception e) {
+            System.err.println("SAVE VERSION ERROR: " + e.getMessage());
+            e.printStackTrace();
+            return new ResponseEntity<>("Error: " + e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+    }
+    
+    /**
+     * Get all versions for a post (for thread history display)
+     */
+    @GetMapping("/{postId}/versions")
+    public ResponseEntity<?> getPostVersions(@PathVariable Long postId,
+                                           HttpServletRequest httpRequest) {
+        try {
+            System.out.println("=== GET POST VERSIONS ===");
+            System.out.println("Getting versions for post ID: " + postId);
+            
+            // Get current user from JWT token
+            String authHeader = httpRequest.getHeader("Authorization");
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                return new ResponseEntity<>("Unauthorized", HttpStatus.UNAUTHORIZED);
+            }
+            
+            String token = authHeader.substring(7);
+            String username = jwtTokenUtil.getUsernameFromToken(token);
+            if (username == null) {
+                return new ResponseEntity<>("Invalid token", HttpStatus.UNAUTHORIZED);
+            }
+            
+            List<PostVersion> versions = postVersionService.getVersionHistory(postId);
+            System.out.println("Found " + versions.size() + " versions");
+            
+            return new ResponseEntity<>(versions, HttpStatus.OK);
+        } catch (Exception e) {
+            System.err.println("GET VERSIONS ERROR: " + e.getMessage());
+            e.printStackTrace();
+            return new ResponseEntity<>("Error: " + e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+    }
+    
+    /**
+     * Restore post to a previous version
+     */
+    @PostMapping("/{postId}/restore-version")
+    public ResponseEntity<?> restorePostVersion(@PathVariable Long postId,
+                                              @Valid @RequestBody RestoreVersionRequest request,
+                                              HttpServletRequest httpRequest) {
+        try {
+            System.out.println("=== RESTORE POST VERSION ===");
+            System.out.println("Restoring post ID: " + postId + " to version ID: " + request.getVersionId());
+            
+            // Get current user from JWT token
+            String authHeader = httpRequest.getHeader("Authorization");
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                return new ResponseEntity<>("Unauthorized", HttpStatus.UNAUTHORIZED);
+            }
+            
+            String token = authHeader.substring(7);
+            String username = jwtTokenUtil.getUsernameFromToken(token);
+            if (username == null) {
+                return new ResponseEntity<>("Invalid token", HttpStatus.UNAUTHORIZED);
+            }
+            
+            Post restoredPost = postVersionService.restoreVersion(postId, request);
+            System.out.println("Post restored successfully");
+            
+            return new ResponseEntity<>(restoredPost, HttpStatus.OK);
+        } catch (Exception e) {
+            System.err.println("RESTORE VERSION ERROR: " + e.getMessage());
+            e.printStackTrace();
+            return new ResponseEntity<>("Error: " + e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+    }
+    
+    /**
+     * Get version count for a post
+     */
+    @GetMapping("/{postId}/versions/count")
+    public ResponseEntity<?> getVersionCount(@PathVariable Long postId,
+                                           HttpServletRequest httpRequest) {
+        try {
+            // Get current user from JWT token
+            String authHeader = httpRequest.getHeader("Authorization");
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                return new ResponseEntity<>("Unauthorized", HttpStatus.UNAUTHORIZED);
+            }
+            
+            String token = authHeader.substring(7);
+            String username = jwtTokenUtil.getUsernameFromToken(token);
+            if (username == null) {
+                return new ResponseEntity<>("Invalid token", HttpStatus.UNAUTHORIZED);
+            }
+            
+            Long count = postVersionService.getVersionCount(postId);
+            return new ResponseEntity<>(count, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error: " + e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+    }
+    
+    /**
+     * Debug endpoint to test version system without authentication
+     */
+    @GetMapping("/debug/versions/test")
+    public ResponseEntity<?> debugVersionSystem() {
+        try {
+            System.out.println("=== DEBUG VERSION SYSTEM ===");
+            
+            // Test if PostVersionService is properly injected
+            if (postVersionService == null) {
+                return new ResponseEntity<>("PostVersionService is null", HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+            
+            // Test database connection by trying to count versions for post 1
+            Long count = postVersionService.getVersionCount(1L);
+            System.out.println("Version count for post 1: " + count);
+            
+            return new ResponseEntity<>("Version system working. Count for post 1: " + count, HttpStatus.OK);
+            
+        } catch (Exception e) {
+            System.err.println("DEBUG VERSION ERROR: " + e.getMessage());
+            e.printStackTrace();
+            return new ResponseEntity<>("Debug error: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }
