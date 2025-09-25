@@ -61,7 +61,7 @@ public class PostController {
     
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<Post>> getPostsByUser(@PathVariable Long userId) {
-        List<Post> posts = postService.findByCreatedBy(userId);
+        List<Post> posts = postService.findByCreatedByOrderByCreatedAtDesc(userId);
         return new ResponseEntity<>(posts, HttpStatus.OK);
     }
     

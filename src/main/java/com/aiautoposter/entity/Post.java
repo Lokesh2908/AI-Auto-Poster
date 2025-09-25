@@ -35,6 +35,9 @@ public class Post {
     
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @Column(name = "post_url")
+    private String postUrl;
     
     // Relationships
     @ManyToOne
@@ -135,7 +138,15 @@ public class Post {
     public void preUpdate() {
         this.updatedAt = LocalDateTime.now();
     }
-    
+
+    public String getPostUrl() {
+        return postUrl;
+    }
+
+    public void setPostUrl(String postUrl) {
+        this.postUrl = postUrl;
+    }
+
     public enum PostStatus {
         DRAFT, PENDING_APPROVAL, APPROVED, REJECTED, SCHEDULED, PUBLISHED, FAILED
     }

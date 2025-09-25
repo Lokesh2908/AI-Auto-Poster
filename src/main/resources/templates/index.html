@@ -523,6 +523,19 @@
                                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
                                                               :class="getStatusColor(post.currentStatus)"
                                                               x-text="post.currentStatus"></span>
+
+                                                        <!-- Single Platform Badge -->
+                                                        <span x-show="post.targetPlatforms"
+                                                              class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium space-x-1"
+                                                              :class="post.targetPlatforms === 'linkedin' ? 'bg-blue-100 text-blue-800' :
+                                                                      post.targetPlatforms === 'wordpress' ? 'bg-purple-100 text-purple-800' :
+                                                                      'bg-gray-100 text-gray-800'">
+                                                            <i :class="post.targetPlatforms === 'linkedin' ? 'fab fa-linkedin text-xs' :
+                                                                       post.targetPlatforms === 'wordpress' ? 'fab fa-wordpress text-xs' :
+                                                                       'fas fa-globe text-xs'"></i>
+                                                            <span x-text="post.targetPlatforms"></span>
+                                                        </span>
+
                                                         <span class="text-sm text-gray-500" x-text="formatDate(post.createdAt)"></span>
                                                     </div>
                                                     
@@ -615,6 +628,16 @@
                                                             <i class="fas fa-redo text-lg group-hover:scale-110 transition-transform duration-200"></i>
                                                         </button>
                                                     </template>
+
+                                                    <!--Redirect to actual post-->
+                                                    <template x-if="post.currentStatus === 'PUBLISHED' && post.postUrl">
+                                                        <button @click="window.open(post.postUrl, '_blank')"
+                                                                class="text-green-600 hover:text-green-800 p-2 rounded-lg hover:bg-green-50 transition-all duration-200 group"
+                                                                title="View Published Post">
+                                                            <i class="fas fa-external-link-alt text-lg group-hover:scale-110 transition-transform duration-200"></i>
+                                                        </button>
+                                                    </template>
+
                                                 </div>
                                             </div>
                                         </div>
@@ -2199,7 +2222,7 @@ Use simple formatting:
                             <i class="fas fa-calendar-plus text-white text-2xl"></i>
                         </div>
                         <h3 class="text-2xl font-bold text-gradient mb-2">Schedule Post</h3>
-                        <p class="text-gray-600">Schedule an approved post for LinkedIn</p>
+                        <p class="text-gray-600">Schedule an approved post</p>
                     </div>
                     
                     <form @submit.prevent="schedulePostToLinkedIn()">
@@ -2257,10 +2280,13 @@ Use simple formatting:
                                 </label>
                                 <select x-model="scheduleForm.platform" @change="loadPlatformApps(scheduleForm.platform)" required
                                         class="w-full px-4 py-3 border border-gray-200 bg-white text-gray-900 rounded-xl shadow-sm focus:outline-none transition-all duration-300">
+                                    <option value="" disabled selected>Select Platform</option>
                                     <option value="LINKEDIN">LinkedIn</option>
                                     <option value="WORDPRESS">WordPress</option>
                                 </select>
                             </div>
+
+
                             
                             <!-- Social Media App Selection -->
                             <div x-show="scheduleForm.platform && availableApps.length > 0">
@@ -2737,7 +2763,7 @@ Use simple formatting:
                 scheduleForm: {
                     postId: '',
                     scheduledFor: '',
-                    platform: 'LINKEDIN'
+                    platform: ''
                 },
                 approvedPostsForSchedule: [],
                 isLoadingApprovedPosts: false,

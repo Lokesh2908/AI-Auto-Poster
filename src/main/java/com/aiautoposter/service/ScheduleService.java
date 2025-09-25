@@ -210,6 +210,7 @@ public class ScheduleService {
                 scheduleRepository.save(schedule);
                 
                 // Update post status
+                post.setPostUrl(schedule.getPostUrl());
                 post.setCurrentStatus(Post.PostStatus.PUBLISHED);
                 postRepository.save(post);
                 

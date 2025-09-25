@@ -116,6 +116,10 @@ public class PostService {
     public List<Post> findByCreatedBy(Long userId) {
         return postRepository.findByCreatedBy(userId);
     }
+
+    public  List<Post> findByCreatedByOrderByCreatedAtDesc(Long userId){
+        return postRepository.findByCreatedByOrderByCreatedAtDesc(userId);
+    }
     
     public List<Post> findPostsByManager(Long managerId) {
         try {
