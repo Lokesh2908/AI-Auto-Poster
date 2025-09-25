@@ -1139,10 +1139,169 @@
                                     <i class="fas fa-comments text-green-500 mr-2"></i>
                                     Source Discussion
                                 </label>
-                                <textarea x-model="postForm.sourceDiscussion" rows="5" required
-                                          placeholder="Share the key points, insights, or discussion topics that should be transformed into a LinkedIn post..."
-                                          class="input-glow w-full px-4 py-3 border border-gray-200 bg-white/80 backdrop-blur-sm text-gray-900 rounded-xl shadow-sm focus:outline-none transition-all duration-300 resize-none"></textarea>
-                                <p class="text-xs text-gray-500 mt-2">💡 Tip: The more detailed your discussion, the better AI can craft your content</p>
+                                <div class="relative">
+                                    <textarea x-model="postForm.sourceDiscussion" rows="5" required
+                                              placeholder="Share the key points, insights, or discussion topics that should be transformed into a LinkedIn post..."
+                                              class="input-glow w-full px-4 py-3 pr-12 border border-gray-200 bg-white/80 backdrop-blur-sm text-gray-900 rounded-xl shadow-sm focus:outline-none transition-all duration-300 resize-none"></textarea>
+                                    
+                                    <!-- Voice Input Button -->
+                                    <button type="button" x-on:click="toggleVoiceInput('create')" 
+                                            x-bind:class="isRecording && currentRecordingField === 'create' ? 'bg-red-500 text-white animate-pulse' : 'bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700'"
+                                            class="absolute right-2 top-2 w-8 h-8 rounded-lg shadow-lg transition-all duration-300 flex items-center justify-center"
+                                            x-bind:disabled="!speechRecognitionSupported"
+                                            x-bind:title="!speechRecognitionSupported ? 'Voice input not supported in this browser' : (isRecording && currentRecordingField === 'create' ? 'Click to stop recording' : 'Click to start voice input')">
+                                        <i x-bind:class="isRecording && currentRecordingField === 'create' ? 'fas fa-stop' : 'fas fa-microphone'" class="text-sm"></i>
+                                    </button>
+                                    
+                                    <!-- Voice Status Indicator -->
+                                    <div x-show="isRecording && currentRecordingField === 'create'" 
+                                         x-transition:enter="transition ease-out duration-200"
+                                         x-transition:enter-start="opacity-0 transform scale-95"
+                                         x-transition:enter-end="opacity-100 transform scale-100"
+                                         class="absolute -bottom-8 left-0 right-0 text-center">
+                                        <div class="inline-flex items-center px-3 py-1 bg-red-500 text-white text-xs rounded-full shadow-lg">
+                                            <div class="w-2 h-2 bg-white rounded-full mr-2 animate-pulse"></div>
+                                            Recording... Click microphone to stop
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex justify-between items-start mt-2">
+                                    <p class="text-xs text-gray-500">💡 Tip: The more detailed your discussion, the better AI can craft your content</p>
+                                    <p class="text-xs text-blue-500 flex items-center">
+                                        <i class="fas fa-microphone mr-1"></i>
+                                        Click microphone for voice input
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Post Enhancement Options -->
+                            <div class="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6 border border-blue-100">
+                                <h4 class="text-sm font-semibold text-gray-800 mb-4 flex items-center">
+                                    <i class="fas fa-sliders-h text-blue-600 mr-2"></i>
+                                    Post Enhancement Options
+                                    <span class="ml-2 text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">AI Boost</span>
+                                </h4>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <!-- Target Audience -->
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                                            <i class="fas fa-users text-blue-500 mr-2 text-xs"></i>
+                                            Target Audience
+                                        </label>
+                                        <select x-model="postForm.targetAudience" class="w-full px-3 py-2 border border-gray-200 bg-white text-gray-900 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
+                                            <option value="">Select audience...</option>
+                                            <option value="professionals">Business Professionals</option>
+                                            <option value="technical">Technical/IT Community</option>
+                                            <option value="entrepreneurs">Entrepreneurs & Startups</option>
+                                            <option value="general">General Professional Network</option>
+                                            <option value="industry">Industry Specific</option>
+                                            <option value="students">Students & New Graduates</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Post Length -->
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                                            <i class="fas fa-text-width text-green-500 mr-2 text-xs"></i>
+                                            Post Length
+                                        </label>
+                                        <select x-model="postForm.postLength" class="w-full px-3 py-2 border border-gray-200 bg-white text-gray-900 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
+                                            <option value="">Select length...</option>
+                                            <option value="short">Short (50-100 words)</option>
+                                            <option value="medium">Medium (100-200 words)</option>
+                                            <option value="long">Long (200-300 words)</option>
+                                            <option value="extended">Extended (300+ words)</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Tone -->
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                                            <i class="fas fa-palette text-purple-500 mr-2 text-xs"></i>
+                                            Tone & Style
+                                        </label>
+                                        <select x-model="postForm.tone" class="w-full px-3 py-2 border border-gray-200 bg-white text-gray-900 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
+                                            <option value="">Select tone...</option>
+                                            <option value="professional">Professional & Formal</option>
+                                            <option value="conversational">Conversational & Friendly</option>
+                                            <option value="inspirational">Inspirational & Motivational</option>
+                                            <option value="educational">Educational & Informative</option>
+                                            <option value="casual">Casual & Approachable</option>
+                                            <option value="thought-leadership">Thought Leadership</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Post Type -->
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                                            <i class="fas fa-tags text-orange-500 mr-2 text-xs"></i>
+                                            Post Type
+                                        </label>
+                                        <select x-model="postForm.postType" class="w-full px-3 py-2 border border-gray-200 bg-white text-gray-900 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
+                                            <option value="">Select type...</option>
+                                            <option value="announcement">Announcement</option>
+                                            <option value="tips">Tips & Best Practices</option>
+                                            <option value="question">Question for Community</option>
+                                            <option value="story">Success Story/Case Study</option>
+                                            <option value="achievement">Achievement/Milestone</option>
+                                            <option value="industry-news">Industry News & Insights</option>
+                                            <option value="how-to">How-To Guide</option>
+                                            <option value="opinion">Opinion & Commentary</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Call to Action -->
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                                            <i class="fas fa-bullhorn text-red-500 mr-2 text-xs"></i>
+                                            Call to Action
+                                        </label>
+                                        <select x-model="postForm.callToAction" class="w-full px-3 py-2 border border-gray-200 bg-white text-gray-900 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
+                                            <option value="">No specific CTA...</option>
+                                            <option value="comments">Ask for Comments</option>
+                                            <option value="shares">Encourage Shares</option>
+                                            <option value="connections">Connect with Me</option>
+                                            <option value="website">Visit Website/Link</option>
+                                            <option value="dm">Send Direct Message</option>
+                                            <option value="follow">Follow for More Content</option>
+                                            <option value="discussion">Start Discussion</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Hashtag Style -->
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                                            <i class="fas fa-hashtag text-indigo-500 mr-2 text-xs"></i>
+                                            Hashtag Style
+                                        </label>
+                                        <select x-model="postForm.hashtagStyle" class="w-full px-3 py-2 border border-gray-200 bg-white text-gray-900 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
+                                            <option value="">Auto-select hashtags...</option>
+                                            <option value="minimal">Minimal (3-5 hashtags)</option>
+                                            <option value="moderate">Moderate (5-10 hashtags)</option>
+                                            <option value="extensive">Extensive (10+ hashtags)</option>
+                                            <option value="none">No hashtags</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                                    <p class="text-xs text-blue-700 flex items-center">
+                                        <i class="fas fa-robot mr-2"></i>
+                                        <strong>AI Enhancement:</strong> These options will be automatically merged with your Source Discussion to create more targeted and engaging content.
+                                    </p>
+                                </div>
+                                
+                                <!-- Backend Integration Note: 
+                                     These fields (targetAudience, postLength, tone, postType, callToAction, hashtagStyle) 
+                                     are sent to the backend and should be merged with sourceDiscussion to enhance AI prompt:
+                                     
+                                     Example enhanced prompt:
+                                     "Create a {postLength} LinkedIn post in a {tone} tone for {targetAudience} audience. 
+                                     The post type should be {postType} with {callToAction} call-to-action and {hashtagStyle} hashtags.
+                                     
+                                     Source content: {sourceDiscussion}"
+                                -->
                             </div>
                             
                             <div>
@@ -1877,10 +2036,158 @@ Use simple formatting:
                                         <i class="fas fa-comments text-green-500 mr-2"></i>
                                         Source Discussion
                                     </label>
-                                    <textarea x-model="selectedPost.sourceDiscussion" rows="5" required
-                                              placeholder="Share the key points, insights, or discussion topics that should be transformed into a LinkedIn post..."
-                                              class="input-glow w-full px-4 py-3 border border-gray-200 bg-white/80 backdrop-blur-sm text-gray-900 rounded-xl shadow-sm focus:outline-none transition-all duration-300 resize-none"></textarea>
-                                    <p class="text-xs text-gray-500 mt-2">💡 Tip: Modify the discussion to get different AI-generated content</p>
+                                    <div class="relative">
+                                        <textarea x-model="selectedPost.sourceDiscussion" rows="5" required
+                                                  placeholder="Share the key points, insights, or discussion topics that should be transformed into a LinkedIn post..."
+                                                  class="input-glow w-full px-4 py-3 pr-12 border border-gray-200 bg-white/80 backdrop-blur-sm text-gray-900 rounded-xl shadow-sm focus:outline-none transition-all duration-300 resize-none"></textarea>
+                                        
+                                        <!-- Voice Input Button -->
+                                        <button type="button" x-on:click="toggleVoiceInput('regenerate')" 
+                                                x-bind:class="isRecording && currentRecordingField === 'regenerate' ? 'bg-red-500 text-white animate-pulse' : 'bg-gradient-to-r from-purple-500 to-pink-600 text-white hover:from-purple-600 hover:to-pink-700'"
+                                                class="absolute right-2 top-2 w-8 h-8 rounded-lg shadow-lg transition-all duration-300 flex items-center justify-center"
+                                                x-bind:disabled="!speechRecognitionSupported"
+                                                x-bind:title="!speechRecognitionSupported ? 'Voice input not supported in this browser' : (isRecording && currentRecordingField === 'regenerate' ? 'Click to stop recording' : 'Click to start voice input')">
+                                            <i x-bind:class="isRecording && currentRecordingField === 'regenerate' ? 'fas fa-stop' : 'fas fa-microphone'" class="text-sm"></i>
+                                        </button>
+                                        
+                                        <!-- Voice Status Indicator -->
+                                        <div x-show="isRecording && currentRecordingField === 'regenerate'" 
+                                             x-transition:enter="transition ease-out duration-200"
+                                             x-transition:enter-start="opacity-0 transform scale-95"
+                                             x-transition:enter-end="opacity-100 transform scale-100"
+                                             class="absolute -bottom-8 left-0 right-0 text-center">
+                                            <div class="inline-flex items-center px-3 py-1 bg-red-500 text-white text-xs rounded-full shadow-lg">
+                                                <div class="w-2 h-2 bg-white rounded-full mr-2 animate-pulse"></div>
+                                                Recording... Click microphone to stop
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex justify-between items-start mt-2">
+                                        <p class="text-xs text-gray-500">💡 Tip: Modify the discussion to get different AI-generated content</p>
+                                        <p class="text-xs text-purple-500 flex items-center">
+                                            <i class="fas fa-microphone mr-1"></i>
+                                            Voice input available
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <!-- Post Enhancement Options for Regeneration -->
+                                <div class="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-6 border border-purple-100">
+                                    <h4 class="text-sm font-semibold text-gray-800 mb-4 flex items-center">
+                                        <i class="fas fa-magic text-purple-600 mr-2"></i>
+                                        Regeneration Enhancement Options
+                                        <span class="ml-2 text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full">AI Boost</span>
+                                    </h4>
+                                    
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <!-- Target Audience -->
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                                                <i class="fas fa-users text-blue-500 mr-2 text-xs"></i>
+                                                Target Audience
+                                            </label>
+                                            <select x-model="selectedPost.targetAudience" class="w-full px-3 py-2 border border-gray-200 bg-white text-gray-900 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm">
+                                                <option value="">Select audience...</option>
+                                                <option value="professionals">Business Professionals</option>
+                                                <option value="technical">Technical/IT Community</option>
+                                                <option value="entrepreneurs">Entrepreneurs & Startups</option>
+                                                <option value="general">General Professional Network</option>
+                                                <option value="industry">Industry Specific</option>
+                                                <option value="students">Students & New Graduates</option>
+                                            </select>
+                                        </div>
+
+                                        <!-- Post Length -->
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                                                <i class="fas fa-text-width text-green-500 mr-2 text-xs"></i>
+                                                Post Length
+                                            </label>
+                                            <select x-model="selectedPost.postLength" class="w-full px-3 py-2 border border-gray-200 bg-white text-gray-900 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm">
+                                                <option value="">Select length...</option>
+                                                <option value="short">Short (50-100 words)</option>
+                                                <option value="medium">Medium (100-200 words)</option>
+                                                <option value="long">Long (200-300 words)</option>
+                                                <option value="extended">Extended (300+ words)</option>
+                                            </select>
+                                        </div>
+
+                                        <!-- Tone -->
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                                                <i class="fas fa-palette text-purple-500 mr-2 text-xs"></i>
+                                                Tone & Style
+                                            </label>
+                                            <select x-model="selectedPost.tone" class="w-full px-3 py-2 border border-gray-200 bg-white text-gray-900 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm">
+                                                <option value="">Select tone...</option>
+                                                <option value="professional">Professional & Formal</option>
+                                                <option value="conversational">Conversational & Friendly</option>
+                                                <option value="inspirational">Inspirational & Motivational</option>
+                                                <option value="educational">Educational & Informative</option>
+                                                <option value="casual">Casual & Approachable</option>
+                                                <option value="thought-leadership">Thought Leadership</option>
+                                            </select>
+                                        </div>
+
+                                        <!-- Post Type -->
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                                                <i class="fas fa-tags text-orange-500 mr-2 text-xs"></i>
+                                                Post Type
+                                            </label>
+                                            <select x-model="selectedPost.postType" class="w-full px-3 py-2 border border-gray-200 bg-white text-gray-900 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm">
+                                                <option value="">Select type...</option>
+                                                <option value="announcement">Announcement</option>
+                                                <option value="tips">Tips & Best Practices</option>
+                                                <option value="question">Question for Community</option>
+                                                <option value="story">Success Story/Case Study</option>
+                                                <option value="achievement">Achievement/Milestone</option>
+                                                <option value="industry-news">Industry News & Insights</option>
+                                                <option value="how-to">How-To Guide</option>
+                                                <option value="opinion">Opinion & Commentary</option>
+                                            </select>
+                                        </div>
+
+                                        <!-- Call to Action -->
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                                                <i class="fas fa-bullhorn text-red-500 mr-2 text-xs"></i>
+                                                Call to Action
+                                            </label>
+                                            <select x-model="selectedPost.callToAction" class="w-full px-3 py-2 border border-gray-200 bg-white text-gray-900 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm">
+                                                <option value="">No specific CTA...</option>
+                                                <option value="comments">Ask for Comments</option>
+                                                <option value="shares">Encourage Shares</option>
+                                                <option value="connections">Connect with Me</option>
+                                                <option value="website">Visit Website/Link</option>
+                                                <option value="dm">Send Direct Message</option>
+                                                <option value="follow">Follow for More Content</option>
+                                                <option value="discussion">Start Discussion</option>
+                                            </select>
+                                        </div>
+
+                                        <!-- Hashtag Style -->
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                                                <i class="fas fa-hashtag text-indigo-500 mr-2 text-xs"></i>
+                                                Hashtag Style
+                                            </label>
+                                            <select x-model="selectedPost.hashtagStyle" class="w-full px-3 py-2 border border-gray-200 bg-white text-gray-900 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm">
+                                                <option value="">Auto-select hashtags...</option>
+                                                <option value="minimal">Minimal (3-5 hashtags)</option>
+                                                <option value="moderate">Moderate (5-10 hashtags)</option>
+                                                <option value="extensive">Extensive (10+ hashtags)</option>
+                                                <option value="none">No hashtags</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-4 p-3 bg-purple-50 rounded-lg border border-purple-200">
+                                        <p class="text-xs text-purple-700 flex items-center">
+                                            <i class="fas fa-magic mr-2"></i>
+                                            <strong>Regeneration Boost:</strong> Modify these options to get completely different AI-generated content styles and approaches.
+                                        </p>
+                                    </div>
                                 </div>
                                 
                                 <div>
@@ -2355,6 +2662,11 @@ Use simple formatting:
                 showNotification: false,
                 notificationMessage: '',
                 notificationType: 'success', // success, error, info
+                // Voice Recognition State
+                speechRecognitionSupported: false,
+                speechRecognition: null,
+                isRecording: false,
+                currentRecordingField: null, // 'create' or 'regenerate'
                 loginForm: {
                     email: '',
                     password: ''
@@ -2372,7 +2684,14 @@ Use simple formatting:
                     sourceDiscussion: '',
                     targetPlatforms: 'linkedin',
                     selectedPlatforms: ['linkedin'], // Default to LinkedIn selected
-                    selectedMedia: [] // Array to store selected media files
+                    selectedMedia: [], // Array to store selected media files
+                    // New enhancement fields
+                    targetAudience: '',
+                    postLength: '',
+                    tone: '',
+                    postType: '',
+                    callToAction: '',
+                    hashtagStyle: ''
                 },
                 showMediaSelector: false,
                 editForm: {
@@ -2410,6 +2729,9 @@ Use simple formatting:
 
                 init() {
             document.documentElement.classList.remove('dark');
+            
+            // Initialize Voice Recognition
+            this.initVoiceRecognition();
             
             // Check for token in localStorage first
             const storedToken = localStorage.getItem('token');
@@ -3117,7 +3439,14 @@ Use simple formatting:
                                 title: this.postForm.title,
                                 sourceDiscussion: this.postForm.sourceDiscussion,
                                 targetPlatforms: this.postForm.selectedPlatforms.join(','), // Convert array to comma-separated string
-                                createdBy: this.user.id
+                                createdBy: this.user.id,
+                                // Enhancement options for AI
+                                targetAudience: this.postForm.targetAudience,
+                                postLength: this.postForm.postLength,
+                                tone: this.postForm.tone,
+                                postType: this.postForm.postType,
+                                callToAction: this.postForm.callToAction,
+                                hashtagStyle: this.postForm.hashtagStyle
                             })
                         });
                         
@@ -3157,7 +3486,19 @@ Use simple formatting:
                             const mediaText = mediaCount > 0 ? ` with ${mediaCount} media file${mediaCount > 1 ? 's' : ''}` : '';
                             
                             this.showCreatePost = false;
-                            this.postForm = { title: '', sourceDiscussion: '', targetPlatforms: 'linkedin', selectedPlatforms: ['linkedin'], selectedMedia: [] };
+                            this.postForm = { 
+                                title: '', 
+                                sourceDiscussion: '', 
+                                targetPlatforms: 'linkedin', 
+                                selectedPlatforms: ['linkedin'], 
+                                selectedMedia: [],
+                                targetAudience: '',
+                                postLength: '',
+                                tone: '',
+                                postType: '',
+                                callToAction: '',
+                                hashtagStyle: ''
+                            };
                             this.showMediaSelector = false;
                             await this.loadPosts();
                             await this.loadStats();
@@ -3480,6 +3821,105 @@ Use simple formatting:
                     return new Date(dateString).toLocaleDateString();
                 },
 
+                // Voice Recognition Functions
+                initVoiceRecognition() {
+                    // Check if browser supports Speech Recognition
+                    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                        this.speechRecognition = new SpeechRecognition();
+                        this.speechRecognitionSupported = true;
+                        
+                        // Configure Speech Recognition
+                        this.speechRecognition.continuous = true;
+                        this.speechRecognition.interimResults = true;
+                        this.speechRecognition.lang = 'en-US';
+                        
+                        // Handle speech recognition results
+                        this.speechRecognition.onresult = (event) => {
+                            let finalTranscript = '';
+                            let interimTranscript = '';
+                            
+                            for (let i = event.resultIndex; i < event.results.length; i++) {
+                                const transcript = event.results[i][0].transcript;
+                                if (event.results[i].isFinal) {
+                                    finalTranscript += transcript;
+                                } else {
+                                    interimTranscript += transcript;
+                                }
+                            }
+                            
+                            // Update the appropriate field
+                            if (this.currentRecordingField === 'create') {
+                                if (finalTranscript) {
+                                    this.postForm.sourceDiscussion += (this.postForm.sourceDiscussion ? ' ' : '') + finalTranscript;
+                                }
+                            } else if (this.currentRecordingField === 'regenerate') {
+                                if (finalTranscript) {
+                                    this.selectedPost.sourceDiscussion += (this.selectedPost.sourceDiscussion ? ' ' : '') + finalTranscript;
+                                }
+                            }
+                        };
+                        
+                        // Handle speech recognition errors
+                        this.speechRecognition.onerror = (event) => {
+                            console.error('Speech recognition error:', event.error);
+                            this.showNotificationMessage(`Voice input error: ${event.error}`, 'error');
+                            this.stopVoiceRecording();
+                        };
+                        
+                        // Handle when speech recognition ends
+                        this.speechRecognition.onend = () => {
+                            this.isRecording = false;
+                            this.currentRecordingField = null;
+                        };
+                        
+                        console.log('🎤 Voice recognition initialized successfully');
+                    } else {
+                        console.warn('Speech recognition not supported in this browser');
+                        this.speechRecognitionSupported = false;
+                    }
+                },
+
+                toggleVoiceInput(field) {
+                    if (!this.speechRecognitionSupported) {
+                        this.showNotificationMessage('Voice input is not supported in your browser. Please try Chrome, Edge, or Safari.', 'error');
+                        return;
+                    }
+                    
+                    if (this.isRecording) {
+                        this.stopVoiceRecording();
+                    } else {
+                        this.startVoiceRecording(field);
+                    }
+                },
+
+                startVoiceRecording(field) {
+                    try {
+                        this.isRecording = true;
+                        this.currentRecordingField = field;
+                        this.speechRecognition.start();
+                        this.showNotificationMessage('🎤 Voice recording started. Click the microphone again to stop.', 'info');
+                        console.log('🎤 Started voice recording for field:', field);
+                    } catch (error) {
+                        console.error('Error starting voice recognition:', error);
+                        this.showNotificationMessage('Failed to start voice recording', 'error');
+                        this.stopVoiceRecording();
+                    }
+                },
+
+                stopVoiceRecording() {
+                    try {
+                        if (this.speechRecognition && this.isRecording) {
+                            this.speechRecognition.stop();
+                        }
+                        this.isRecording = false;
+                        this.currentRecordingField = null;
+                        console.log('🎤 Stopped voice recording');
+                    } catch (error) {
+                        console.error('Error stopping voice recognition:', error);
+                    }
+                },
+
                 async viewPost(post) {
                     console.log('Viewing post:', post);
                     this.selectedPost = post;
@@ -3628,7 +4068,14 @@ Use simple formatting:
                             body: JSON.stringify({
                                 title: this.selectedPost.title,
                                 sourceDiscussion: this.selectedPost.sourceDiscussion,
-                                targetPlatforms: this.selectedPost.selectedPlatforms.join(',') // Use selected platforms
+                                targetPlatforms: this.selectedPost.selectedPlatforms.join(','), // Use selected platforms
+                                // Enhancement options for AI regeneration
+                                targetAudience: this.selectedPost.targetAudience,
+                                postLength: this.selectedPost.postLength,
+                                tone: this.selectedPost.tone,
+                                postType: this.selectedPost.postType,
+                                callToAction: this.selectedPost.callToAction,
+                                hashtagStyle: this.selectedPost.hashtagStyle
                             })
                         });
 
