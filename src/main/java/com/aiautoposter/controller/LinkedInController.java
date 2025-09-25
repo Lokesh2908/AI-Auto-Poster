@@ -2,10 +2,12 @@ package com.aiautoposter.controller;
 
 import com.aiautoposter.entity.LinkedInUser;
 import com.aiautoposter.entity.Post;
+import com.aiautoposter.entity.SocialMediaApp;
 import com.aiautoposter.entity.User;
 import com.aiautoposter.repository.LinkedInUserRepository;
 import com.aiautoposter.service.LinkedInService;
 import com.aiautoposter.service.PostService;
+import com.aiautoposter.service.SocialMediaAppService;
 import com.aiautoposter.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,10 +40,14 @@ public class LinkedInController {
     @Autowired
     private PostService postService;
 
-    // STEP 1: Get Authorization URL (Now requires JWT authentication)
+    @Autowired
+    private SocialMediaAppService socialMediaAppService;
+
+    // STEP 1: Get Authorization URL for specific app (Now requires JWT authentication)
     @GetMapping("/auth-url")
     //@PreAuthorize("hasRole('USER')") // Requires authenticated user
     public ResponseEntity<Map<String, String>> getAuthUrl(
+            @RequestParam(value = "appId", required = true) Long appId,
             @RequestParam(value = "force", required = false, defaultValue = "false") boolean force,
             HttpServletRequest request,
             Authentication authentication) {
@@ -49,13 +55,23 @@ public class LinkedInController {
         try {
             // Get current user from JWT token
             String username = authentication.getName();
-            log.info("Getting LinkedIn auth URL for user: {}", username);
+            log.info("Getting LinkedIn auth URL for user: {} with app ID: {}", username, appId);
             
-            String authUrl = linkedInService.getAuthorizationUrl(username, force); // Pass username for state, allow force login
+            // Get the specific social media app
+            SocialMediaApp app = socialMediaAppService.getAppById(appId).get();
+            if (app == null || !app.getPlatform().equals(SocialMediaApp.Platform.LINKEDIN)) {
+                return ResponseEntity.badRequest().body(Map.of(
+                    "error", "Invalid LinkedIn app ID: " + appId
+                ));
+            }
+            
+            String authUrl = linkedInService.getAuthorizationUrl(username, app, force);
 
             return ResponseEntity.ok(Map.of(
                     "authUrl", authUrl,
-                    "message", "Visit this URL in browser to authorize LinkedIn access"
+                    "appId", appId.toString(),
+                    "appName", app.getName(),
+                    "message", "Visit this URL in browser to authorize LinkedIn access for " + app.getName()
             ));
         } catch (Exception e) {
             log.error("Error getting LinkedIn auth URL: {}", e.getMessage(), e);
@@ -84,12 +100,19 @@ public class LinkedInController {
         }
 
         try {
-            // Extract user ID from state parameter (set during auth URL generation)
+            // Extract user ID and app ID from state parameter (set during auth URL generation)
             Long userId = linkedInService.extractUserIdFromState(state);
+            Long appId = linkedInService.extractAppIdFromState(state);
+            
+            // Get the specific social media app
+            SocialMediaApp app = socialMediaAppService.getAppById(appId).get();
+            if (app == null || !app.getPlatform().equals(SocialMediaApp.Platform.LINKEDIN)) {
+                return ResponseEntity.badRequest().body(buildErrorResponse("invalid_app", "Invalid LinkedIn app configuration"));
+            }
 
-            // Exchange code for tokens
-            Map<String, Object> tokenResponse = linkedInService.exchangeCodeForToken(code);
-            log.info("LinkedIn token response: {}", tokenResponse);
+            // Exchange code for tokens using specific app
+            Map<String, Object> tokenResponse = linkedInService.exchangeCodeForToken(code, app);
+            log.info("LinkedIn token response for app {}: {}", app.getName(), tokenResponse);
             
             String accessToken = (String) tokenResponse.get("access_token");
             String refreshToken = (String) tokenResponse.get("refresh_token");
@@ -110,7 +133,7 @@ public class LinkedInController {
 
             // Save or update LinkedIn user data
             LinkedInUser linkedInUser = saveLinkedInUser(userId, linkedInProfile,
-                    accessToken, refreshToken, expiresIn);
+                    accessToken, refreshToken, expiresIn, app);
 
             return ResponseEntity.ok(String.format("""
                 <html>
@@ -172,7 +195,7 @@ public class LinkedInController {
     }
 
     private LinkedInUser saveLinkedInUser(Long userId, Map<String, Object> profile,
-                                          String accessToken, String refreshToken, Integer expiresIn) {
+                                          String accessToken, String refreshToken, Integer expiresIn, SocialMediaApp app) {
 
         log.info("Saving LinkedIn user for userId: {}", userId);
         User user = userService.findById(userId).get(); // Your user service
@@ -198,6 +221,7 @@ public class LinkedInController {
 
         // If this LinkedIn account was previously linked to another app user, reassign to current
         linkedInUser.setUser(user);
+        linkedInUser.setSocialMediaApp(app);
         linkedInUser.setLinkedinUserId(subject);
         linkedInUser.setPersonUrn(personUrn);
         linkedInUser.setName((String) profile.get("name"));
@@ -351,8 +375,11 @@ public class LinkedInController {
             // Create a mock Post object (replace with your actual Post entity)
             Post post = postService.findById(postId).get();
             // Use your existing publishPost method
-            boolean success = linkedInService.publishPost(post, accessToken, personUrn);
+            String postid = linkedInService.publishPost(post, accessToken, personUrn);
 
+            boolean success = false;
+            if(postid!=null)
+                success=true;
             return ResponseEntity.ok(Map.of(
                     "success", success,
                     "message", success ? "Post published successfully!" : "Failed to publish post",

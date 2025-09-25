@@ -40,8 +40,19 @@ public class ScheduleService {
     
     @Autowired
     private PostService postService;
+    
+    @Autowired
+    private SocialMediaAppService socialMediaAppService;
+
     public Schedule createSchedule(Long postId, LocalDateTime scheduledFor) {
         Schedule schedule = new Schedule(postId, scheduledFor);
+        return scheduleRepository.save(schedule);
+    }
+    
+    public Schedule createSchedule(Long postId, LocalDateTime scheduledFor, Long socialMediaAppId, Schedule.Platform platform) {
+        Schedule schedule = new Schedule(postId, scheduledFor);
+        schedule.setSocialMediaAppId(socialMediaAppId);
+        schedule.setPlatform(platform);
         return scheduleRepository.save(schedule);
     }
     
@@ -170,7 +181,7 @@ public class ScheduleService {
                 
                 try {
                     if ("linkedin".equals(platform)) {
-                        boolean linkedInPublished = publishToLinkedIn(post, creator);
+                        boolean linkedInPublished = publishToLinkedIn(post, creator, schedule);
                         if (linkedInPublished) {
                             anyPublished = true;
                             publishResults.append("LinkedIn: Success. ");
@@ -178,10 +189,11 @@ public class ScheduleService {
                             publishResults.append("LinkedIn: Failed. ");
                         }
                     } else if ("wordpress".equals(platform)) {
-                        boolean wordPressPublished = publishToWordPress(post, creator);
-                        if (wordPressPublished) {
+                        WordPressPostResponse wordPressPublished = publishToWordPress(post, creator, schedule);
+                        if (wordPressPublished!=null && wordPressPublished.getStatus()!=null) {
                             anyPublished = true;
                             publishResults.append("WordPress: Success. ");
+                            schedule.setPostUrl(wordPressPublished.getPostUrl());
                         } else {
                             publishResults.append("WordPress: Failed. ");
                         }
@@ -194,6 +206,7 @@ public class ScheduleService {
             if (anyPublished) {
                 schedule.setStatus(Schedule.ScheduleStatus.PUBLISHED);
                 schedule.setPublishedAt(LocalDateTime.now());
+
                 scheduleRepository.save(schedule);
                 
                 // Update post status
@@ -235,9 +248,20 @@ public class ScheduleService {
         }
     }
     
-    private boolean publishToLinkedIn(Post post, User creator) {
+    private boolean publishToLinkedIn(Post post, User creator, Schedule schedule) {
         try {
-            java.util.Optional<LinkedInUser> liUserOpt = linkedInUserRepository.findByUser(creator);
+            // Get the social media app configuration
+            SocialMediaApp socialMediaApp = null;
+            if (schedule.getSocialMediaAppId() != null) {
+                socialMediaApp = socialMediaAppService.getAppById(schedule.getSocialMediaAppId())
+                    .orElseThrow(() -> new RuntimeException("Social Media App not found with id: " + schedule.getSocialMediaAppId()));
+            } else {
+                // Fallback to default LinkedIn app
+                socialMediaApp = socialMediaAppService.getDefaultApp(SocialMediaApp.Platform.LINKEDIN)
+                    .orElseThrow(() -> new RuntimeException("No default LinkedIn app configured"));
+            }
+
+            java.util.Optional<LinkedInUser> liUserOpt = linkedInUserRepository.findByUserAndSocialMediaAppId(creator,socialMediaApp.getId());
             if (!liUserOpt.isPresent()) {
                 throw new RuntimeException("LinkedIn account not connected for the post creator");
             }
@@ -255,16 +279,36 @@ public class ScheduleService {
                 throw new RuntimeException("LinkedIn token expired. Please reconnect LinkedIn.");
             }
 
-            // Publish with media attachments support
-            return linkedInService.publishPost(post, accessToken, personUrn);
+            // Publish with media attachments support using the selected app configuration
+            String linkedInPostId = linkedInService.publishPost(post, accessToken, personUrn);
+            
+            // Store the LinkedIn post ID for reference
+            if (linkedInPostId != null) {
+                schedule.setLinkedInPostId(linkedInPostId);
+                schedule.setPostUrl("https://www.linkedin.com/feed/update/"+linkedInPostId);
+                scheduleRepository.save(schedule);
+            }
+            
+            return linkedInPostId != null;
             
         } catch (Exception e) {
             throw new RuntimeException("LinkedIn publishing failed: " + e.getMessage(), e);
         }
     }
     
-    private boolean publishToWordPress(Post post, User creator) {
+    private WordPressPostResponse publishToWordPress(Post post, User creator, Schedule schedule) {
         try {
+            // Get the social media app configuration
+            SocialMediaApp socialMediaApp = null;
+            if (schedule.getSocialMediaAppId() != null) {
+                socialMediaApp = socialMediaAppService.getAppById(schedule.getSocialMediaAppId())
+                    .orElseThrow(() -> new RuntimeException("Social Media App not found with id: " + schedule.getSocialMediaAppId()));
+            } else {
+                // Fallback to default WordPress app
+                socialMediaApp = socialMediaAppService.getDefaultApp(SocialMediaApp.Platform.WORDPRESS)
+                    .orElseThrow(() -> new RuntimeException("No default WordPress app configured"));
+            }
+            
             // Get post content for WordPress
             List<PostContent> contentList = postService.getPostContents(post.getId());
             PostContent wordpressContent = contentList.stream()
@@ -276,9 +320,9 @@ public class ScheduleService {
                 throw new RuntimeException("No WordPress content found for post");
             }
             
-            // Publish with media attachments support
-            var response = wordpressService.publishPost(post, wordpressContent);
-            return response != null && response.getStatus() != null;
+            // Publish with media attachments support using specific app configuration
+            var response = wordpressService.publishPost(post, wordpressContent, socialMediaApp);
+            return response;
             
         } catch (Exception e) {
             throw new RuntimeException("WordPress publishing failed: " + e.getMessage(), e);

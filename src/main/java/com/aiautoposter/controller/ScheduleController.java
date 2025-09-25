@@ -44,7 +44,7 @@ public class ScheduleController {
     @PostMapping
     public ResponseEntity<ScheduleDto> createSchedule(@Valid @RequestBody Schedule schedule) {
         try {
-            Schedule createdSchedule = scheduleService.createSchedule(schedule.getPostId(), schedule.getScheduledFor());
+            Schedule createdSchedule = scheduleService.createSchedule(schedule.getPostId(), schedule.getScheduledFor(),schedule.getSocialMediaAppId(), schedule.getPlatform());
             return new ResponseEntity<>(ScheduleDto.from(createdSchedule), HttpStatus.CREATED);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);

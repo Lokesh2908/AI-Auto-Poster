@@ -15,7 +15,7 @@ public interface PostContentRepository extends JpaRepository<PostContent, Long> 
     
     List<PostContent> findByPlatform(String platform);
     
-    List<PostContent> findByPostIdAndPlatform(Long postId, String platform);
+    PostContent findByPostIdAndPlatform(Long postId, String platform);
     
     @Query("SELECT pc FROM PostContent pc WHERE pc.postId = :postId ORDER BY pc.createdAt DESC")
     List<PostContent> findByPostIdOrderByCreatedAtDesc(@Param("postId") Long postId);

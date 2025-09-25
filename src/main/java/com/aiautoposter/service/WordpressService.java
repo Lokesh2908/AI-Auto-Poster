@@ -5,6 +5,7 @@ import com.aiautoposter.entity.WordPressPostResponse;
 import com.aiautoposter.entity.Post;
 import com.aiautoposter.entity.PostMedia;
 import com.aiautoposter.entity.Media;
+import com.aiautoposter.entity.SocialMediaApp;
 import com.aiautoposter.repository.PostMediaRepository;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -32,51 +33,14 @@ public class WordpressService {
 
     private final RestTemplate restTemplate = new RestTemplate();
 
-    @Value("${wordpress.name}")
-    private String blogName;
-
-    @Value("${wordpress.url}")
-    private String blogUrl;
-
-    @Value("${wordpress.username}")
-    private String username;
-
-    @Value("${wordpress.app-password}")
-    private String appPassword;
-
-    @Value("${wordpress.enabled}")
-    private boolean enabled;
 
     @Autowired
     private PostMediaRepository postMediaRepository;
 
-    public WordPressPostResponse publishPost(PostContent content) {
-        if (!enabled) {
-            throw new RuntimeException("WordPress publishing is disabled");
-        }
-
-        try {
-            // Extract images from HTML content
-            List<String> imageUrls = extractImageUrls(content.getContent());
-
-            // Upload images to WordPress
-            Map<String, Integer> urlToWpMediaId = uploadImages(imageUrls);
-
-            // Replace local image URLs with WordPress URLs
-            String wpContent = replaceImageUrls(content.getContent(), urlToWpMediaId);
-
-            // Create WordPress post
-            return createPost(content.getTitle(), wpContent, urlToWpMediaId);
-
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to publish to WordPress: " + e.getMessage(), e);
-        }
-    }
-
-    // New method to publish post with media from database
-    public WordPressPostResponse publishPost(Post post, PostContent content) {
-        if (!enabled) {
-            throw new RuntimeException("WordPress publishing is disabled");
+    // New method to publish post with app-specific configuration
+    public WordPressPostResponse publishPost(Post post, PostContent content, SocialMediaApp app) {
+        if (app == null || !app.getPlatform().equals(SocialMediaApp.Platform.WORDPRESS)) {
+            throw new RuntimeException("Invalid WordPress app configuration");
         }
 
         try {
@@ -100,59 +64,32 @@ public class WordpressService {
             // Add images from HTML content
             allImageUrls.addAll(htmlImageUrls);
 
-            // Upload all images to WordPress
-            Map<String, Integer> urlToWpMediaId = uploadImages(allImageUrls);
+            // Upload all images to WordPress using app-specific config
+            Map<String, Integer> urlToWpMediaId = uploadImages(allImageUrls, app);
 
             // Replace local image URLs with WordPress URLs in content
-            String wpContent = replaceImageUrls(content.getContent(), urlToWpMediaId);
+            String wpContent = replaceImageUrls(content.getContent(), urlToWpMediaId, app);
             
             // If no images in HTML content but we have media from database, add them to content
             if (htmlImageUrls.isEmpty() && !postMediaList.isEmpty()) {
-                wpContent = addMediaToContent(wpContent, postMediaList, urlToWpMediaId);
+                wpContent = addMediaToContent(wpContent, postMediaList, urlToWpMediaId, app);
             }
 
-            // Create WordPress post
-            return createPost(content.getTitle(), wpContent, urlToWpMediaId);
+            // Create WordPress post using app-specific config
+            return createPost(content.getTitle(), wpContent, urlToWpMediaId, app);
 
         } catch (Exception e) {
             throw new RuntimeException("Failed to publish to WordPress: " + e.getMessage(), e);
         }
     }
 
-    public boolean testConnection() {
-        if (!enabled) return false;
 
-        try {
-            String testUrl = blogUrl + "/wp-json/wp/v2/posts?per_page=1";
-
-            HttpHeaders headers = new HttpHeaders();
-            headers.set("Authorization", getBasicAuthHeader());
-
-            HttpEntity<String> entity = new HttpEntity<>(headers);
-            ResponseEntity<String> response = restTemplate.exchange(testUrl, HttpMethod.GET, entity, String.class);
-
-            return response.getStatusCode() == HttpStatus.OK;
-
-        } catch (Exception e) {
-            System.err.println("WordPress connection failed: " + e.getMessage());
-            return false;
-        }
-    }
-
-    public Map<String, String> getBlogInfo() {
-        return Map.of(
-                "name", blogName,
-                "url", blogUrl,
-                "enabled", String.valueOf(enabled)
-        );
-    }
-
-    private Map<String, Integer> uploadImages(List<String> imageUrls) {
+    private Map<String, Integer> uploadImages(List<String> imageUrls, SocialMediaApp app) {
         Map<String, Integer> urlToMediaId = new HashMap<>();
 
         for (String imageUrl : imageUrls) {
             try {
-                Integer mediaId = uploadImage(imageUrl);
+                Integer mediaId = uploadImage(imageUrl, app);
                 if (mediaId != null) {
                     urlToMediaId.put(imageUrl, mediaId);
                 }
@@ -164,15 +101,15 @@ public class WordpressService {
         return urlToMediaId;
     }
 
-    private Integer uploadImage(String imageUrl) throws IOException {
-        String uploadUrl = blogUrl + "/wp-json/wp/v2/media";
+    private Integer uploadImage(String imageUrl, SocialMediaApp app) throws IOException {
+        String uploadUrl = app.getUrl() + "/wp-json/wp/v2/media";
 
         byte[] imageData = downloadImageData(imageUrl);
         String fileName = extractFileName(imageUrl);
         String mimeType = getMimeType(fileName);
 
         HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", getBasicAuthHeader());
+        headers.set("Authorization", getBasicAuthHeader(app));
         headers.set("Content-Disposition", "attachment; filename=\"" + fileName + "\"");
         headers.setContentType(MediaType.parseMediaType(mimeType));
 
@@ -186,12 +123,12 @@ public class WordpressService {
         return null;
     }
 
-    private WordPressPostResponse createPost(String title, String content, Map<String, Integer> mediaIds) {
-        String postUrl = blogUrl + "/wp-json/wp/v2/posts";
+    private WordPressPostResponse createPost(String title, String content, Map<String, Integer> mediaIds, SocialMediaApp app) {
+        String postUrl = app.getUrl() + "/wp-json/wp/v2/posts";
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.set("Authorization", getBasicAuthHeader());
+        headers.set("Authorization", getBasicAuthHeader(app));
 
         Map<String, Object> payload = new HashMap<>();
         payload.put("title", title);
@@ -218,8 +155,8 @@ public class WordpressService {
         throw new RuntimeException("Failed to create WordPress post");
     }
 
-    private String getBasicAuthHeader() {
-        return "Basic " + Base64.getEncoder().encodeToString((username + ":" + appPassword).getBytes(StandardCharsets.UTF_8));
+    private String getBasicAuthHeader(SocialMediaApp app) {
+        return "Basic " + Base64.getEncoder().encodeToString((app.getUsername() + ":" + app.getAppPassword()).getBytes(StandardCharsets.UTF_8));
     }
 
     private List<String> extractImageUrls(String htmlContent) {
@@ -231,7 +168,7 @@ public class WordpressService {
                 .collect(Collectors.toList());
     }
 
-    private String replaceImageUrls(String htmlContent, Map<String, Integer> urlToMediaId) {
+    private String replaceImageUrls(String htmlContent, Map<String, Integer> urlToMediaId, SocialMediaApp app) {
         Document doc = Jsoup.parse(htmlContent);
         Elements images = doc.select("img");
 
@@ -240,7 +177,7 @@ public class WordpressService {
             Integer mediaId = urlToMediaId.get(originalSrc);
 
             if (mediaId != null) {
-                String wpMediaUrl = getMediaUrl(mediaId);
+                String wpMediaUrl = getMediaUrl(mediaId, app);
                 if (wpMediaUrl != null) {
                     img.attr("src", wpMediaUrl);
                 }
@@ -250,12 +187,13 @@ public class WordpressService {
         return doc.body().html();
     }
 
-    private String getMediaUrl(Integer mediaId) {
+
+    private String getMediaUrl(Integer mediaId, SocialMediaApp app) {
         try {
-            String mediaUrl = blogUrl + "/wp-json/wp/v2/media/" + mediaId;
+            String mediaUrl = app.getUrl() + "/wp-json/wp/v2/media/" + mediaId;
 
             HttpHeaders headers = new HttpHeaders();
-            headers.set("Authorization", getBasicAuthHeader());
+            headers.set("Authorization", getBasicAuthHeader(app));
 
             HttpEntity<String> entity = new HttpEntity<>(headers);
             ResponseEntity<Map> response = restTemplate.exchange(mediaUrl, HttpMethod.GET, entity, Map.class);
@@ -297,8 +235,8 @@ public class WordpressService {
         }
     }
 
-    // Helper method to add media to content when no images exist in HTML
-    private String addMediaToContent(String content, List<PostMedia> postMediaList, Map<String, Integer> urlToWpMediaId) {
+    // Helper method to add media to content when no images exist in HTML (app-specific)
+    private String addMediaToContent(String content, List<PostMedia> postMediaList, Map<String, Integer> urlToWpMediaId, SocialMediaApp app) {
         StringBuilder contentBuilder = new StringBuilder(content);
         
         for (PostMedia postMedia : postMediaList) {
@@ -306,7 +244,7 @@ public class WordpressService {
             if (media != null && ("IMAGE".equalsIgnoreCase(media.getMediaType()) || "PNG".equalsIgnoreCase(media.getMediaType()))) {
                 Integer wpMediaId = urlToWpMediaId.get(media.getFileUrl());
                 if (wpMediaId != null) {
-                    String wpMediaUrl = getMediaUrl(wpMediaId);
+                    String wpMediaUrl = getMediaUrl(wpMediaId, app);
                     if (wpMediaUrl != null) {
                         // Add image to content with proper WordPress image block format
                         String imageBlock = String.format(

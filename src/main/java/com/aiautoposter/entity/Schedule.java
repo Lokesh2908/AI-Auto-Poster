@@ -32,10 +32,30 @@ public class Schedule {
     @Column(name = "status")
     private ScheduleStatus status = ScheduleStatus.PENDING;
     
+    @Column(name = "social_media_app_id")
+    private Long socialMediaAppId;
+    
+    @Column(name = "platform")
+    @Enumerated(EnumType.STRING)
+    private Platform platform;
+    
+    @Column(name = "linkedin_post_id")
+    private String linkedInPostId;
+
+    @Column(name = "post_url")
+    private String postUrl;
+    
+    @Column(name = "error_message")
+    private String errorMessage;
+    
     // Relationships
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "post_id", insertable = false, updatable = false)
     private Post post;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "social_media_app_id", insertable = false, updatable = false)
+    private SocialMediaApp socialMediaApp;
     
     // Constructors
     public Schedule() {
@@ -114,6 +134,54 @@ public class Schedule {
         this.post = post;
     }
     
+    public Long getSocialMediaAppId() {
+        return socialMediaAppId;
+    }
+    
+    public void setSocialMediaAppId(Long socialMediaAppId) {
+        this.socialMediaAppId = socialMediaAppId;
+    }
+    
+    public Platform getPlatform() {
+        return platform;
+    }
+    
+    public void setPlatform(Platform platform) {
+        this.platform = platform;
+    }
+    
+    public String getLinkedInPostId() {
+        return linkedInPostId;
+    }
+    
+    public void setLinkedInPostId(String linkedInPostId) {
+        this.linkedInPostId = linkedInPostId;
+    }
+    
+    public String getErrorMessage() {
+        return errorMessage;
+    }
+    
+    public void setErrorMessage(String errorMessage) {
+        this.errorMessage = errorMessage;
+    }
+    
+    public SocialMediaApp getSocialMediaApp() {
+        return socialMediaApp;
+    }
+    
+    public void setSocialMediaApp(SocialMediaApp socialMediaApp) {
+        this.socialMediaApp = socialMediaApp;
+    }
+
+    public String getPostUrl() {
+        return postUrl;
+    }
+
+    public void setPostUrl(String postUrl) {
+        this.postUrl = postUrl;
+    }
+
     @PreUpdate
     public void preUpdate() {
         this.updatedAt = LocalDateTime.now();
@@ -122,4 +190,22 @@ public class Schedule {
     public enum ScheduleStatus {
         PENDING, PUBLISHED, FAILED, CANCELLED, SCHEDULED
     }
+    
+    public enum Platform {
+        LINKEDIN("LinkedIn"),
+        WORDPRESS("WordPress"),
+        TWITTER("Twitter"),
+        FACEBOOK("Facebook");
+        
+        private final String displayName;
+        
+        Platform(String displayName) {
+            this.displayName = displayName;
+        }
+        
+        public String getDisplayName() {
+            return displayName;
+        }
+    }
+
 }

@@ -5,6 +5,7 @@ import com.aiautoposter.entity.PostContent;
 import com.aiautoposter.entity.User;
 import com.aiautoposter.entity.PostMedia;
 import com.aiautoposter.entity.Media;
+import com.aiautoposter.entity.SocialMediaApp;
 import com.aiautoposter.repository.PostContentRepository;
 import com.aiautoposter.repository.PostMediaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,15 +27,6 @@ import java.util.*;
 @Service
 public class LinkedInService {
 
-    @Value("${linkedin.client.id}")
-    private String clientId;
-
-    @Value("${linkedin.client.secret}")
-    private String clientSecret;
-
-    @Value("${linkedin.client.redirect-uri}")
-    private String redirectUri;
-
     @Autowired
     private RestTemplate restTemplate;
 
@@ -47,34 +39,37 @@ public class LinkedInService {
     @Autowired
     private UserService userService;
 
-    // Generate auth URL with user state for linking
-    public String getAuthorizationUrl(String username) {
-        return getAuthorizationUrl(username, false);
+    // Generate auth URL with user state for linking using specific app configuration
+    public String getAuthorizationUrl(String username, SocialMediaApp app) {
+        return getAuthorizationUrl(username, app, false);
     }
 
-    // Generate auth URL with optional force-login (prompt=login)
-    public String getAuthorizationUrl(String username, boolean forceLogin) {
+    // Generate auth URL with optional force-login (prompt=login) using specific app configuration
+    public String getAuthorizationUrl(String username, SocialMediaApp app, boolean forceLogin) {
         User user = userService.findByUsername(username);
         String state = Base64.getEncoder().encodeToString(
-                ("user:" + user.getId() + ":nonce:" + UUID.randomUUID()).getBytes(StandardCharsets.UTF_8)
+                ("user:" + user.getId() + ":app:" + app.getId() + ":nonce:" + UUID.randomUUID()).getBytes(StandardCharsets.UTF_8)
         );
 
-        UriComponentsBuilder b = UriComponentsBuilder
+        String redirectUri = "http://localhost:8080/api/linkedin/callback";
+
+        UriComponentsBuilder builder = UriComponentsBuilder
                 .fromHttpUrl("https://www.linkedin.com/oauth/v2/authorization")
                 .queryParam("response_type", "code")
-                .queryParam("client_id", clientId)
+                .queryParam("client_id", app.getClientId())
                 .queryParam("redirect_uri", redirectUri)
-                .queryParam("scope", "openid profile email w_member_social")
-                .queryParam("state", state)
-                .queryParam("nonce", UUID.randomUUID().toString())
-                .queryParam("cb", System.currentTimeMillis());
+                .queryParam("scope", "openid profile email w_member_social") // Fixed: single scope parameter
+                .queryParam("state", state);
+        // Removed nonce parameter - LinkedIn doesn't support it properly
+        // Removed cb parameter - not needed
 
         if (forceLogin) {
-            b.queryParam("prompt", "login");
+            builder.queryParam("prompt", "login");
         }
 
-        return b.toUriString();
+        return builder.toUriString();
     }
+
 
     public Long extractUserIdFromState(String state) {
         if (state == null) {
@@ -86,7 +81,7 @@ public class LinkedInService {
             if (!decoded.startsWith("user:")) {
                 throw new IllegalArgumentException("Invalid state format");
             }
-            // Support both "user:<id>" and "user:<id>:nonce:<uuid>"
+            // Support format "user:<id>:app:<appId>:nonce:<uuid>"
             String[] parts = decoded.split(":");
             if (parts.length >= 2) {
                 return Long.parseLong(parts[1]);
@@ -97,18 +92,37 @@ public class LinkedInService {
         }
     }
 
+    public Long extractAppIdFromState(String state) {
+        if (state == null) {
+            throw new IllegalArgumentException("State parameter is required");
+        }
+
+        try {
+            String decoded = new String(Base64.getDecoder().decode(state), StandardCharsets.UTF_8);
+            // Format: "user:<id>:app:<appId>:nonce:<uuid>"
+            String[] parts = decoded.split(":");
+            for (int i = 0; i < parts.length - 1; i++) {
+                if ("app".equals(parts[i]) && i + 1 < parts.length) {
+                    return Long.parseLong(parts[i + 1]);
+                }
+            }
+            throw new IllegalArgumentException("Invalid state format (missing app id)");
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid state parameter", e);
+        }
+    }
+
     // Updated to actually publish to LinkedIn with media support
-    public boolean publishPost(Post post, String accessToken, String personUrn) {
+    public String publishPost(Post post, String accessToken, String personUrn) {
         try {
             // Get LinkedIn content for the post
-            List<PostContent> postContents = postContentRepository.findByPostIdAndPlatform(
+            PostContent linkedinContent = postContentRepository.findByPostIdAndPlatform(
                     post.getId(), "linkedin");
 
-            if (postContents.isEmpty()) {
+            if (linkedinContent==null) {
                 throw new RuntimeException("No LinkedIn content found for post");
             }
 
-            PostContent linkedinContent = postContents.get(0);
             
             // Get media files associated with the post
             List<PostMedia> postMediaList = postMediaRepository.findByPostIdWithMediaOrderByDisplayOrder(post.getId());
@@ -158,19 +172,19 @@ public class LinkedInService {
 
             if (postId != null) {
                 System.out.println("Successfully published to LinkedIn with ID: " + postId);
-                return true;
+                return postId;
             }
 
-            return false;
+            return null;
 
         } catch (Exception e) {
             System.err.println("Error publishing to LinkedIn: " + e.getMessage());
             e.printStackTrace();
-            return false;
+            return null;
         }
     }
 
-    private String createLinkedInPost(String accessToken, String personUrn, PostContent content) {
+    public String createLinkedInPost(String accessToken, String personUrn, PostContent content) {
         String postUrl = "https://api.linkedin.com/v2/ugcPosts";
 
         HttpHeaders headers = new HttpHeaders();
@@ -248,22 +262,24 @@ public class LinkedInService {
         return fullContent.toString();
     }
 
-    // Updated authorization URL with proper scope
-    public String getAuthorizationUrl() {
+    // Updated authorization URL with proper scope using specific app configuration
+    public String getAuthorizationUrl(SocialMediaApp app) {
+        String redirectUri = "http://localhost:8080/auth/linkedin/callback";
         return UriComponentsBuilder
                 .fromHttpUrl("https://www.linkedin.com/oauth/v2/authorization")
                 .queryParam("response_type", "code")
-                .queryParam("client_id", clientId)
+                .queryParam("client_id", app.getClientId())
                 .queryParam("redirect_uri", redirectUri)
-                .queryParam("state", UUID.randomUUID().toString())
+                .queryParam("state", app.getId().toString())
                 .queryParam("scope", "openid profile email w_member_social")
                 .toUriString();
     }
 
-    // Updated token exchange method
-    public Map<String, Object> exchangeCodeForToken(String code) {
+    // Updated token exchange method using specific app configuration
+    public Map<String, Object> exchangeCodeForToken(String code, SocialMediaApp app) {
         try {
             String tokenUrl = "https://www.linkedin.com/oauth/v2/accessToken";
+            String redirectUri = "http://localhost:8080/api/linkedin/callback";
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
@@ -271,8 +287,8 @@ public class LinkedInService {
             MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
             params.add("grant_type", "authorization_code");
             params.add("code", code);
-            params.add("client_id", clientId);
-            params.add("client_secret", clientSecret);
+            params.add("client_id", app.getClientId());
+            params.add("client_secret", app.getClientSecret());
             params.add("redirect_uri", redirectUri);
 
             HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
@@ -368,8 +384,8 @@ public class LinkedInService {
                 }});
     }
 
-    // Refresh expired access token using refresh token
-    public Map<String, Object> refreshAccessToken(String refreshToken) {
+    // Refresh expired access token using refresh token with specific app configuration
+    public Map<String, Object> refreshAccessToken(String refreshToken, SocialMediaApp app) {
         try {
             String tokenUrl = "https://www.linkedin.com/oauth/v2/accessToken";
 
@@ -379,8 +395,8 @@ public class LinkedInService {
             MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
             params.add("grant_type", "refresh_token");
             params.add("refresh_token", refreshToken);
-            params.add("client_id", clientId);
-            params.add("client_secret", clientSecret);
+            params.add("client_id", app.getClientId());
+            params.add("client_secret", app.getClientSecret());
 
             HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
             ResponseEntity<Map> response = restTemplate.postForEntity(tokenUrl, request, Map.class);
@@ -551,6 +567,106 @@ public class LinkedInService {
             }
         } catch (Exception e) {
             throw new IOException("Failed to download image from: " + imageUrl, e);
+        }
+    }
+    
+    /**
+     * Publish post using specific social media app configuration
+     */
+    public String publishPostWithApp(Post post, String accessToken, String personUrn, SocialMediaApp socialMediaApp) {
+        try {
+            // Get LinkedIn-specific content
+            PostContent linkedInContent = postContentRepository.findByPostIdAndPlatform(post.getId(), "linkedin");
+            if (linkedInContent == null) {
+                throw new RuntimeException("No LinkedIn content found for post");
+            }
+
+            String content = linkedInContent.getContent();
+            
+            // Get media attachments
+            List<PostMedia> mediaAttachments = postMediaRepository.findByPostIdOrderByDisplayOrder(post.getId());
+            
+            // Create LinkedIn post payload
+            Map<String, Object> postData = new HashMap<>();
+            postData.put("author", personUrn);
+            
+            Map<String, Object> lifecycleState = new HashMap<>();
+            lifecycleState.put("lifecycleState", "PUBLISHED");
+            postData.put("lifecycleState", lifecycleState.get("lifecycleState"));
+            
+            Map<String, Object> specificContent = new HashMap<>();
+            Map<String, Object> shareContent = new HashMap<>();
+            Map<String, Object> shareCommentary = new HashMap<>();
+            shareCommentary.put("text", content);
+            shareContent.put("shareCommentary", shareCommentary);
+            
+            // Add media if present
+            if (!mediaAttachments.isEmpty()) {
+                List<Map<String, Object>> mediaList = new ArrayList<>();
+                for (PostMedia postMedia : mediaAttachments) {
+                    Media media = postMedia.getMedia();
+                    if (media != null) {
+                        // Upload image to LinkedIn and get asset URN
+                        String assetUrn = uploadImageToLinkedIn(media, accessToken, socialMediaApp);
+                        if (assetUrn != null) {
+                            Map<String, Object> mediaItem = new HashMap<>();
+                            mediaItem.put("status", "READY");
+                            mediaItem.put("media", assetUrn);
+                            
+                            Map<String, Object> title = new HashMap<>();
+                            title.put("text", media.getTitle() != null ? media.getTitle() : "");
+                            mediaItem.put("title", title);
+                            
+                            mediaList.add(mediaItem);
+                        }
+                    }
+                }
+                shareContent.put("media", mediaList);
+            }
+            
+            specificContent.put("com.linkedin.ugc.ShareContent", shareContent);
+            postData.put("specificContent", specificContent);
+            
+            Map<String, Object> visibility = new HashMap<>();
+            visibility.put("com.linkedin.ugc.MemberNetworkVisibility", "PUBLIC");
+            postData.put("visibility", visibility);
+
+            // Make API call using the social media app's configuration
+            RestTemplate restTemplate = new RestTemplate();
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.setBearerAuth(accessToken);
+           // headers.set("LinkedIn-Version", socialMediaApp.getApiVersion() != null ? socialMediaApp.getApiVersion() : "202304");
+            headers.set("X-Restli-Protocol-Version", "2.0.0");
+
+            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(postData, headers);
+            
+            String apiUrl = "https://api.linkedin.com" + "/v2/ugcPosts";
+            ResponseEntity<Map> response = restTemplate.postForEntity(apiUrl, entity, Map.class);
+
+            if (response.getStatusCode() == HttpStatus.CREATED) {
+                Map<String, Object> responseBody = response.getBody();
+                if (responseBody != null && responseBody.containsKey("id")) {
+                    return responseBody.get("id").toString();
+                }
+            }
+            
+            return null;
+            
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to publish to LinkedIn with app configuration: " + e.getMessage(), e);
+        }
+    }
+    
+    private String uploadImageToLinkedIn(Media media, String accessToken, SocialMediaApp socialMediaApp) {
+        try {
+            // Implementation for uploading image to LinkedIn using the app configuration
+            // This would use the socialMediaApp's clientId and other settings
+            // For now, return a placeholder
+            return "urn:li:digitalmediaAsset:" + media.getId();
+        } catch (Exception e) {
+            System.err.println("Failed to upload image to LinkedIn: " + e.getMessage());
+            return null;
         }
     }
 }

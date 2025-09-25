@@ -2,6 +2,7 @@ package com.aiautoposter.service;
 
 import com.aiautoposter.entity.LinkedInUser;
 import com.aiautoposter.entity.PostContent;
+import com.aiautoposter.entity.SocialMediaApp;
 import com.aiautoposter.repository.LinkedInUserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -20,10 +21,10 @@ public class PersistentLinkedInService {
     private LinkedInService linkedInService;
 
     // Store user with refresh token for long-term access
-    public LinkedInUser storeUserWithRefreshToken(String code) {
+    public LinkedInUser storeUserWithRefreshToken(String code, SocialMediaApp app) {
         try {
             // Exchange code for tokens
-            Map<String, Object> tokenResponse = linkedInService.exchangeCodeForToken(code);
+            Map<String, Object> tokenResponse = linkedInService.exchangeCodeForToken(code, app);
 
             String accessToken = (String) tokenResponse.get("access_token");
             String refreshToken = (String) tokenResponse.get("refresh_token"); // This is key!
@@ -66,7 +67,7 @@ public class PersistentLinkedInService {
     }
 
     // Get valid access token (refresh if needed)
-    public String getValidAccessToken(String linkedinUserId) {
+    public String getValidAccessToken(String linkedinUserId, SocialMediaApp app) {
         Optional<LinkedInUser> userOpt = linkedInUserRepository.findByLinkedinUserId(linkedinUserId);
 
         if (!userOpt.isPresent()) {
@@ -76,18 +77,21 @@ public class PersistentLinkedInService {
         LinkedInUser user = userOpt.get();
 
         // Check if refresh token has expired
-        if (user.getRefreshTokenExpiresAt().isBefore(LocalDateTime.now())) {
+        if (user.getRefreshTokenExpiresAt() != null && user.getRefreshTokenExpiresAt().isBefore(LocalDateTime.now())) {
             throw new RuntimeException("Refresh token expired. User needs to re-authenticate.");
         }
 
         // Check if access token is still valid
-        if (user.getAccessTokenExpiresAt().isAfter(LocalDateTime.now().plusMinutes(5))) {
+        if (user.getAccessTokenExpiresAt() != null && user.getAccessTokenExpiresAt().isAfter(LocalDateTime.now().plusMinutes(5))) {
             return user.getAccessToken(); // Still valid
         }
 
         // Access token expired, refresh it
         try {
-            Map<String, Object> tokenResponse = linkedInService.refreshAccessToken(user.getRefreshToken());
+            if (user.getRefreshToken() == null) {
+                throw new RuntimeException("No refresh token available. User needs to re-authenticate.");
+            }
+            Map<String, Object> tokenResponse = linkedInService.refreshAccessToken(user.getRefreshToken(), app);
 
             String newAccessToken = (String) tokenResponse.get("access_token");
             Integer expiresIn = (Integer) tokenResponse.get("expires_in");
@@ -107,7 +111,7 @@ public class PersistentLinkedInService {
     }
 
     // Post using stored credentials (for scheduling)
-    public boolean schedulePost(String linkedinUserId, PostContent content) {
+    public boolean schedulePost(String linkedinUserId, PostContent content, SocialMediaApp app) {
         try {
             Optional<LinkedInUser> userOpt = linkedInUserRepository.findByLinkedinUserId(linkedinUserId);
             if (!userOpt.isPresent()) {
@@ -117,10 +121,10 @@ public class PersistentLinkedInService {
             LinkedInUser user = userOpt.get();
 
             // Get valid access token (automatically refreshes if needed)
-            String accessToken = getValidAccessToken(linkedinUserId);
+            String accessToken = getValidAccessToken(linkedinUserId, app);
 
             // Create post using persistent authentication
-            String postId ="0";// linkedInService.createLinkedInPost(accessToken, user.getPersonUrn(), content);
+            String postId = linkedInService.createLinkedInPost(accessToken, user.getPersonUrn(), content);
 
             return postId != null;
 
@@ -128,5 +132,15 @@ public class PersistentLinkedInService {
             System.err.println("Failed to schedule post: " + e.getMessage());
             return false;
         }
+    }
+
+    // Overloaded method for backward compatibility
+    public String getValidAccessToken(String linkedinUserId) {
+        throw new RuntimeException("This method requires a SocialMediaApp parameter. Use getValidAccessToken(String, SocialMediaApp) instead.");
+    }
+
+    // Overloaded method for backward compatibility  
+    public LinkedInUser storeUserWithRefreshToken(String code) {
+        throw new RuntimeException("This method requires a SocialMediaApp parameter. Use storeUserWithRefreshToken(String, SocialMediaApp) instead.");
     }
 }

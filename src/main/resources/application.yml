@@ -72,12 +72,6 @@ ai:
     dalleDeploymentName: dall-e-3
     apiVersion: 2024-04-01-preview
 
-linkedin:
-  client:
-    id: ${LINKEDIN_CLIENT_ID:linkedin_client_id}
-    secret: ${LINKEDIN_CLIENT_SECRET:linkedin_client_secret}
-    redirect-uri: ${LINKEDIN_REDIRECT_URI:http://localhost:8080/api/linkedin/callback}
-
 logging:
   level:
     com.aiautoposter: DEBUG
@@ -88,10 +82,3 @@ app:
     dir: uploads
   base:
     url: http://localhost:8080
-
-wordpress:
-  name: "My Blog"
-  url: "https://inventorytoothbrush.s3-tastewp.com/"
-  username: "admin"
-  app-password: "${WP_PASSWORD:KGDN j2Ct B5qw b74s YZb7 oltO}"
-  enabled: true

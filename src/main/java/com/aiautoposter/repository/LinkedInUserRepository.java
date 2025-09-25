@@ -26,4 +26,6 @@ public interface LinkedInUserRepository extends JpaRepository<LinkedInUser,Long>
 
     @Query("SELECT lu FROM LinkedInUser lu WHERE lu.user = :user AND lu.accessTokenExpiresAt > :now")
     Optional<LinkedInUser> findValidTokenByUser(@Param("user") User user, @Param("now") LocalDateTime now);
+
+    Optional<LinkedInUser> findByUserAndSocialMediaAppId(User creator, Long id);
 }

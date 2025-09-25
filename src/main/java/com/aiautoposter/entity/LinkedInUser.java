@@ -35,6 +35,10 @@ public class LinkedInUser {
     @ManyToOne
     private User user;
 
+    @ManyToOne
+    @JoinColumn(name = "social_media_app_id")
+    private SocialMediaApp socialMediaApp;
+
     // Getters and setters...
 
     public Long getId() {
@@ -147,5 +151,13 @@ public class LinkedInUser {
     
     public boolean needsReauthorization() {
         return isAccessTokenExpired() && (!hasRefreshToken() || isRefreshTokenExpired());
+    }
+
+    public SocialMediaApp getSocialMediaApp() {
+        return socialMediaApp;
+    }
+
+    public void setSocialMediaApp(SocialMediaApp socialMediaApp) {
+        this.socialMediaApp = socialMediaApp;
     }
 }

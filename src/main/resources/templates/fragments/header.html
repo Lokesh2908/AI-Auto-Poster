@@ -29,9 +29,6 @@
                     </template>
                     <template x-if="isAuthenticated">
                         <div class="flex items-center space-x-4">
-                            <button id="linkedin-connect-btn" class="btn btn-primary" onclick="connectLinkedIn()">
-                                🔗 Connect LinkedIn
-                            </button>
                             <!-- User Profile -->
                             <div class="flex items-center space-x-3 glass px-4 py-2 rounded-xl">
                                 <div class="w-8 h-8 bg-gradient-primary rounded-full flex items-center justify-center">
@@ -42,15 +39,6 @@
                                     <p class="text-xs text-gray-500" x-text="user?.role || 'Member'"></p>
                                 </div>
                             </div>
-                            
-                            <!-- Notifications -->
-                            <button class="relative p-3 glass rounded-xl hover:bg-white/50 transition-all">
-                                <i class="fas fa-bell text-gray-600"></i>
-                                <span x-show="notifications.filter(n => !n.readStatus).length > 0" 
-                                      class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center notification-badge"
-                                      x-text="notifications.filter(n => !n.readStatus).length"></span>
-                            </button>
-                            
                             <!-- Logout -->
                             <button @click="logout()" class="bg-gradient-danger text-white px-4 py-3 rounded-xl font-semibold hover:shadow-lg transition-all flex items-center space-x-2">
                                 <i class="fas fa-sign-out-alt"></i>
