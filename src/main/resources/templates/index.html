@@ -3649,6 +3649,31 @@ Use simple formatting:
                                 }
                             }
                             
+                            // *** KEY FIX: Save initial version after post creation ***
+                            try {
+                                console.log('💾 Saving initial post version...');
+                                // Wait a moment for content generation to complete
+                                await new Promise(resolve => setTimeout(resolve, 2000));
+                                
+                                await this.saveContentVersion({
+                                    postId: createdPost.id,
+                                    versionType: 'initial_creation',
+                                    changeDescription: 'Original AI-generated content',
+                                    enhancementOptions: {
+                                        targetAudience: this.postForm.targetAudience,
+                                        postLength: this.postForm.postLength,
+                                        tone: this.postForm.tone,
+                                        postType: this.postForm.postType,
+                                        callToAction: this.postForm.callToAction,
+                                        hashtagStyle: this.postForm.hashtagStyle
+                                    }
+                                });
+                                console.log('✅ Initial version saved successfully');
+                            } catch (versionError) {
+                                console.error('⚠️ Failed to save initial version:', versionError);
+                                // Don't fail post creation if version saving fails
+                            }
+                            
                             // Store media count before resetting form
                             const mediaCount = this.postForm.selectedMedia.length;
                             const mediaText = mediaCount > 0 ? ` with ${mediaCount} media file${mediaCount > 1 ? 's' : ''}` : '';
@@ -4363,6 +4388,12 @@ Use simple formatting:
                             // Update the selected post with restored data
                             this.selectedPost = { ...restoredPost };
                             
+                            // *** KEY FIX: Reload the actual post content after restore ***
+                            console.log('🔄 Reloading post content after restore...');
+                            this.selectedPostContent = []; // Clear cache
+                            await this.loadPostContent(this.selectedPost.id);
+                            console.log('✅ Post content reloaded, new content:', this.selectedPostContent);
+                            
                             // Reload content versions to show the new restore entry
                             await this.loadContentVersions(this.selectedPost.id);
                             
@@ -4424,6 +4455,23 @@ Use simple formatting:
                             throw new Error('Failed to update post details');
                         }
 
+                        // *** KEY FIX: Save version BEFORE content changes ***
+                        console.log('💾 Saving current content as version before refinement...');
+                        await this.saveContentVersion({
+                            postId: this.selectedPost.id,
+                            versionType: 'backup_before_refinement',
+                            changeDescription: 'Backup before refinement',
+                            refinementInstructions: this.refinementInstructions,
+                            enhancementOptions: {
+                                targetAudience: this.selectedPost.targetAudience,
+                                postLength: this.selectedPost.postLength,
+                                tone: this.selectedPost.tone,
+                                postType: this.selectedPost.postType,
+                                callToAction: this.selectedPost.callToAction,
+                                hashtagStyle: this.selectedPost.hashtagStyle
+                            }
+                        });
+
                         // Then regenerate AI content using existing endpoint
                         const regenerateResponse = await fetch(`/api/posts/${this.selectedPost.id}/regenerate-content`, {
                             method: 'POST',
@@ -4435,7 +4483,7 @@ Use simple formatting:
                         if (regenerateResponse.ok) {
                             console.log('Content refined successfully');
                             
-                            // Save this refinement as a new version in the thread
+                            // Save this refinement as a new version in the thread (with new content)
                             await this.saveContentVersion({
                                 postId: this.selectedPost.id,
                                 versionType: 'refinement',
@@ -4523,6 +4571,22 @@ Use simple formatting:
                             throw new Error('Failed to update post details');
                         }
 
+                        // *** KEY FIX: Save version BEFORE content changes ***
+                        console.log('💾 Saving current content as version before full regeneration...');
+                        await this.saveContentVersion({
+                            postId: this.selectedPost.id,
+                            versionType: 'backup_before_regeneration',
+                            changeDescription: 'Backup before full regeneration',
+                            enhancementOptions: {
+                                targetAudience: this.selectedPost.targetAudience,
+                                postLength: this.selectedPost.postLength,
+                                tone: this.selectedPost.tone,
+                                postType: this.selectedPost.postType,
+                                callToAction: this.selectedPost.callToAction,
+                                hashtagStyle: this.selectedPost.hashtagStyle
+                            }
+                        });
+
                         // Then regenerate AI content using existing endpoint
                         const regenerateResponse = await fetch(`/api/posts/${this.selectedPost.id}/regenerate-content`, {
                             method: 'POST',
@@ -4534,7 +4598,7 @@ Use simple formatting:
                         if (regenerateResponse.ok) {
                             console.log('Content fully regenerated successfully');
                             
-                            // Save this full regeneration as a new version in the thread
+                            // Save this full regeneration as a new version in the thread (with new content)
                             await this.saveContentVersion({
                                 postId: this.selectedPost.id,
                                 versionType: 'full_regeneration',

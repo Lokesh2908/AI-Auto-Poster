@@ -18,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.sql.DataSource;
 import javax.validation.Valid;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -40,6 +41,9 @@ public class PostController {
     
     @Autowired
     private JwtTokenUtil jwtTokenUtil;
+    
+    @Autowired
+    private DataSource dataSource;
     
     @PostMapping
     public ResponseEntity<Post> createPost(@Valid @RequestBody Post post) {
@@ -658,6 +662,82 @@ public class PostController {
     }
     
     /**
+     * Debug endpoint to check if database migration V7 executed
+     */
+    @GetMapping("/debug/database/check-migration")
+    public ResponseEntity<?> checkDatabaseMigration() {
+        try {
+            System.out.println("=== CHECKING DATABASE MIGRATION V7 ===");
+            
+            // Try to access a version with the new fields
+            List<com.aiautoposter.entity.PostVersion> versions = postVersionService.getVersionHistory(1L);
+            
+            StringBuilder result = new StringBuilder();
+            result.append("Migration V7 Status: ");
+            
+            if (versions.isEmpty()) {
+                result.append("No versions found to test\n");
+            } else {
+                com.aiautoposter.entity.PostVersion firstVersion = versions.get(0);
+                try {
+                    // Try to access the new fields
+                    String savedContent = firstVersion.getSavedContent();
+                    String contentSummary = firstVersion.getContentSummary();
+                    
+                    result.append("SUCCESS - V7 fields accessible\n");
+                    result.append("Saved Content Field: ").append(savedContent != null ? "EXISTS" : "NULL").append("\n");
+                    result.append("Content Summary Field: ").append(contentSummary != null ? "EXISTS" : "NULL").append("\n");
+                } catch (Exception e) {
+                    result.append("FAILED - V7 fields not accessible: ").append(e.getMessage()).append("\n");
+                }
+            }
+            
+            return new ResponseEntity<>(result.toString(), HttpStatus.OK);
+            
+        } catch (Exception e) {
+            return new ResponseEntity<>("Migration check failed: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+    
+    /**
+     * Manual database migration endpoint (use only if V7 didn't execute)
+     */
+    @PostMapping("/debug/database/run-migration-v7")
+    public ResponseEntity<?> runMigrationV7() {
+        try {
+            System.out.println("=== RUNNING MANUAL MIGRATION V7 ===");
+            
+            // Use the injected DataSource
+            if (dataSource != null) {
+                try (java.sql.Connection conn = dataSource.getConnection();
+                     java.sql.Statement stmt = conn.createStatement()) {
+                    
+                    // Check if columns already exist
+                    try (java.sql.ResultSet rs = stmt.executeQuery("SHOW COLUMNS FROM post_versions LIKE 'saved_content'")) {
+                        if (rs.next()) {
+                            return new ResponseEntity<>("Migration V7 already executed - saved_content column exists", HttpStatus.OK);
+                        }
+                    }
+                    
+                    // Execute the migration
+                    stmt.executeUpdate("ALTER TABLE post_versions ADD COLUMN saved_content LONGTEXT COMMENT 'JSON array of PostContent objects saved at this version'");
+                    stmt.executeUpdate("ALTER TABLE post_versions ADD COLUMN content_summary TEXT COMMENT 'Brief summary of content for display purposes'");
+                    stmt.executeUpdate("CREATE INDEX idx_post_versions_content_summary ON post_versions(content_summary(100))");
+                    
+                    return new ResponseEntity<>("✅ Migration V7 executed successfully!", HttpStatus.OK);
+                }
+            }
+            
+            return new ResponseEntity<>("❌ Could not get database connection", HttpStatus.INTERNAL_SERVER_ERROR);
+            
+        } catch (Exception e) {
+            System.err.println("Manual migration error: " + e.getMessage());
+            e.printStackTrace();
+            return new ResponseEntity<>("❌ Migration failed: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
      * Debug endpoint to test version system without authentication
      */
     @GetMapping("/debug/versions/test")
@@ -678,6 +758,75 @@ public class PostController {
             
         } catch (Exception e) {
             System.err.println("DEBUG VERSION ERROR: " + e.getMessage());
+            e.printStackTrace();
+            return new ResponseEntity<>("Debug error: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+    
+    /**
+     * Debug endpoint to check if versions are saving content properly
+     */
+    @GetMapping("/debug/versions/{postId}")
+    public ResponseEntity<?> debugVersionContent(@PathVariable Long postId) {
+        try {
+            System.out.println("=== DEBUG VERSION CONTENT FOR POST " + postId + " ===");
+            
+            List<com.aiautoposter.entity.PostVersion> versions = postVersionService.getVersionHistory(postId);
+            
+            StringBuilder debug = new StringBuilder();
+            debug.append("Post ID: ").append(postId).append("\n");
+            debug.append("Total versions: ").append(versions.size()).append("\n\n");
+            
+            for (int i = 0; i < versions.size(); i++) {
+                com.aiautoposter.entity.PostVersion version = versions.get(i);
+                debug.append("=== VERSION ").append(i + 1).append(" ===\n");
+                debug.append("ID: ").append(version.getId()).append("\n");
+                debug.append("Type: ").append(version.getVersionType()).append("\n");
+                debug.append("Description: ").append(version.getChangeDescription()).append("\n");
+                debug.append("Title: ").append(version.getTitle()).append("\n");
+                debug.append("Saved Content: ").append(version.getSavedContent() != null ? "YES (" + version.getSavedContent().length() + " chars)" : "NO").append("\n");
+                debug.append("Content Summary: ").append(version.getContentSummary()).append("\n");
+                debug.append("Created: ").append(version.getCreatedAt()).append("\n\n");
+            }
+            
+            return new ResponseEntity<>(debug.toString(), HttpStatus.OK);
+            
+        } catch (Exception e) {
+            System.err.println("DEBUG VERSION CONTENT ERROR: " + e.getMessage());
+            e.printStackTrace();
+            return new ResponseEntity<>("Debug error: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+    
+    /**
+     * Debug endpoint to check current post content
+     */
+    @GetMapping("/debug/post/{postId}/current-content")
+    public ResponseEntity<?> debugCurrentContent(@PathVariable Long postId) {
+        try {
+            System.out.println("=== DEBUG CURRENT CONTENT FOR POST " + postId + " ===");
+            
+            List<com.aiautoposter.entity.PostContent> contents = postService.getPostContents(postId);
+            
+            StringBuilder debug = new StringBuilder();
+            debug.append("Post ID: ").append(postId).append("\n");
+            debug.append("Current content items: ").append(contents.size()).append("\n\n");
+            
+            for (int i = 0; i < contents.size(); i++) {
+                com.aiautoposter.entity.PostContent content = contents.get(i);
+                debug.append("=== CONTENT ").append(i + 1).append(" ===\n");
+                debug.append("ID: ").append(content.getId()).append("\n");
+                debug.append("Platform: ").append(content.getPlatform()).append("\n");
+                debug.append("Title: ").append(content.getTitle()).append("\n");
+                debug.append("Content: ").append(content.getContent().substring(0, Math.min(200, content.getContent().length()))).append("...\n");
+                debug.append("Hashtags: ").append(content.getHashtags()).append("\n");
+                debug.append("Created: ").append(content.getCreatedAt()).append("\n\n");
+            }
+            
+            return new ResponseEntity<>(debug.toString(), HttpStatus.OK);
+            
+        } catch (Exception e) {
+            System.err.println("DEBUG CURRENT CONTENT ERROR: " + e.getMessage());
             e.printStackTrace();
             return new ResponseEntity<>("Debug error: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
