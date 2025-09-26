@@ -1,0 +1,65 @@
+<nav class="glass backdrop-blur-xl border-b border-white/20 sticky top-0 z-50" xmlns:th="http://www.thymeleaf.org" th:fragment="header">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between h-20">
+                <div class="flex items-center">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-12 h-12 bg-gradient-primary rounded-2xl flex items-center justify-center">
+                            <i class="fas fa-robot text-white text-xl"></i>
+                        </div>
+                        <div>
+                            <h1 class="text-2xl font-black text-gray-800">
+                                AI <span class="text-gradient">Auto Poster</span>
+                            </h1>
+                            <p class="text-xs text-gray-500 font-medium">Revolutionary Content Management</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <template x-if="!isAuthenticated">
+                        <div class="flex space-x-3">
+                            <button @click="showLogin = true" class="btn-primary text-white px-6 py-3 rounded-xl font-semibold flex items-center space-x-2 shadow-lg">
+                                <i class="fas fa-sign-in-alt"></i>
+                                <span>Login</span>
+                            </button>
+                            <button @click="showRegister = true" class="glass text-gray-700 px-6 py-3 rounded-xl font-semibold border border-gray-200 hover:bg-white/50 flex items-center space-x-2">
+                                <i class="fas fa-user-plus"></i>
+                                <span>Register</span>
+                            </button>
+                        </div>
+                    </template>
+                    <template x-if="isAuthenticated">
+                        <div class="flex items-center space-x-4">
+                            <button id="linkedin-connect-btn" class="btn btn-primary" onclick="connectLinkedIn()">
+                                🔗 Connect LinkedIn
+                            </button>
+                            <!-- User Profile -->
+                            <div class="flex items-center space-x-3 glass px-4 py-2 rounded-xl">
+                                <div class="w-8 h-8 bg-gradient-primary rounded-full flex items-center justify-center">
+                                    <i class="fas fa-user text-white text-sm"></i>
+                                </div>
+                                <div class="text-left">
+                                    <p class="text-sm font-semibold text-gray-700" x-text="user?.email || 'User'"></p>
+                                    <p class="text-xs text-gray-500" x-text="user?.role || 'Member'"></p>
+                                </div>
+                            </div>
+                            
+                            <!-- Notifications -->
+                            <button class="relative p-3 glass rounded-xl hover:bg-white/50 transition-all">
+                                <i class="fas fa-bell text-gray-600"></i>
+                                <span x-show="notifications.filter(n => !n.readStatus).length > 0" 
+                                      class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center notification-badge"
+                                      x-text="notifications.filter(n => !n.readStatus).length"></span>
+                            </button>
+                            
+                            <!-- Logout -->
+                            <button @click="logout()" class="bg-gradient-danger text-white px-4 py-3 rounded-xl font-semibold hover:shadow-lg transition-all flex items-center space-x-2">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span>Logout</span>
+                            </button>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+    </nav>
+
