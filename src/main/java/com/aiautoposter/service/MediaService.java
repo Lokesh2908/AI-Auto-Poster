@@ -5,9 +5,7 @@ import com.aiautoposter.repository.MediaRepository;
 import org.hibernate.type.ImageType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
@@ -46,6 +44,7 @@ public class MediaService {
     private static final String STANDARD_EXTENSION = ".png";
     private static final String STANDARD_CONTENT_TYPE = "image/png";
 
+
     public String generateImage(String prompt, String title) {
         try {
             System.out.println("MediaService - Starting image generation");
@@ -55,6 +54,8 @@ public class MediaService {
             if (prompt == null || prompt.trim().isEmpty()) {
                 throw new RuntimeException("Prompt cannot be empty");
             }
+
+            prompt = aiContentGenerationService.getPromptForImageGen(prompt,title);
             
             String url = aiContentGenerationService.tryAzureOpenAIImageGeneration(prompt, title);
             System.out.println("AI service returned URL: " + url);
@@ -262,4 +263,148 @@ public class MediaService {
         }
     }
 
+    public byte[] generateDiagramImage(String mermaidCode) {
+        try {
+            String url = "https://kroki.io/mermaid/png";
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.TEXT_PLAIN);
+
+            HttpEntity<String> entity = new HttpEntity<>(mermaidCode, headers);
+
+            RestTemplate restTemplate = new RestTemplate();
+            ResponseEntity<byte[]> response = restTemplate.postForEntity(url, entity, byte[].class);
+
+            if (response.getStatusCode() == HttpStatus.OK) {
+                return response.getBody();
+            }
+
+            throw new RuntimeException("Failed to generate diagram");
+
+        } catch (Exception e) {
+            throw new RuntimeException("Error generating diagram: " + e.getMessage());
+        }
+    }
+
+    public byte[] generateLatexDiagramImage(String latexCode) {
+        try {
+            // Change URL to use tikz endpoint for LaTeX
+            String url = "https://kroki.io/tikz/png";
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.TEXT_PLAIN);
+
+            // Use latexCode instead of mermaidCode
+            HttpEntity<String> entity = new HttpEntity<>(latexCode, headers);
+
+            RestTemplate restTemplate = new RestTemplate();
+            ResponseEntity<byte[]> response = restTemplate.postForEntity(url, entity, byte[].class);
+
+            if (response.getStatusCode() == HttpStatus.OK) {
+                return response.getBody();
+            }
+
+            throw new RuntimeException("Failed to generate diagram");
+
+        } catch (Exception e) {
+            throw new RuntimeException("Error generating diagram: " + e.getMessage());
+        }
+    }
+
+
+    public String storeDiagramAsMedia(String prompt, String title, String description, String type) {
+        try {
+            // Generate diagram image
+            String code=null;
+            byte[] imageBytes=null;
+            if(type.equals("diagram")) {
+                code = aiContentGenerationService.createDiagramUsingAI(prompt);
+                code = cleanMermaidCode(code);
+                imageBytes = generateDiagramImage(code);
+            }
+            else {
+                code = aiContentGenerationService.createLatexDiagramUsingAI(prompt);
+                code = clearLatexCode(code);
+                imageBytes = generateLatexDiagramImage(code);
+            }
+
+            // Create unique filename
+            String fileName = "diagram_" + System.currentTimeMillis() + ".png";
+            String filePath = "uploads/" + fileName;
+
+            // Save to file system
+            Path uploadPath = Paths.get(filePath);
+            Files.createDirectories(uploadPath.getParent());
+            Files.write(uploadPath, imageBytes);
+
+            // Create Media entity
+            Media media = new Media();
+            media.setOriginalFilename("ai-generated-image.png");
+            media.setStoredFilename(fileName);
+            media.setFileUrl(baseUrl+"/"+filePath);
+            media.setContentType(STANDARD_CONTENT_TYPE);
+            media.setFileSize(Files.size(uploadPath));
+            media.setMediaType("PNG");
+            media.setTitle(title != null ? title : "AI Generated Image");
+            media.setAltText(description);
+            media.setCreatedAt(LocalDateTime.now());
+            media.setUpdatedAt(LocalDateTime.now());
+            mediaRepository.save(media);
+            // Save to database
+            return filePath;
+
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to store diagram as media: " + e.getMessage());
+        }
+    }
+
+    private String clearLatexCode(String latexCode)
+    {
+        String cleaned = latexCode.trim();
+
+        // Remove markdown code blocks
+        if (cleaned.startsWith("```")) {
+            cleaned = cleaned.substring(10).trim();
+        } else if (cleaned.startsWith("```")){
+            cleaned = cleaned.substring(3).trim();
+        }
+
+        if (cleaned.endsWith("```")) {
+            cleaned = cleaned.substring(0, cleaned.length() - 3).trim();
+        }
+        return  cleaned;
+    }
+
+    private String cleanMermaidCode(String mermaidCode) {
+        String cleaned = mermaidCode.trim();
+
+        // Remove markdown code blocks
+        if (cleaned.startsWith("```mermaid")) {
+            cleaned = cleaned.substring(10).trim();
+        } else if (cleaned.startsWith("```")){
+                cleaned = cleaned.substring(3).trim();
+    }
+
+    if (cleaned.endsWith("```")) {
+        cleaned = cleaned.substring(0, cleaned.length() - 3).trim();
+    }
+
+     //Ensure it starts with a valid Mermaid diagram type
+    if (!cleaned.startsWith("flowchart") &&
+            !cleaned.startsWith("graph") &&
+            !cleaned.startsWith("sequenceDiagram") &&
+            !cleaned.startsWith("classDiagram") &&
+            !cleaned.startsWith("stateDiagram")) {
+
+        // If no diagram type detected, assume it's a flowchart
+        cleaned = "flowchart TD\n" + cleaned;
+    }
+
+    return cleaned;
 }
+
+
+
+
+
+        }

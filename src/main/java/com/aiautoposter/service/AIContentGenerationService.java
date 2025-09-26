@@ -42,14 +42,14 @@ public class AIContentGenerationService {
     @Value("${ai.azure.apiVersion:2024-04-01-preview}")
     private String apiVersion;
 
-    public String generateLinkedInContent(String sourceDiscussion, String title) {
+    public String generateLinkedInContent(String sourceDiscussion, String title, String platform) {
         // Try OpenAI first
-        String content = tryOpenAI(sourceDiscussion, title);
-        if (content != null && !content.isEmpty()) {
-            return content;
-        }
+//        String content = tryOpenAI(sourceDiscussion, title);
+//        if (content != null && !content.isEmpty()) {
+//            return content;
+//        }
         // Try Azure OpenAI if OpenAI fails
-        content = tryAzureOpenAI(sourceDiscussion, title);
+        String content = tryAzureOpenAI(sourceDiscussion, title, platform);
         if (content != null && !content.isEmpty()) {
             return content;
         }
@@ -58,54 +58,13 @@ public class AIContentGenerationService {
         return generateFallbackContent(title, sourceDiscussion);
     }
     
-    private String tryOpenAI(String sourceDiscussion, String title) {
-        try {
-            String prompt = String.format(
-                "Generate a professional LinkedIn post based on the following discussion and title:\n\n" +
-                "Title: %s\n\n" +
-                "Discussion: %s\n\n" +
-                "Please create engaging content that:\n" +
-                "1. Is professional and appropriate for LinkedIn\n" +
-                "2. Includes relevant hashtags\n" +
-                "3. Encourages engagement\n" +
-                "4. Is between 100-300 words\n" +
-                "5. Has a clear call-to-action",
-                title, sourceDiscussion
-            );
-            Map<String, Object> requestBody = new HashMap<>();
-            requestBody.put("model", "text-davinci-003");
-            requestBody.put("prompt", prompt);
-            requestBody.put("max_tokens", 500);
-            requestBody.put("temperature", 0.7);
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.set("Authorization", "Bearer " + openaiApiKey);
-            
-            HttpEntity<Map<String, Object>> request = new HttpEntity<>(requestBody, headers);
-            
-            ResponseEntity<Map> response = restTemplate.postForEntity(openaiApiUrl, request, Map.class);
-            if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
-                Map<String, Object> responseBody = response.getBody();
-                if (responseBody.containsKey("choices")) {
-                    Object[] choices = (Object[]) responseBody.get("choices");
-                    if (choices.length > 0) {
-                        Map<String, Object> choice = (Map<String, Object>) choices[0];
-                        return (String) choice.get("text");
-                    }
-                }
-            }
-            return null;
-        } catch (Exception e) {
-            System.err.println("Error calling OpenAI API: " + e.getMessage());
-            return null;
-        }
-    }
 
-    private String tryAzureOpenAI(String sourceDiscussion, String title) {
+
+    private String tryAzureOpenAI(String sourceDiscussion, String title, String platform) {
         try {
-            String systemMessage = "Generate a professional LinkedIn post based on the following discussion and title. " +
+            String systemMessage = "Generate a professional "+ platform+ " post based on the following discussion and title. " +
                     "Please create engaging content that: " +
-                    "1. Is professional and appropriate for LinkedIn " +
+                    "1. Is professional and appropriate " +
                     "2. Includes relevant hashtags " +
                     "3. Encourages engagement " +
                     "4. Is between 100-300 words " +
@@ -345,6 +304,119 @@ public class AIContentGenerationService {
         } catch (Exception e) {
             System.err.println("Error calling Azure OpenAI Image Generation API: " + e.getMessage());
             e.printStackTrace();
+            return null;
+        }
+    }
+
+    public String getPromptForImageGen(String prompt, String title)
+    {
+        String systemMessage = "Generate a professional prompt for generating content heavy image on following input: " +prompt+
+                "Please create engaging content image: " +
+                "1. Is professional and appropriate " +
+                "2. Includes relevant hashtags " +
+                "3. Encourages engagement " +
+                "4. Is accurate and not distorted";
+
+        return getAzureOpenAIResult(systemMessage, prompt, title);
+
+    }
+
+    public String createDiagramUsingAI(String prompt)
+    {
+        String gptPrompt = """
+                Create a Mermaid flowchart for this social media process: %s
+                
+                Make it visually appealing for social media posts.
+                Use clear, short labels and logical flow.
+                Include decision points and actions.
+                Only return mermaid code
+                """.formatted(prompt);
+
+        return getAzureOpenAIResult(gptPrompt, prompt, "");
+
+    }
+
+    public String createLatexDiagramUsingAI(String prompt) {
+        String gptPrompt = """
+            Create a complete LaTeX TikZ document for this social media process: %s
+            
+            IMPORTANT REQUIREMENTS:
+            - Include complete LaTeX document structure starting with \\documentclass{standalone}
+            - Include \\usepackage{tikz}
+            - Include \\begin{document} and \\end{document}
+            - Make it visually appealing with colors for social media posts
+            - Use clear, short labels and logical flow
+            - Make it colorful using fill colors like red!30, blue!30, green!30, etc.
+            - Use inline node styles (no \\tikzstyle)
+            - Only return the complete LaTeX code, nothing else
+            
+            Example format:
+            \\documentclass{standalone}
+            \\usepackage{tikz}
+            \\begin{document}
+            \\begin{tikzpicture}[node distance=2cm]
+            \\node[rectangle, rounded corners, minimum width=3cm, minimum height=1cm, text centered, draw=black, fill=red!30] (start) {Start};
+            \\node[rectangle, minimum width=3cm, minimum height=1cm, text centered, draw=black, fill=blue!30, below of=start] (process1) {Process 1};
+            \\draw[thick, ->, >=stealth] (start) -- (process1);
+            \\end{tikzpicture}
+            \\end{document}
+            """.formatted(prompt);
+
+        return getAzureOpenAIResult(gptPrompt, prompt, "");
+    }
+
+
+
+
+    public String getAzureOpenAIResult(String systemMessage, String prompt, String title) {
+        try {
+
+            String userMessage = String.format("prompt: %s title: %s", prompt, title);
+
+            // Create messages array for chat completions
+            List<Map<String, String>> messages = new ArrayList<>();
+
+            Map<String, String> systemMsg = new HashMap<>();
+            systemMsg.put("role", "system");
+            systemMsg.put("content", systemMessage);
+            messages.add(systemMsg);
+
+            Map<String, String> userMsg = new HashMap<>();
+            userMsg.put("role", "user");
+            userMsg.put("content", userMessage);
+            messages.add(userMsg);
+
+            Map<String, Object> requestBody = new HashMap<>();
+            requestBody.put("messages", messages);  // Use messages instead of prompt
+            requestBody.put("max_tokens", 500);
+            requestBody.put("temperature", 0.7);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.set("api-key", azureApiKey);
+
+            HttpEntity<Map<String, Object>> request = new HttpEntity<>(requestBody, headers);
+
+            ResponseEntity<Map> response = restTemplate.postForEntity(azureApiUrl, request, Map.class);
+
+            if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
+                Map<String, Object> responseBody = response.getBody();
+                if (responseBody.containsKey("choices")) {
+                    List<Map<String, Object>> choices = (List<Map<String, Object>>) responseBody.get("choices");
+                    if (!choices.isEmpty()) {
+                        Map<String, Object> choice = choices.get(0);
+                        Map<String, Object> message = (Map<String, Object>) choice.get("message");
+                        return (String) message.get("content");
+                    }
+                }
+            }
+
+
+
+            return null;
+
+        } catch (Exception e) {
+            System.err.println("Error calling Azure OpenAI API: " + e.getMessage());
             return null;
         }
     }

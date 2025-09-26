@@ -253,17 +253,17 @@ public class PostService {
                 if ("linkedin".equals(platform)) {
                     // Generate LinkedIn content (plain text friendly)
                     content = aiContentGenerationService.generateLinkedInContent(
-                        post.getSourceDiscussion(), post.getTitle()
+                        post.getSourceDiscussion(), post.getTitle(),platform
                     );
                     // Convert any HTML to plain text for LinkedIn
                     content = convertHtmlToLinkedInText(content);
                 } else if ("wordpress".equals(platform)) {
                     // Generate WordPress content (can include HTML)
-                    content = generateWordPressContent(post.getSourceDiscussion(), post.getTitle());
+                    content = generateWordPressContent(post.getSourceDiscussion(), post.getTitle(), platform);
                 } else {
                     // Default content generation
                     content = aiContentGenerationService.generateLinkedInContent(
-                        post.getSourceDiscussion(), post.getTitle()
+                        post.getSourceDiscussion(), post.getTitle(), platform
                     );
                 }
                 
@@ -639,12 +639,12 @@ public class PostService {
     }
     
     // Generate WordPress-specific content (can include HTML formatting)
-    private String generateWordPressContent(String sourceDiscussion, String title) {
+    private String generateWordPressContent(String sourceDiscussion, String title, String platform) {
         try {
             System.out.println("PostService - Generating WordPress content");
             
             // For now, use the same AI service but format for WordPress
-            String baseContent = aiContentGenerationService.generateLinkedInContent(sourceDiscussion, title);
+            String baseContent = aiContentGenerationService.generateLinkedInContent(sourceDiscussion, title, platform);
             
             // Format content for WordPress (add some HTML structure)
             String wordpressContent = formatContentForWordPress(baseContent, title);

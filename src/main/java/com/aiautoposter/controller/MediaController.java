@@ -24,7 +24,8 @@ public class MediaController {
     @PostMapping("/generate-image")
     public ResponseEntity<String> generateImage(
             @RequestParam String prompt,
-            @RequestParam(required = false, defaultValue = "Generated Image") String title) {
+            @RequestParam(required = false, defaultValue = "Generated Image") String title,
+            @RequestParam(required = false) String imageType) {
         try {
             System.out.println("Generating image with prompt: " + prompt);
             System.out.println("Title: " + title);
@@ -32,8 +33,13 @@ public class MediaController {
             if (prompt == null || prompt.trim().isEmpty()) {
                 return new ResponseEntity<>("Prompt cannot be empty", HttpStatus.BAD_REQUEST);
             }
-            
-            String imageUrl = mediaService.generateImage(prompt, title);
+
+            String imageUrl=null;
+
+            if(imageType.equals("general"))
+                imageUrl = mediaService.generateImage(prompt, title);
+            else
+                imageUrl = mediaService.storeDiagramAsMedia(prompt,title,"",imageType);
             if (imageUrl != null && !imageUrl.isEmpty()) {
                 return new ResponseEntity<>(imageUrl, HttpStatus.CREATED);
             } else {
