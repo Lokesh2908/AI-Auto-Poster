@@ -42,6 +42,12 @@ public class PostVersion {
     @Column(name = "target_platforms")
     private String targetPlatforms;
     
+    @Column(name = "saved_content", columnDefinition = "LONGTEXT")
+    private String savedContent; // JSON array of PostContent objects
+    
+    @Column(name = "content_summary", columnDefinition = "TEXT")
+    private String contentSummary; // Brief summary for display
+    
     // Constructors
     public PostVersion() {
         this.createdAt = LocalDateTime.now();
@@ -141,5 +147,21 @@ public class PostVersion {
     
     public void setTargetPlatforms(String targetPlatforms) {
         this.targetPlatforms = targetPlatforms;
+    }
+    
+    public String getSavedContent() {
+        return savedContent;
+    }
+    
+    public void setSavedContent(String savedContent) {
+        this.savedContent = savedContent;
+    }
+    
+    public String getContentSummary() {
+        return contentSummary;
+    }
+    
+    public void setContentSummary(String contentSummary) {
+        this.contentSummary = contentSummary;
     }
 }

@@ -3,9 +3,12 @@ package com.aiautoposter.service;
 import com.aiautoposter.dto.PostVersionRequest;
 import com.aiautoposter.dto.RestoreVersionRequest;
 import com.aiautoposter.entity.Post;
+import com.aiautoposter.entity.PostContent;
 import com.aiautoposter.entity.PostVersion;
 import com.aiautoposter.repository.PostRepository;
 import com.aiautoposter.repository.PostVersionRepository;
+import com.aiautoposter.repository.PostContentRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +26,12 @@ public class PostVersionService {
     
     @Autowired
     private PostRepository postRepository;
+    
+    @Autowired
+    private PostContentRepository postContentRepository;
+    
+    @Autowired
+    private ObjectMapper objectMapper;
     
     /**
      * Save a new version of a post
@@ -52,6 +61,30 @@ public class PostVersionService {
             request.getCurrentSourceDiscussion() : post.getSourceDiscussion());
         version.setTargetPlatforms(request.getCurrentTargetPlatforms() != null ? 
             request.getCurrentTargetPlatforms() : post.getTargetPlatforms());
+        
+        // Store the actual post content (this is the key fix!)
+        try {
+            List<PostContent> currentContent = postContentRepository.findByPostId(postId);
+            if (currentContent != null && !currentContent.isEmpty()) {
+                // Convert to JSON string for storage
+                String contentJson = objectMapper.writeValueAsString(currentContent);
+                version.setSavedContent(contentJson);
+                
+                // Create a summary for display
+                StringBuilder summary = new StringBuilder();
+                for (PostContent content : currentContent) {
+                    if (summary.length() > 0) summary.append("; ");
+                    summary.append(content.getPlatform()).append(": ")
+                           .append(content.getContent().substring(0, Math.min(100, content.getContent().length())))
+                           .append("...");
+                }
+                version.setContentSummary(summary.toString());
+            }
+        } catch (Exception e) {
+            System.err.println("Error saving post content to version: " + e.getMessage());
+            e.printStackTrace();
+            // Continue without failing the version save
+        }
         
         return postVersionRepository.save(version);
     }
@@ -115,6 +148,47 @@ public class PostVersionService {
         post.setUpdatedAt(LocalDateTime.now());
         
         Post restoredPost = postRepository.save(post);
+        
+        // *** KEY FIX: Restore the actual post content ***
+        try {
+            if (version.getSavedContent() != null && !version.getSavedContent().trim().isEmpty()) {
+                System.out.println("🔄 Restoring post content from version " + version.getId());
+                
+                // Parse the saved content JSON
+                PostContent[] savedContentArray = objectMapper.readValue(version.getSavedContent(), PostContent[].class);
+                List<PostContent> savedContentList = java.util.Arrays.asList(savedContentArray);
+                
+                // Delete current post content
+                List<PostContent> currentContent = postContentRepository.findByPostId(postId);
+                if (!currentContent.isEmpty()) {
+                    System.out.println("🗑️ Deleting " + currentContent.size() + " current content items");
+                    postContentRepository.deleteAll(currentContent);
+                }
+                
+                // Restore the saved content
+                for (PostContent content : savedContentList) {
+                    // Create new content with same data but new ID
+                    PostContent restoredContent = new PostContent();
+                    restoredContent.setPostId(postId);
+                    restoredContent.setPlatform(content.getPlatform());
+                    restoredContent.setTitle(content.getTitle());
+                    restoredContent.setContent(content.getContent());
+                    restoredContent.setHashtags(content.getHashtags());
+                    restoredContent.setAiConfidenceScore(content.getAiConfidenceScore());
+                    restoredContent.setCreatedAt(LocalDateTime.now()); // Use current time for restored content
+                    
+                    postContentRepository.save(restoredContent);
+                }
+                
+                System.out.println("✅ Restored " + savedContentList.size() + " content items from version");
+            } else {
+                System.out.println("⚠️ No saved content found in version " + version.getId());
+            }
+        } catch (Exception e) {
+            System.err.println("❌ Error restoring post content from version: " + e.getMessage());
+            e.printStackTrace();
+            // Don't fail the entire restore operation if content restore fails
+        }
         
         // Create a new version entry for the restore action
         PostVersionRequest restoreRequest = new PostVersionRequest();
